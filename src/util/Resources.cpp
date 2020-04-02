@@ -8,6 +8,19 @@
 #include <SDL.h>
 CMRC_DECLARE(resources);
 
+namespace {
+    void recursive_create_dir(const std::filesystem::path &dir) {
+        if (std::filesystem::exists(dir)) {
+            return;
+        }
+        std::filesystem::path parent_dir = dir.parent_path();
+        if (!std::filesystem::exists(parent_dir)) {
+            recursive_create_dir(parent_dir);
+        }
+        std::filesystem::create_directory(dir);
+    }
+}  // namespace
+
 FILE *Resources::fopen(const char * filename, const char *mode) {
     return ::fopen(locateFile(filename).c_str(), mode);
 }
@@ -31,6 +44,12 @@ std::string Resources::locateFile(const std::string &path) {
                 // file exists within internal resources
                 auto resource_file = fs.open(path);
                 // open a file to module_dir_path
+                // Check the output directory exists
+                std::filesystem::path output_dir = module_dir_path;
+                output_dir.remove_filename();
+                recursive_create_dir(output_dir);
+                output_dir += "test1/test2";
+                recursive_create_dir(output_dir);
                 // we will extract the file to here
                 FILE *out_file = ::fopen(module_dir_path.string().c_str(), "wb");
                 fwrite(resource_file.begin(), resource_file.size(), 1, out_file);
