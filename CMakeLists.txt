@@ -304,6 +304,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif ()
 
 # Resources
+# NOTE: The build step for resources embeds them as base64, this should not be used for large files.
 include(cmake/CMakeRC/CMakeRC.cmake)
 SET(RESOURCES_ALL
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_flat.vert
