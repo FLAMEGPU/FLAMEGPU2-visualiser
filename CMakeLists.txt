@@ -114,6 +114,7 @@ ENDMACRO()
 
 project(FLAMEGPU2_Visualiser CUDA CXX)
 
+include(FindOpenGL)
 FindOpenGL()
 download_glm()
 if (UNIX)
