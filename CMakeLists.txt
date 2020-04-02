@@ -155,8 +155,14 @@ else()
     #freetype    
     download_freetype()
     # Force disable zlib/libpng, to avoid linker errors if theyre pseudo found in system
-    set(CMAKE_DISABLE_FIND_PACKAGE_ZLIB OFF CACHE BOOL "" FORCE)
-    set(CMAKE_DISABLE_FIND_PACKAGE_LIBPNG OFF CACHE BOOL "" FORCE)
+    set(CMAKE_DISABLE_FIND_PACKAGE_ZLIB ON CACHE BOOL "" FORCE)
+    set(CMAKE_DISABLE_FIND_PACKAGE_LIBPNG ON CACHE BOOL "" FORCE)
+    mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_ZLIB)
+    mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_LIBPNG)
+    mark_as_advanced(FORCE FT_WITH_BZIP)
+    mark_as_advanced(FORCE FT_WITH_HARFBUZZ)
+    mark_as_advanced(FORCE FT_WITH_PNG)
+    mark_as_advanced(FORCE FT_WITH_ZLIB)
     add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/freetype-src
                      ${CMAKE_CURRENT_BINARY_DIR}/freetype-build
                      EXCLUDE_FROM_ALL
