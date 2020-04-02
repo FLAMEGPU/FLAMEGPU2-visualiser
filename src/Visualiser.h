@@ -44,8 +44,8 @@ class Visualiser : public ViewportExt {
                 vc.model_path,
                 1.0f,
                 std::make_shared<Shaders>(
-                    "C:\\Users\\Robadob\\fgpu2_visualiser\\resources\\instanced_flat.vert",
-                    "C:\\Users\\Robadob\\fgpu2_visualiser\\resources\\material_flat.frag")))
+                    "resources/instanced_flat.vert",
+                    "resources/material_flat.frag")))
             , requiredSize(0) {
             entity->setMaterial(glm::vec3(0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.7f));
         }

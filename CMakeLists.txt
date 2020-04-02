@@ -185,10 +185,12 @@ SET(VISUALISER_INCLUDE
 # Prepare list of source files
 SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Visualiser.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/util/Resources.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FLAMEGPU_Visualisation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Visualiser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config/AgentStateConfig.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config/ModelConfig.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/util/Resources.cpp
     # .h from sdl_exp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/camera/NoClipCamera.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/interface/Camera.h
@@ -273,16 +275,13 @@ if (NOT DEFINED CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 14)
     set(CMAKE_CXX_STANDARD_REQUIRED true)
 endif ()
-
-# add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/glew-src/build/cmake
-                 # ${CMAKE_CURRENT_BINARY_DIR}/glew-build
-                 # EXCLUDE_FROM_ALL
-                 # )
+if (NOT UNIX)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+endif ()
 # Set up include dirs
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/glm-src)
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${GLEW_INCLUDE_DIRS})
-#target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${OPENGL_INCLUDE_DIRS})
 if (FREETYPE_FOUND) # Only use this if we aren't building it ourselves
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS})
 endif ()
@@ -293,20 +292,30 @@ target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR
 # Add the targets we depend on (this does link and include)
 # This propagates to any project that uses this as a dependency
 target_link_libraries("${PROJECT_NAME}" "legacy_stdio_definitions") # This won't be required if we rebuild freetype with newer than vs2013
-#target_link_libraries("${PROJECT_NAME}" "${OPENGL_LIBRARIES}")
-#target_link_libraries("${PROJECT_NAME}" "glu32")
 target_link_libraries("${PROJECT_NAME}" "${SDL2_LIBRARIES}")
 target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
 target_link_libraries("${PROJECT_NAME}" freetype)
 target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
 target_link_libraries("${PROJECT_NAME}" OpenGL::GLU)
-#target_link_libraries("${PROJECT_NAME}" "${CMAKE_CURRENT_SOURCE_DIR}/lib/freetype.lib") # I think this needs rebuilding dependent on visual studio version
 # Enable parallel compilation
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
 endif ()
 
+# Resources
+# NOTE: The build step for resources embeds them as base64, this should not be used for large files.
+include(cmake/CMakeRC/CMakeRC.cmake)
+SET(RESOURCES_ALL
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_flat.vert
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/default.vert
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/text.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/icosphere.obj
+)
+cmrc_add_resource_library(resources ${RESOURCES_ALL})
+message(STATUS "${PROJECT_NAME}")
+target_link_libraries("${PROJECT_NAME}" resources)
 
 # Setup Visual Studio (and eclipse) filters
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -364,9 +373,12 @@ if (CPPLINT)
     # Put within Lint filter
     if (CMAKE_USE_FOLDERS)
       set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+      set_property(TARGET "${PROJECT_NAME}" PROPERTY FOLDER "FLAMEGPU")
       set_property(TARGET "lint_${PROJECT_NAME}" PROPERTY FOLDER "Lint")
       if (TARGET freetype)
         set_property(TARGET "freetype" PROPERTY FOLDER "FLAMEGPU/Dependencies")
+        set_property(TARGET "resources" PROPERTY FOLDER "FLAMEGPU/Dependencies")
       endif ()
     endif ()
 endif ()
+
