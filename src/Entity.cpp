@@ -13,6 +13,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "util/StringUtils.h"
+#include "util/Resources.h"
 
 #define DEFAULT_TEXCOORD_SIZE 2
 #define FACES_SIZE 3
@@ -369,7 +370,7 @@ void Entity::loadModelFromFile() {
             importModel(modelPath);
             return;
         }
-        FILE* file = fopen(exportPath.c_str(), "r");
+        FILE* file = Resources::fopen(exportPath.c_str(), "r");
         if (file) {
             fclose(file);
             importModel(exportPath.c_str());
@@ -382,7 +383,7 @@ void Entity::loadModelFromFile() {
     printf("\rLoading Model: %s", su::getFilenameFromPath(modelPath).c_str());
 
     // Open file
-    FILE *file = fopen(modelPath, "r");
+    FILE *file = Resources::fopen(modelPath, "r");
     if (!file) {
         printf("\rLoading Model: Could not open model '%s'!\n", modelPath);
         return;
@@ -964,7 +965,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
     std::string materialPath = modelFolder.append("/").append(materialFilename);
 
     // Open file
-    FILE* file = fopen(materialPath.c_str(), "r");
+    FILE* file = Resources::fopen(materialPath.c_str(), "r");
     if (file == NULL) {
         fprintf(stderr, "Could not open material: '%s'!\n", materialPath.c_str());
         return;
@@ -1248,7 +1249,7 @@ void Entity::importModel(const char *path) {
     }
     // Open file
     FILE * file;
-    file = fopen(importPath.c_str(), "rb");
+    file = Resources::fopen(importPath.c_str(), "rb");
     if (!file) {
         fprintf(stderr, "Could not open file for reading: %s. Aborting import\n", importPath.c_str());
     }

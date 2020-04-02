@@ -2,7 +2,7 @@
 
 AgentStateConfig::AgentStateConfig()
     : model_path(nullptr) {
-    setModel("icosphere.obj");
+    setModel("resources/icosphere.obj");
 }
 AgentStateConfig::~AgentStateConfig() {
     if (model_path)
