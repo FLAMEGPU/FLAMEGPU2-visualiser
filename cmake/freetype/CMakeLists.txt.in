@@ -4,7 +4,7 @@ project(freetype-download NONE)
 
 include(ExternalProject)
 ExternalProject_Add(freetype
-    GIT_REPOSITORY    https://git.savannah.gnu.org/cgit/freetype/freetype2.git
+    GIT_REPOSITORY    https://git.savannah.gnu.org/git/freetype/freetype2.git
     GIT_TAG           tags/VER-2-10-1
     SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/freetype-src"
     BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/freetype-build"
