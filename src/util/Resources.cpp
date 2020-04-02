@@ -9,7 +9,7 @@
 CMRC_DECLARE(resources);
 
 FILE *Resources::fopen(const char * filename, const char *mode) {
-    return fopen(locateFile(filename).c_str(), mode);
+    return ::fopen(locateFile(filename).c_str(), mode);
 }
 
 std::string Resources::locateFile(const std::string &path) {
@@ -32,7 +32,7 @@ std::string Resources::locateFile(const std::string &path) {
                 auto resource_file = fs.open(path);
                 // open a file to module_dir_path
                 // we will extract the file to here
-                FILE *out_file = fopen(module_dir_path.string().c_str(), "wb");
+                FILE *out_file = ::fopen(module_dir_path.string().c_str(), "wb");
                 fwrite(resource_file.begin(), resource_file.size(), 1, out_file);
                 fclose(out_file);
                 // Reopen the file we just created and return handle to user
