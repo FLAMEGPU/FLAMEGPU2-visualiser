@@ -32,7 +32,7 @@ const ShaderSet COLOR_NOSHADE{ "color.vert", "color_noshade.frag", nullptr };
 const ShaderSet SKYBOX{ "skybox.vert", "skybox.frag", nullptr };
 const ShaderSet INSTANCED_FLAT{ "instanced_flat.vert", "material_flat.frag", nullptr };
 const ShaderSet INSTANCED_PHONG{ "instanced_default.vert", "material_phong.frag", nullptr };
-const ShaderSet TEXT{ "C:\\Users\\Robadob\\fgpu2_visualiser\\resources\\default.vert", "C:\\Users\\Robadob\\fgpu2_visualiser\\resources\\text.frag", nullptr };
+const ShaderSet TEXT{ "default.vert", "text.frag", nullptr };
 const ShaderSet SPRITE2D{ "default.vert", "sprite2d.frag", nullptr };
 const ShaderSet SPRITE2D_HEAT{ "default.vert", "sprite2dHeat.frag", nullptr };
 const ShaderSet BILLBOARD{ "billboard.vert", "particle.frag", nullptr };

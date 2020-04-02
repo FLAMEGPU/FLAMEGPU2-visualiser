@@ -2,7 +2,7 @@
 
 AgentStateConfig::AgentStateConfig()
     : model_path(nullptr) {
-    setModel("C:\\Users\\Robadob\\fgpu2_visualiser\\resources\\icosphere.obj");
+    setModel("icosphere.obj");
 }
 AgentStateConfig::~AgentStateConfig() {
     if (model_path)

@@ -7,6 +7,7 @@
 #pragma warning(pop)
 #include "util/StringUtils.h"
 #include "shader/Shaders.h"
+#include "util/Resources.h"
 
 bool ShaderCore::exitOnError = false;  // Tempted to use pre-processor macros to swap this default to true on release mode
 
@@ -586,34 +587,35 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
 #define filesystem tr2::sys
 #endif
 char* ShaderCore::loadShaderSource(const char* file) {
-    static std::string shadersRoot;
-    if (shadersRoot.empty()) {
-        // Locate the root directory of the solution
-        // Follow up tree a few layers checking for a shaders directory.
-        shadersRoot = "./shaders/";
-        for (unsigned int i = 0; i < 5; ++i) {
-            if (std::filesystem::exists(std::filesystem::path(shadersRoot)))
-                break;
-            shadersRoot = std::string("./.") + shadersRoot;
-        }
-        if (!std::filesystem::exists(std::filesystem::path(shadersRoot)))
-            shadersRoot = "./";
-    }
+    // static std::string shadersRoot;
+    // if (shadersRoot.empty()) {
+    //     // Locate the root directory of the solution
+    //     // Follow up tree a few layers checking for a shaders directory.
+    //     shadersRoot = "./shaders/";
+    //     for (unsigned int i = 0; i < 5; ++i) {
+    //         if (std::filesystem::exists(std::filesystem::path(shadersRoot)))
+    //             break;
+    //         shadersRoot = std::string("./.") + shadersRoot;
+    //     }
+    //     if (!std::filesystem::exists(std::filesystem::path(shadersRoot)))
+    //         shadersRoot = "./";
+    // }
     //  If file path is 0 it is being omitted. kinda gross
     if (file != nullptr) {
-        std::string shaderPath = shadersRoot + file;
-        FILE* fptr = fopen(shaderPath.c_str(), "rb");  // Attempt with shader root
-        if (!fptr) {
-            fptr = fopen(file, "rb");  // Attempt without shader root
-            if (!fptr) {
-                fprintf(stderr, "Shader source not found: %s\n", file);
-                if (exitOnError) {
-                    getchar();
-                    exit(1);
-                }
-                return nullptr;
-            }
-        }
+        // std::string shaderPath = shadersRoot + file;
+        // FILE* fptr = fopen(shaderPath.c_str(), "rb");  // Attempt with shader root
+        // if (!fptr) {
+        //     fptr = fopen(file, "rb");  // Attempt without shader root
+        //     if (!fptr) {
+        //         fprintf(stderr, "Shader source not found: %s\n", file);
+        //         if (exitOnError) {
+        //             getchar();
+        //             exit(1);
+        //         }
+        //         return nullptr;
+        //     }
+        // }
+        FILE* fptr = Resources::fopen(file, "rb");  // Attempt with shader root
         fseek(fptr, 0, SEEK_END);
         int64_t length = ftell(fptr);
         char* buf = static_cast<char*>(malloc(length + 1));  //  Allocate a buffer for the entire length of the file and a null terminator
