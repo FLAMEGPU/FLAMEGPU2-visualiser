@@ -115,6 +115,9 @@ ENDMACRO()
 project(flamegpu2_visualiser CUDA CXX)
 
 include(FindOpenGL)
+if (NOT TARGET OpenGL::GL)
+    message(FATAL_ERROR "OpenGL is required for building")
+endif ()
 download_glm()
 if (UNIX)
     # Linux users need to install it via their package manager
@@ -134,14 +137,14 @@ if (UNIX)
       message(FATAL_ERROR "freetype is required for building, install it via your package manager.\n"
                           "e.g. sudo apt install libfreetype-dev")
     endif ()
-    if (NOT OpenGL::GLU)
+    if (NOT TARGET OpenGL::GLU)
       message(FATAL_ERROR "freetype is required for building, install it via your package manager.\n"
                           "e.g. sudo apt install libglu1-mesa-dev")
     endif ()
 else()
-    #if (NOT OpenGL::GLU)
-    #  message(FATAL_ERROR "GLU is required for building")
-    #endif ()
+    if (NOT TARGET OpenGL::GLU)
+      message(FATAL_ERROR "GLU is required for building")
+    endif ()
     #sdl
     download_sdl2()
     set(SDL2_DIR ${CMAKE_CURRENT_BINARY_DIR}/sdl2)
@@ -295,6 +298,8 @@ target_link_libraries("${PROJECT_NAME}" "legacy_stdio_definitions") # This won't
 target_link_libraries("${PROJECT_NAME}" "${SDL2_LIBRARIES}")
 target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
 target_link_libraries("${PROJECT_NAME}" freetype)
+target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
+target_link_libraries("${PROJECT_NAME}" OpenGL::GLU)
 #target_link_libraries("${PROJECT_NAME}" "${CMAKE_CURRENT_SOURCE_DIR}/lib/freetype.lib") # I think this needs rebuilding dependent on visual studio version
 # Enable parallel compilation
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
