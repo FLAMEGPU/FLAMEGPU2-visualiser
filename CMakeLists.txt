@@ -114,7 +114,7 @@ ENDMACRO()
 
 project(FLAMEGPU2_Visualiser CUDA CXX)
 
-FindOpenGL();
+FindOpenGL()
 download_glm()
 if (UNIX)
     # Linux users need to install it via their package manager
@@ -133,6 +133,10 @@ if (UNIX)
     if (NOT FREETYPE_FOUND)
       message(FATAL_ERROR "freetype is required for building, install it via your package manager.\n"
                           "e.g. sudo apt install libfreetype-dev")
+    endif ()
+    if (NOT OpenGL::GLU)
+      message(FATAL_ERROR "freetype is required for building, install it via your package manager.\n"
+                          "e.g. sudo apt install libglu1-mesa-dev")
     endif ()
 else()
     if (NOT OpenGL::GLU)
