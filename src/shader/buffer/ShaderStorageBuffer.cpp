@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include "shader/buffer/ShaderStorageBuffer.h"
 
 #include <cassert>

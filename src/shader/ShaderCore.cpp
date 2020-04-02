@@ -1,4 +1,3 @@
-#define  _CRT_SECURE_NO_WARNINGS
 #include "shader/ShaderCore.h"
 #include <cstdlib>  // < _splitpath() Windows only, need to rewrite linux ver
 #include <regex>

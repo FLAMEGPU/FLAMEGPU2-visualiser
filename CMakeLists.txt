@@ -275,7 +275,9 @@ if (NOT DEFINED CMAKE_CXX_STANDARD)
     set(CMAKE_CXX_STANDARD 14)
     set(CMAKE_CXX_STANDARD_REQUIRED true)
 endif ()
-
+if (NOT UNIX)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+endif ()
 # Set up include dirs
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/glm-src)
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})

@@ -1,4 +1,3 @@
-#define  _CRT_SECURE_NO_WARNINGS
 #include "Entity.h"
 
 #include <sparsehash/dense_hash_map>
