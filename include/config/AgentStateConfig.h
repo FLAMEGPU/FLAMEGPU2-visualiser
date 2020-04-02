@@ -12,7 +12,7 @@ struct AgentStateConfig {
     AgentStateConfig(const AgentStateConfig &other);
     AgentStateConfig &operator=(const AgentStateConfig &other);
 
-    const char *model_path = nullptr;  // "C:\\Users\\Robadob\\fgpu2_visualiser\\resources\\icosphere.obj"
+    const char *model_path = nullptr;  // "icosphere.obj"
 
     /**
     * Inline string to char* util

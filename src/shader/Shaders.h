@@ -22,26 +22,26 @@ struct ShaderSet {
     const char *geometry;
 };
 const ShaderSet FIXED_FUNCTION{ nullptr, nullptr, nullptr };
-const ShaderSet FULLBRIGHT{ "default.vert", "fullbright_phong.frag", nullptr };
-const ShaderSet FULLBRIGHT_FLAT{ "default.vert", "material_fullbright_flat.frag", nullptr };
-const ShaderSet FULLBRIGHT_PHONG{ "default.vert", "material_fullbright_phong.frag", nullptr };
-const ShaderSet FLAT{ "default.vert", "material_flat.frag", nullptr };
-const ShaderSet PHONG{ "default.vert", "material_phong.frag", nullptr };
-const ShaderSet COLOR{ "color.vert", "color.frag", nullptr };
-const ShaderSet COLOR_NOSHADE{ "color.vert", "color_noshade.frag", nullptr };
-const ShaderSet SKYBOX{ "skybox.vert", "skybox.frag", nullptr };
-const ShaderSet INSTANCED_FLAT{ "instanced_flat.vert", "material_flat.frag", nullptr };
-const ShaderSet INSTANCED_PHONG{ "instanced_default.vert", "material_phong.frag", nullptr };
-const ShaderSet TEXT{ "C:\\Users\\Robadob\\fgpu2_visualiser\\resources\\default.vert", "C:\\Users\\Robadob\\fgpu2_visualiser\\resources\\text.frag", nullptr };
-const ShaderSet SPRITE2D{ "default.vert", "sprite2d.frag", nullptr };
-const ShaderSet SPRITE2D_HEAT{ "default.vert", "sprite2dHeat.frag", nullptr };
-const ShaderSet BILLBOARD{ "billboard.vert", "particle.frag", nullptr };
-const ShaderSet LINEAR_DEPTH{ "default.vert", "linear_depth.frag", nullptr };
-const ShaderSet FLAT_SHADOW{ "shadow.vert", "material_flat_shadow.frag", nullptr };
-const ShaderSet PHONG_SHADOW{ "shadow.vert", "material_phong_shadow.frag", nullptr };
-const ShaderSet BONE{ "bone.vert", "material_phong.frag", nullptr };
-const ShaderSet BONE_LINEAR_DEPTH{ "bone.vert", "linear_depth.frag", nullptr };
-const ShaderSet BONE_SHADOW{ "bone_shadow.vert", "material_phong_shadow.frag", nullptr };
+const ShaderSet FULLBRIGHT{ "resources/default.vert", "resources/fullbright_phong.frag", nullptr };
+const ShaderSet FULLBRIGHT_FLAT{ "resources/default.vert", "resources/material_fullbright_flat.frag", nullptr };
+const ShaderSet FULLBRIGHT_PHONG{ "resources/default.vert", "resources/material_fullbright_phong.frag", nullptr };
+const ShaderSet FLAT{ "resources/default.vert", "resources/material_flat.frag", nullptr };
+const ShaderSet PHONG{ "resources/default.vert", "resources/material_phong.frag", nullptr };
+const ShaderSet COLOR{ "resources/color.vert", "resources/color.frag", nullptr };
+const ShaderSet COLOR_NOSHADE{ "resources/color.vert", "resources/color_noshade.frag", nullptr };
+const ShaderSet SKYBOX{ "resources/skybox.vert", "skybox.frag", nullptr };
+const ShaderSet INSTANCED_FLAT{ "resources/instanced_flat.vert", "resources/material_flat.frag", nullptr };
+const ShaderSet INSTANCED_PHONG{ "resources/instanced_default.vert", "resources/material_phong.frag", nullptr };
+const ShaderSet TEXT{ "resources/default.vert", "resources/text.frag", nullptr };
+const ShaderSet SPRITE2D{ "resources/default.vert", "resources/sprite2d.frag", nullptr };
+const ShaderSet SPRITE2D_HEAT{ "resources/default.vert", "resources/sprite2dHeat.frag", nullptr };
+const ShaderSet BILLBOARD{ "resources/billboard.vert", "resources/particle.frag", nullptr };
+const ShaderSet LINEAR_DEPTH{ "resources/default.vert", "resources/linear_depth.frag", nullptr };
+const ShaderSet FLAT_SHADOW{ "resources/shadow.vert", "resources/material_flat_shadow.frag", nullptr };
+const ShaderSet PHONG_SHADOW{ "resources/shadow.vert", "resources/material_phong_shadow.frag", nullptr };
+const ShaderSet BONE{ "resources/bone.vert", "resources/material_phong.frag", nullptr };
+const ShaderSet BONE_LINEAR_DEPTH{ "resources/bone.vert", "resources/linear_depth.frag", nullptr };
+const ShaderSet BONE_SHADOW{ "resources/bone_shadow.vert", "resources/material_phong_shadow.frag", nullptr };
 }  // namespace Shaders
 }  // namespace Stock
 /**

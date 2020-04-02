@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS  // vsnprintf()
 #include "Text.h"
 
 #include <freetype/ftglyph.h>
