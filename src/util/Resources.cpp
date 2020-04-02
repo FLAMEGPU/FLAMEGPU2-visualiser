@@ -36,7 +36,7 @@ std::string Resources::locateFile(const std::string &path) {
     // See if file exists in module dir, use that
     {
         if (std::filesystem::exists(module_dir_path)) {
-            return path;
+            return module_dir_path.string();
         } else {
             // file doesn't exist in module dir, so create it there
             auto fs = cmrc::resources::get_filesystem();
@@ -48,14 +48,12 @@ std::string Resources::locateFile(const std::string &path) {
                 std::filesystem::path output_dir = module_dir_path;
                 output_dir.remove_filename();
                 recursive_create_dir(output_dir);
-                output_dir += "test1/test2";
-                recursive_create_dir(output_dir);
                 // we will extract the file to here
                 FILE *out_file = ::fopen(module_dir_path.string().c_str(), "wb");
                 fwrite(resource_file.begin(), resource_file.size(), 1, out_file);
                 fclose(out_file);
                 // Reopen the file we just created and return handle to user
-                return path;
+                return module_dir_path.string();
             } else {
                 // Unable to locate file
                 throw std::runtime_error("Unable to open file!");  // TODO: Replace with FGPU exception
@@ -86,4 +84,13 @@ std::string Resources::getModuleDir() {
 // #else
 //
 // #endif
+}
+
+std::string Resources::toModuleDir(const std::string &path) {
+    std::filesystem::path output_dir = Resources::getModuleDir();
+    output_dir += path;
+    const std::filesystem::path output_path = output_dir;
+    output_dir.remove_filename();
+    recursive_create_dir(output_dir);
+    return output_path.string();
 }

@@ -369,7 +369,7 @@ void Entity::loadModelFromFile() {
             importModel(modelPath);
             return;
         }
-        FILE* file = Resources::fopen(exportPath.c_str(), "r");
+        FILE* file = fopen(exportPath.c_str(), "r");
         if (file) {
             fclose(file);
             importModel(exportPath.c_str());
@@ -1172,7 +1172,7 @@ Models are stored in the following format;
 void Entity::exportModel() const {
     if (positions.count == 0)
         return;
-    std::string exportPath(modelPath);
+    std::string exportPath = Resources::toModuleDir(modelPath);
     std::string objPath(OBJ_TYPE);
     if (!su::endsWith(modelPath, EXPORT_TYPE, false)) {
         exportPath = exportPath.substr(0, exportPath.length() - objPath.length()).append(EXPORT_TYPE);
