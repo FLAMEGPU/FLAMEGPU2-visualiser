@@ -992,7 +992,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
     while (!feof(file)) {
         if (fscanf(file, "%s", buffer) == 1) {
             if (strcmp(buffer, MATERIAL_NAME_IDENTIFIER) == 0) {
-                if (fscanf(file, "%s", &temp) == 1) {
+                if (fscanf(file, "%s", &temp[0]) == 1) {
                     this->materials.push_back(Material(materialBuffer, static_cast<unsigned int>(materials.size())));
                     materials[materials.size()-1].setName(temp);
                     assert(materials.size() < MAX_OBJ_MATERIALS);
@@ -1030,7 +1030,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                     printf("Bad material file...");
                 }
             } else if (materials.size() && strcmp(buffer, TEX_AMBIENT_IDENTIFIER) == 0) {
-                if (fscanf(file, "%s", &temp) == 1) {
+                if (fscanf(file, "%s", &temp[0]) == 1) {
                     // auto tex = Texture2D::load(temp, modelFolder);
                     // if (tex)
                     // {
@@ -1042,7 +1042,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                     printf("Bad material file...");
                 }
             } else if (materials.size() && strcmp(buffer, TEX_DIFFUSE_IDENTIFIER) == 0) {
-                if (fscanf(file, "%s", &temp) == 1) {
+                if (fscanf(file, "%s", &temp[0]) == 1) {
                     // auto tex = Texture2D::load(temp, modelFolder);
                     // if (tex)
                     // {
@@ -1054,7 +1054,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                     printf("Bad material file...");
                 }
             } else if (materials.size() && strcmp(buffer, TEX_SPECULAR_IDENTIFIER) == 0) {
-                if (fscanf(file, "%s", &temp) == 1) {
+                if (fscanf(file, "%s", &temp[0]) == 1) {
                     // auto tex = Texture2D::load(temp, modelFolder);
                     // if (tex)
                     // {
@@ -1275,12 +1275,12 @@ void Entity::importModel(const char *path) {
     }
     // Check float/uint lengths aren't too short
     if (sizeof(float) != mask.SIZE_OF_FLOAT) {
-        fprintf(stderr, "File %s uses floats of %i bytes, this architecture has floats of %llu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
+        fprintf(stderr, "File %s uses floats of %i bytes, this architecture has floats of %lu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
         fclose(file);
         return;
     }
     if (sizeof(unsigned int) != mask.SIZE_OF_UINT) {
-        fprintf(stderr, "File %s uses uints of %i bytes, this architecture has floats of %llu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
+        fprintf(stderr, "File %s uses uints of %i bytes, this architecture has floats of %lu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
         fclose(file);
         return;
     }

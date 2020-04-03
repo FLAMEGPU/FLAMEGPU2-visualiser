@@ -51,7 +51,7 @@ FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depth, FBA stenci
     GL_CALL(glGenFramebuffers(1, &name));     {  // Assign an attachment point to each color attachment
         unsigned int i = 0;
         for (FBA c : color) {
-            if (c.Class() != FBA::Disabled) {
+            if (c.Class() != FBA::Null) {
                 colors.emplace(i++, c);
             }
         }
