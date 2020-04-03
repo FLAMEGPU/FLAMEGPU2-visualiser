@@ -1,4 +1,7 @@
 #include "Draw.h"
+
+#include <stdexcept>
+
 #include "util/StringUtils.h"
 
 const unsigned int Draw::DEFAULT_INITIAL_VBO_LENGTH = 1024;

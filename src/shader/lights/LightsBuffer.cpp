@@ -1,6 +1,7 @@
 #include "shader/lights/LightsBuffer.h"
 
 #include <memory>
+#include <stdexcept>
 
 #include "shader/lights/PointLight.h"
 #include "shader/lights/SpotLight.h"

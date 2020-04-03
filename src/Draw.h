@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <stdexcept>
 
 #include "interface/Renderable.h"
 #include "shader/Shaders.h"

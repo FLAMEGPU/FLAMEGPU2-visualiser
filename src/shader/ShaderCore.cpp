@@ -579,10 +579,18 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
     snprintf(this->shaderTag, shaderName.length() + 1, "%s", shaderName.c_str());
     return static_cast<int>(findShaderVersion(*reinterpret_cast<std::vector<const char*>*>(&shaderSources)));
 }
-#include <experimental/filesystem>
-#ifdef _MSC_VER
-#define filesystem tr2::sys
-#endif
+// If earlier than VS 2019
+// #if defined(_MSC_VER) && _MSC_VER < 1920
+// #include <filesystem>
+// using std::tr2::sys::exists;
+// using std::tr2::sys::path;
+// #else
+// // VS2019 requires this macro, as building pre c++17 cant use std::filesystem
+// #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+// #include <experimental/filesystem>
+// using std::experimental::filesystem::v1::exists;
+// using std::experimental::filesystem::v1::path;
+// #endif
 char* ShaderCore::loadShaderSource(const char* file) {
     // static std::string shadersRoot;
     // if (shadersRoot.empty()) {
@@ -590,11 +598,11 @@ char* ShaderCore::loadShaderSource(const char* file) {
     //     // Follow up tree a few layers checking for a shaders directory.
     //     shadersRoot = "./shaders/";
     //     for (unsigned int i = 0; i < 5; ++i) {
-    //         if (std::experimental::filesystem::exists(std::experimental::filesystem::path(shadersRoot)))
+    //         if (exists(path(shadersRoot)))
     //             break;
     //         shadersRoot = std::string("./.") + shadersRoot;
     //     }
-    //     if (!std::experimental::filesystem::exists(std::experimental::filesystem::path(shadersRoot)))
+    //     if (!exists(path(shadersRoot)))
     //         shadersRoot = "./";
     // }
     //  If file path is 0 it is being omitted. kinda gross

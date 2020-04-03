@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <utility>
+#include <stdexcept>
 
 #pragma warning(push, 3)
 #include <glm/gtc/type_ptr.hpp>
