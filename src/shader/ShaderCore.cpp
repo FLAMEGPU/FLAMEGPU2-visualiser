@@ -12,8 +12,7 @@ bool ShaderCore::exitOnError = false;  // Tempted to use pre-processor macros to
 
 // Constructors/Destructors
 ShaderCore::ShaderCore()
-    : programId(-1)
-    , shaderTag("") { }
+    : programId(-1), shaderTag("") {} // TODO linux warning ISO C++ forbids converting a string constant to ‘char*’
 ShaderCore::ShaderCore(const ShaderCore &other)
     : ShaderCore() {
     // Copy across all member variables: e.g uniforms, textures, buffers etc
@@ -43,7 +42,7 @@ void ShaderCore::reload() {
     GL_CHECK();
     // Clear shadertag
     if (this->shaderTag[0] != '\0') delete[] this->shaderTag;
-    this->shaderTag = "";
+    this->shaderTag = ""; // TODO linux warning ISO C++ forbids converting a string constant to ‘char*’
     while (true) {  // Iterate until shader compilation has been corrected
         // Create temporary shader program
         GLuint t_programId = GL_CALL(glCreateProgram());
@@ -581,7 +580,7 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
     snprintf(this->shaderTag, shaderName.length() + 1, "%s", shaderName.c_str());
     return static_cast<int>(findShaderVersion(*reinterpret_cast<std::vector<const char*>*>(&shaderSources)));
 }
-#include <filesystem>
+#include <experimental/filesystem>
 #ifdef _MSC_VER
 #define filesystem tr2::sys
 #endif
@@ -592,11 +591,11 @@ char* ShaderCore::loadShaderSource(const char* file) {
     //     // Follow up tree a few layers checking for a shaders directory.
     //     shadersRoot = "./shaders/";
     //     for (unsigned int i = 0; i < 5; ++i) {
-    //         if (std::filesystem::exists(std::filesystem::path(shadersRoot)))
+    //         if (std::experimental::filesystem::exists(std::experimental::filesystem::path(shadersRoot)))
     //             break;
     //         shadersRoot = std::string("./.") + shadersRoot;
     //     }
-    //     if (!std::filesystem::exists(std::filesystem::path(shadersRoot)))
+    //     if (!std::experimental::filesystem::exists(std::experimental::filesystem::path(shadersRoot)))
     //         shadersRoot = "./";
     // }
     //  If file path is 0 it is being omitted. kinda gross

@@ -1,5 +1,5 @@
 #include "Resources.h"
-#include <filesystem>
+#include <experimental/filesystem>
 #ifdef _MSC_VER
 #define filesystem tr2::sys
 #endif
@@ -9,15 +9,15 @@
 CMRC_DECLARE(resources);
 
 namespace {
-    void recursive_create_dir(const std::filesystem::path &dir) {
-        if (std::filesystem::exists(dir)) {
+    void recursive_create_dir(const std::experimental::filesystem::path &dir) {
+        if (std::experimental::filesystem::exists(dir)) {
             return;
         }
-        std::filesystem::path parent_dir = dir.parent_path();
-        if (!std::filesystem::exists(parent_dir)) {
+        std::experimental::filesystem::path parent_dir = dir.parent_path();
+        if (!std::experimental::filesystem::exists(parent_dir)) {
             recursive_create_dir(parent_dir);
         }
-        std::filesystem::create_directory(dir);
+        std::experimental::filesystem::create_directory(dir);
     }
 }  // namespace
 
@@ -28,14 +28,14 @@ FILE *Resources::fopen(const char * filename, const char *mode) {
 std::string Resources::locateFile(const std::string &path) {
     // File exists in working directory, use that
     {
-        if (std::filesystem::exists(std::filesystem::path(path)))
+        if (std::experimental::filesystem::exists(std::experimental::filesystem::path(path)))
             return path;
     }
-    std::filesystem::path module_dir_path = std::filesystem::path(getModuleDir());
+    std::experimental::filesystem::path module_dir_path = std::experimental::filesystem::path(getModuleDir());
     module_dir_path += path;
     // See if file exists in module dir, use that
     {
-        if (std::filesystem::exists(module_dir_path)) {
+        if (std::experimental::filesystem::exists(module_dir_path)) {
             return module_dir_path.string();
         } else {
             // file doesn't exist in module dir, so create it there
@@ -45,7 +45,7 @@ std::string Resources::locateFile(const std::string &path) {
                 auto resource_file = fs.open(path);
                 // open a file to module_dir_path
                 // Check the output directory exists
-                std::filesystem::path output_dir = module_dir_path;
+                std::experimental::filesystem::path output_dir = module_dir_path;
                 output_dir.remove_filename();
                 recursive_create_dir(output_dir);
                 // we will extract the file to here
@@ -74,7 +74,7 @@ std::string Resources::getModuleDir() {
 //    if (hModule) {
 //        char out_path[MAX_PATH];
 //        GetModuleFileName(hModule, out_path, sizeof(out_path));
-//        std::filesystem::path module_path = std::filesystem::path(out_path);
+//        std::experimental::filesystem::path module_path = std::experimental::filesystem::path(out_path);
 //        module_path.remove_filename();
 //        return module_path.string();
 //    } else {
@@ -87,9 +87,9 @@ std::string Resources::getModuleDir() {
 }
 
 std::string Resources::toModuleDir(const std::string &path) {
-    std::filesystem::path output_dir = Resources::getModuleDir();
+    std::experimental::filesystem::path output_dir = Resources::getModuleDir();
     output_dir += path;
-    const std::filesystem::path output_path = output_dir;
+    const std::experimental::filesystem::path output_path = output_dir;
     output_dir.remove_filename();
     recursive_create_dir(output_dir);
     return output_path.string();

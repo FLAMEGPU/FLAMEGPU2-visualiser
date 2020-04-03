@@ -41,7 +41,7 @@ class Overlay {
     void render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo);
     unsigned int getWidth() const { return dimensions.x; }
     unsigned int getHeight() const { return dimensions.y;}
-    std::shared_ptr<Shaders> Overlay::getShaders() const { return shaders; }
+    std::shared_ptr<Shaders> getShaders() const { return shaders; }
 
     /**
      * Sets whether the overlay should be rendered or not

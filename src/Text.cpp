@@ -11,6 +11,9 @@
 
 #include "shader/Shaders.h"
 
+// TODO: Gracefully handle missing fonts
+// TODO: cross platform font loading.
+
 namespace Stock {
 /**
  * Fast access fonts available to most Windows machines

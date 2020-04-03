@@ -132,7 +132,7 @@ if (UNIX)
       message(FATAL_ERROR "glew is required for building, install it via your package manager.\n"
                           "e.g. sudo apt install libglew-dev")
     endif ()
-    find_package(FREETYPE)
+    find_package(Freetype)
     if (NOT FREETYPE_FOUND)
       message(FATAL_ERROR "freetype is required for building, install it via your package manager.\n"
                           "e.g. sudo apt install libfreetype-dev")
@@ -175,6 +175,12 @@ else()
 endif ()
 
 
+# GCC requires -lpthreads for std::thread
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Threads REQUIRED)
+
+
 # Prepare list of include files
 SET(VISUALISER_INCLUDE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/FLAMEGPU_Visualisation.h
@@ -213,8 +219,8 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/lights/LightsBuffer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/lights/PointLight.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/lights/PointLight.inl
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/lights/Spotlight.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/lights/Spotlight.inl
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/lights/SpotLight.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/lights/SpotLight.inl
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/ShaderCore.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/ShaderHeader.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/Shaders.h
@@ -225,7 +231,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/TextureBuffer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/TextureCubeMap.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/cuda.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/util/GLCheck.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/util/GLcheck.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/StringUtils.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Axis.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Draw.h
@@ -266,8 +272,6 @@ SET(VISUALISER_ALL
     ${VISUALISER_SRC}
 )
 
-# Define output
-add_library("${PROJECT_NAME}" STATIC ${VISUALISER_ALL})
 
 # Use C++14 standard - std::make_unique is 14 not 11
 # Specify using C++14 standard
@@ -278,6 +282,8 @@ endif ()
 if (NOT UNIX)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 endif ()
+# Define output
+add_library("${PROJECT_NAME}" STATIC ${VISUALISER_ALL})
 # Set up include dirs
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/glm-src)
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
@@ -291,12 +297,24 @@ target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR
 
 # Add the targets we depend on (this does link and include)
 # This propagates to any project that uses this as a dependency
-target_link_libraries("${PROJECT_NAME}" "legacy_stdio_definitions") # This won't be required if we rebuild freetype with newer than vs2013
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_link_libraries("${PROJECT_NAME}" "legacy_stdio_definitions") # This won't be required if we rebuild freetype with newer than vs2013
+endif()
+
+# If gcc, need to add flag for std::experimental::filesystem
+message("CMAKE_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID}" )
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_link_libraries("${PROJECT_NAME}" "-lstdc++fs")
+endif()
+
+
 target_link_libraries("${PROJECT_NAME}" "${SDL2_LIBRARIES}")
 target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
 target_link_libraries("${PROJECT_NAME}" freetype)
 target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
 target_link_libraries("${PROJECT_NAME}" OpenGL::GLU)
+target_link_libraries("${PROJECT_NAME}" Threads::Threads)
+
 # Enable parallel compilation
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")

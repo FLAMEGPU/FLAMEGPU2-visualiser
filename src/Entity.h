@@ -106,7 +106,7 @@ class Entity : public Renderable {
     /**
      * Ensure updateShaders() is called after making changes to shaders returned by this method
      */
-    std::unique_ptr<ShadersVec> Entity::getShaders(unsigned int shaderIndex = 0) const;
+    std::unique_ptr<ShadersVec> getShaders(unsigned int shaderIndex = 0) const;
     void setViewMatPtr(glm::mat4 const *viewMat) override;
     using Renderable::setViewMatPtr;
     void setProjectionMatPtr(glm::mat4 const *projectionMat) override;
