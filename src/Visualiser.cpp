@@ -470,7 +470,7 @@ void Visualiser::updateFPS() {
     //  If it's been more than a second, do something.
     if (this->currentTime > this->previousTime + ONE_SECOND_MS) {
         //  Calculate average fps.
-        double fps = this->frameCount / static_cast<double>(this->currentTime - this->previousTime) * ONE_SECOND_MS;
+        // double fps = this->frameCount / static_cast<double>(this->currentTime - this->previousTime) * ONE_SECOND_MS;
         // Update the FPS string
         // this->fpsDisplay->setString("%.3f fps", fps);
         //  reset values;

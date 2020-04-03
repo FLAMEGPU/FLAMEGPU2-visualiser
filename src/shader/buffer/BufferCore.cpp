@@ -10,7 +10,7 @@ BufferCore::BufferCore(GLenum bufferType, GLint bindPoint, size_t size, void* da
     , bufferName(0)
     , bufferBindPoint(bindPoint)
     , bufferType(bufferType) {
-    assert(this->size < (size_t)maxSize(bufferType));
+    assert(this->size < static_cast<size_t>(maxSize(bufferType)));
     GL_CALL(glGenBuffers(1, &bufferName));
     GL_CALL(glBindBuffer(bufferType, bufferName));
     GL_CALL(glBindBufferBase(bufferType, bufferBindPoint, bufferName));
@@ -22,7 +22,7 @@ BufferCore::~BufferCore() {
 }
 void BufferCore::setData(void *data, size_t _size) {
     this->size = _size == 0 ? this->size : _size;
-    assert(this->size < (size_t)maxSize(bufferType));
+    assert(this->size < static_cast<size_t>(maxSize(bufferType)));
     GL_CALL(glBindBuffer(bufferType, bufferName));
     GL_CALL(glBufferData(bufferType, this->size, data, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(bufferType, 0));

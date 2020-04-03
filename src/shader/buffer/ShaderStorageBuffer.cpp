@@ -12,7 +12,7 @@ ShaderStorageBuffer::~ShaderStorageBuffer() {
 }
 
 GLint ShaderStorageBuffer::allocateBindPoint() {
-    if (allocatedBindPoints.size() == MaxBuffers()) {
+    if (allocatedBindPoints.size() == size_t(MaxBuffers())) {
         // TODO: Better exception implementation.
         // char buff[1024];
         // snprintf(buff, sizeof(buff), "Shader Storage Buffer Bindings exceeded!\nLimit = %d\n\nsdl_exp ShaderStorageBuffer objs are not designed for sharing buffer bindings.", MaxBuffers());

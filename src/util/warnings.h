@@ -38,4 +38,4 @@
 
 
 
-#endif // SRC_UTIL_WARNINGS_H_
+#endif  // SRC_UTIL_WARNINGS_H_

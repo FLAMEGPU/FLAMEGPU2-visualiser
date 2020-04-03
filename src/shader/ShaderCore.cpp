@@ -4,12 +4,12 @@
 #include "util/warnings.h"
 DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>
-DISABLE_WARNING_POP 
+DISABLE_WARNING_POP
 #include "util/StringUtils.h"
 #include "shader/Shaders.h"
 #include "util/Resources.h"
 
-bool ShaderCore::exitOnError = false; // Tempted to use pre-processor macros to swap this default to true on release mode
+bool ShaderCore::exitOnError = false;  // Tempted to use pre-processor macros to swap this default to true on release mode
 // Constructors/Destructors
 ShaderCore::ShaderCore()
     : programId(-1), shaderTag(const_cast<char *>("")) { }
