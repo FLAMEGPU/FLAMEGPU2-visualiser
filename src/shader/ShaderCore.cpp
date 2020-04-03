@@ -9,10 +9,9 @@
 #include "util/Resources.h"
 
 bool ShaderCore::exitOnError = false;  // Tempted to use pre-processor macros to swap this default to true on release mode
-
 // Constructors/Destructors
 ShaderCore::ShaderCore()
-    : programId(-1), shaderTag("") {} // TODO linux warning ISO C++ forbids converting a string constant to ‘char*’
+    : programId(-1), shaderTag(const_cast<char *>("")) { }
 ShaderCore::ShaderCore(const ShaderCore &other)
     : ShaderCore() {
     // Copy across all member variables: e.g uniforms, textures, buffers etc
@@ -42,7 +41,7 @@ void ShaderCore::reload() {
     GL_CHECK();
     // Clear shadertag
     if (this->shaderTag[0] != '\0') delete[] this->shaderTag;
-    this->shaderTag = ""; // TODO linux warning ISO C++ forbids converting a string constant to ‘char*’
+    this->shaderTag = const_cast<char *>("");
     while (true) {  // Iterate until shader compilation has been corrected
         // Create temporary shader program
         GLuint t_programId = GL_CALL(glCreateProgram());
