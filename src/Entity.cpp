@@ -1258,7 +1258,7 @@ void Entity::importModel(const char *path) {
     ExportMask mask;
     size_t elementsRead = 0;
     elementsRead = fread(&mask, sizeof(ExportMask), 1, file);
-    if(elementsRead != 1){
+    if (elementsRead != 1) {
         fprintf(stderr, "Failed to read FILE TYPE FLAG from file header %s. Aborting import\n", importPath.c_str());
         fclose(file);
         return;

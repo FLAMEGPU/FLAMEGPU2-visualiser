@@ -627,7 +627,7 @@ char* ShaderCore::loadShaderSource(const char* file) {
         char* buf = static_cast<char*>(malloc(length + 1));  //  Allocate a buffer for the entire length of the file and a null terminator
         fseek(fptr, 0, SEEK_SET);
         size_t elementsRead = fread(buf, length, 1, fptr);
-        if(elementsRead != 1){
+        if (elementsRead != 1) {
             fprintf(stdout, "Error: Incorrect number of elements read for resource %s\n", file);
         }
         fclose(fptr);
