@@ -766,7 +766,7 @@ exit_loop: {}
             if (mtllib)
                 break;
             // Check for mtllib tag
-            for (int i = 1; i < (sizeof(mtllib_tag) / sizeof(c)) - 1; i++) {
+            for (unsigned int i = 1; i < (sizeof(mtllib_tag) / sizeof(c)) - 1; i++) {
                 if ((c = static_cast<char>(fgetc(file))) != mtllib_tag[i]) {
                     // Break if tag ends early
                     break;
@@ -800,7 +800,7 @@ exit_loop: {}
             if (usemtl)
                 break;
             // Check for usemtl tag
-            for (int i = 1; i < (sizeof(usemtl_tag) / sizeof(c)) - 1; i++) {
+            for (unsigned int i = 1; i < (sizeof(usemtl_tag) / sizeof(c)) - 1; i++) {
                 if ((c = static_cast<char>(fgetc(file))) != usemtl_tag[i]) {
                     // Break if tag ends early
                     break;

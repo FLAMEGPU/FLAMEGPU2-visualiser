@@ -197,6 +197,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config/AgentStateConfig.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config/ModelConfig.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/Resources.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/util/warnings.h
     # .h from sdl_exp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/camera/NoClipCamera.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/interface/Camera.h

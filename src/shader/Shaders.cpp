@@ -5,11 +5,13 @@
 #include <utility>
 #include <stdexcept>
 
-#pragma warning(push, 3)
+#include "util/warnings.h"
+
+DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
-#pragma warning(pop)
+DISABLE_WARNING_POP
 
 const char *Shaders::MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
 const char *Shaders::PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";

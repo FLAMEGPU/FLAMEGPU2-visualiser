@@ -1,8 +1,9 @@
 #include "camera/NoClipCamera.h"
+#include "util/warnings.h"
 
-#pragma warning(push, 3)
+DISABLE_WARNING_PUSH
 #include <glm/gtx/rotate_vector.hpp>
-#pragma warning(pop)
+DISABLE_WARNING_POP
 
 #include "util/GLcheck.h"
 

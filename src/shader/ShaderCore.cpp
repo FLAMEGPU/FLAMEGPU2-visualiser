@@ -1,14 +1,15 @@
 #include "shader/ShaderCore.h"
 #include <cstdlib>  // < _splitpath() Windows only, need to rewrite linux ver
 #include <regex>
-#pragma warning(push, 3)
+#include "util/warnings.h"
+DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>
-#pragma warning(pop)
+DISABLE_WARNING_POP 
 #include "util/StringUtils.h"
 #include "shader/Shaders.h"
 #include "util/Resources.h"
 
-bool ShaderCore::exitOnError = false;  // Tempted to use pre-processor macros to swap this default to true on release mode
+bool ShaderCore::exitOnError = false; // Tempted to use pre-processor macros to swap this default to true on release mode
 // Constructors/Destructors
 ShaderCore::ShaderCore()
     : programId(-1), shaderTag(const_cast<char *>("")) { }
