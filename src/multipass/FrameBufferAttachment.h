@@ -39,7 +39,7 @@ class FrameBufferAttachment {
         , internalFormat(internalFormat)
         , pixelFormat(pixelFormat)
         , storageType(storageType)
-        , rt(rt) { }
+        , rt(tex) { }
     /**
      * Which class of attachment is it: Color, Depth, Stencil or DepthStencil
      */
