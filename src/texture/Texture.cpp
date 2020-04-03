@@ -1,6 +1,7 @@
 #include "texture/Texture.h"
 #include <cassert>
 #include <algorithm>
+#include "util\StringUtils.h"
 
 // Ensure these remain lowercase without prepended '.'
 const char* Texture::IMAGE_EXTS[] = {
@@ -392,7 +393,7 @@ void Texture::setTexture(const void *data, const glm::uvec2 &dimensions, glm::iv
 
 bool Texture::supportsExtension(const std::string &fileExtension) {
     std::string _fileExtension;
-    std::transform(fileExtension.begin(), fileExtension.end(), _fileExtension.begin(), ::tolower);
+    su::toLower(fileExtension);
     // Compare each extension with and without . prepended
     for (unsigned int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*); ++i) {
         if (_fileExtension.compare(IMAGE_EXTS[i]) == 0)

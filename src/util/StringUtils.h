@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <cstdio>
+#include <cctype>
 #include <memory>
 
 namespace su {
@@ -21,10 +22,13 @@ struct MatchPathSeparator {
     }
 };
 #endif
+inline char toLower_char(char c) {
+    return static_cast<char>(std::tolower(c));
+}
 }  // namespace internal
 inline std::string toLower(const std::string &in) {
     std::string out(in.size(), '\0');  // Create empty string of null terminating
-    std::transform(in.begin(), in.end(), out.begin(), ::tolower);
+    std::transform(in.begin(), in.end(), out.begin(), su::internal::toLower_char);
     return out;
 }
 inline bool beginsWith(const std::string &str, const std::string &begin, bool caseSensitive = true) {
