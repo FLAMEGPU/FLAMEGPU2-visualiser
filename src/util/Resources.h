@@ -18,7 +18,7 @@ class Resources {
 
  private:
     static std::string getModuleDir();
-    static std::string Resources::locateFile(const std::string &path);
+    static std::string locateFile(const std::string &path);
 };
 
 #endif  // SRC_UTIL_RESOURCES_H_

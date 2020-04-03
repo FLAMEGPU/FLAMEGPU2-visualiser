@@ -1,5 +1,4 @@
 #include "texture/TextureCubeMap.h"
-#include <cassert>
 #include <glm/gtx/component_wise.hpp>
 
 /**
@@ -29,10 +28,10 @@ std::unordered_map<std::string, std::weak_ptr<const TextureCubeMap>> TextureCube
 //     allocateTextureImmutable(faceDimensions);
 //     for (unsigned int i = 0; i < sizeof(FACES) / sizeof(CubeMapParts); i++)
 //     {
-//         assert(images[i]);
-//         assert(images[i]->w == faceDimensions.x);  // All must share dimensions and pixel format
-//         assert(images[i]->h == faceDimensions.y);
-//         assert(getFormat(images[i]) == format);
+//         visassert(images[i]);
+//         visassert(images[i]->w == faceDimensions.x);  // All must share dimensions and pixel format
+//         visassert(images[i]->h == faceDimensions.y);
+//         visassert(getFormat(images[i]) == format);
 //         setTexture(images[i]->pixels, faceDimensions, glm::ivec2(0), FACES[i].target);
 //     }
 //     applyOptions();
@@ -134,7 +133,7 @@ GLuint TextureCubeMap::genTextureUnit() {
     GLint maxUnits;
     GL_CALL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits));  //  192 on Modern GPUs, spec minimum 80
 #ifdef _DEBUG
-    assert(texUnit < static_cast<GLuint>(maxUnits));
+    visassert(texUnit < static_cast<GLuint>(maxUnits));
 #endif
     if (texUnit >= static_cast<GLuint>(maxUnits)) {
         texUnit = 1;

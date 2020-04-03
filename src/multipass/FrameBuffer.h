@@ -183,7 +183,7 @@ class FrameBuffer : public FBuffer {
      * Disables filtering for the specified color attachment's texture
      * @param attachPt The attachment point to disable filtering for, default 0 (aka single color texture)
      */
-    void FrameBuffer::disableFiltering(GLuint attachPt = 0);
+    void disableFiltering(GLuint attachPt = 0);
 
  private:
     inline GLenum GL_TEXTURE_TYPE() const { return samples == 0 ? GL_TEXTURE_2D : GL_TEXTURE_2D_MULTISAMPLE; }

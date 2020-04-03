@@ -5,21 +5,14 @@
 
 #include <cstdio>
 #include <cstdlib>
-
-
-// Define EXIT_ON_ERROR to cause the program to exit when a GL error occurs
-// Define FORCE_OPTIMUS to force dedicated GPU usage in laptops
+#include "VisException.h"
 
 #ifdef _DEBUG  // VS standard debug flag
 
 inline static void HandleGLError(const char *file, int line) {
     GLuint error = glGetError();
     if (error != GL_NO_ERROR) {
-        printf("%s(%i) GL Error Occurred;\n%s\n", file, line, reinterpret_cast<const char *>(gluErrorString(error)));
-#if EXIT_ON_ERROR
-        getchar();
-        exit(1);
-#endif
+        throw GLError("%s(%i) GL Error Occurred;\n%s\n", file, line, reinterpret_cast<const char *>(gluErrorString(error)));
     }
 }
 
@@ -38,9 +31,7 @@ inline static void InitGlew() {
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
     if (GLEW_OK != err) {
-        fprintf(stderr, "Error: %s\n", reinterpret_cast<const char *>(glewGetErrorString(err)));
-        getchar();
-        exit(1);
+        THROW GLError("Glew Init failed;\n%s\n", reinterpret_cast<const char *>(glewGetErrorString(err)));
     }
     glGetError();  // This error can be ignored, GL_INVALID_ENUMERANT
 }

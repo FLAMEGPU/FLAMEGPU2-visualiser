@@ -1,19 +1,18 @@
 #include "shader/ShaderCore.h"
 #include <cstdlib>  // < _splitpath() Windows only, need to rewrite linux ver
 #include <regex>
-#pragma warning(push, 3)
+#include "util/warnings.h"
+DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>
-#pragma warning(pop)
+DISABLE_WARNING_POP
 #include "util/StringUtils.h"
 #include "shader/Shaders.h"
 #include "util/Resources.h"
 
 bool ShaderCore::exitOnError = false;  // Tempted to use pre-processor macros to swap this default to true on release mode
-
 // Constructors/Destructors
 ShaderCore::ShaderCore()
-    : programId(-1)
-    , shaderTag("") { }
+    : programId(-1), shaderTag(const_cast<char *>("")) { }
 ShaderCore::ShaderCore(const ShaderCore &other)
     : ShaderCore() {
     // Copy across all member variables: e.g uniforms, textures, buffers etc
@@ -43,7 +42,7 @@ void ShaderCore::reload() {
     GL_CHECK();
     // Clear shadertag
     if (this->shaderTag[0] != '\0') delete[] this->shaderTag;
-    this->shaderTag = "";
+    this->shaderTag = const_cast<char *>("");
     while (true) {  // Iterate until shader compilation has been corrected
         // Create temporary shader program
         GLuint t_programId = GL_CALL(glCreateProgram());
@@ -189,7 +188,9 @@ void ShaderCore::prepare(bool autoClear) {
             }
             // Updated textures use unique buffers, if for some reason this fails we have exceeded GL_MAX_COMBINED_TEXTURE_UNITS
             // and must start reusing texture units (for the given texture type) based on a static flag/counter
-            assert(static_cast<GLuint>(whichID) == utd.second.name);
+            if (static_cast<GLuint>(whichID) != utd.second.name) {
+                THROW VisAssert("ShaderCore::prepare(): Buffer binding point does not match!\n");
+            }
         }
         // Reset to texture unit 0 for doing work
         GL_CALL(glActiveTexture(GL_TEXTURE0));
@@ -439,7 +440,9 @@ bool ShaderCore::addTexture(const char *textureNameInShader, GLenum type, GLint 
             a = textures.erase(a);
         } else {
             // Check for collision of texture unit
-            assert(a->first != static_cast<GLint>(textureUnit));
+            if (a->first == static_cast<GLint>(textureUnit)) {
+                THROW VisAssert("Multiple textures in shader cannot use the same texture unit!\n");
+            }
             ++a;
         }
     }
@@ -581,10 +584,18 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
     snprintf(this->shaderTag, shaderName.length() + 1, "%s", shaderName.c_str());
     return static_cast<int>(findShaderVersion(*reinterpret_cast<std::vector<const char*>*>(&shaderSources)));
 }
-#include <filesystem>
-#ifdef _MSC_VER
-#define filesystem tr2::sys
-#endif
+// If earlier than VS 2019
+// #if defined(_MSC_VER) && _MSC_VER < 1920
+// #include <filesystem>
+// using std::tr2::sys::exists;
+// using std::tr2::sys::path;
+// #else
+// // VS2019 requires this macro, as building pre c++17 cant use std::filesystem
+// #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+// #include <experimental/filesystem>
+// using std::experimental::filesystem::v1::exists;
+// using std::experimental::filesystem::v1::path;
+// #endif
 char* ShaderCore::loadShaderSource(const char* file) {
     // static std::string shadersRoot;
     // if (shadersRoot.empty()) {
@@ -592,11 +603,11 @@ char* ShaderCore::loadShaderSource(const char* file) {
     //     // Follow up tree a few layers checking for a shaders directory.
     //     shadersRoot = "./shaders/";
     //     for (unsigned int i = 0; i < 5; ++i) {
-    //         if (std::filesystem::exists(std::filesystem::path(shadersRoot)))
+    //         if (exists(path(shadersRoot)))
     //             break;
     //         shadersRoot = std::string("./.") + shadersRoot;
     //     }
-    //     if (!std::filesystem::exists(std::filesystem::path(shadersRoot)))
+    //     if (!exists(path(shadersRoot)))
     //         shadersRoot = "./";
     // }
     //  If file path is 0 it is being omitted. kinda gross
@@ -619,7 +630,10 @@ char* ShaderCore::loadShaderSource(const char* file) {
         int64_t length = ftell(fptr);
         char* buf = static_cast<char*>(malloc(length + 1));  //  Allocate a buffer for the entire length of the file and a null terminator
         fseek(fptr, 0, SEEK_SET);
-        fread(buf, length, 1, fptr);
+        size_t elementsRead = fread(buf, length, 1, fptr);
+        if (elementsRead != 1) {
+            fprintf(stdout, "Error: Incorrect number of elements read for resource %s\n", file);
+        }
         fclose(fptr);
         buf[length] = '\0';  //  Null terminator
         return buf;
@@ -673,7 +687,7 @@ bool ShaderCore::checkProgramLinkError(const GLuint _programId) const {
     }
     return true;
 }
-unsigned int ShaderCore::findShaderVersion(std::vector<const char*> shaderSources) {
+unsigned int ShaderCore::findShaderVersion(std::vector<const char*> const& shaderSources) {
     static std::regex versionRegex("#version ([0-9]+)", std::regex::ECMAScript | std::regex_constants::icase);
     std::cmatch match;
     for (auto shaderSource : shaderSources)

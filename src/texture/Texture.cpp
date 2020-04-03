@@ -1,6 +1,6 @@
 #include "texture/Texture.h"
-#include <cassert>
 #include <algorithm>
+#include "util/StringUtils.h"
 
 // Ensure these remain lowercase without prepended '.'
 const char* Texture::IMAGE_EXTS[] = {
@@ -27,27 +27,27 @@ const uint64_t Texture::FILTER_MIN_LINEAR_MIPMAP_LINEAR    = 1ull << 6;
 GLenum Texture::filterMinOption() const {
     GLenum rtn = GL_INVALID_ENUM;
     if ((options & FILTER_MIN_NEAREST) == FILTER_MIN_NEAREST) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_NEAREST;
     }
     if ((options & FILTER_MIN_LINEAR) == FILTER_MIN_LINEAR) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_LINEAR;
     }
     if ((options & FILTER_MIN_NEAREST_MIPMAP_NEAREST) == FILTER_MIN_NEAREST_MIPMAP_NEAREST) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_NEAREST_MIPMAP_NEAREST;
     }
     if ((options & FILTER_MIN_LINEAR_MIPMAP_NEAREST) == FILTER_MIN_LINEAR_MIPMAP_NEAREST) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_LINEAR_MIPMAP_NEAREST;
     }
     if ((options & FILTER_MIN_NEAREST_MIPMAP_LINEAR) == FILTER_MIN_NEAREST_MIPMAP_LINEAR) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_NEAREST_MIPMAP_LINEAR;
     }
     if ((options & FILTER_MIN_LINEAR_MIPMAP_LINEAR) == FILTER_MIN_LINEAR_MIPMAP_LINEAR) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_LINEAR_MIPMAP_LINEAR;
     }
     return rtn == GL_INVALID_ENUM ? GL_NEAREST_MIPMAP_LINEAR : rtn;  // If none specified, return GL default
@@ -165,7 +165,7 @@ Texture::Texture(GLenum type, GLuint textureUnit, const Format &format, const st
     , format(format)
     , options(options)
     , externalTex(glName != 0) {
-    assert(textureUnit != 0);  // We reserve texture unit 0 for texture commands, because if we bind a texture to change settings we would knock the desired one out of the unit
+    visassert(textureUnit != 0);  // We reserve texture unit 0 for texture commands, because if we bind a texture to change settings we would knock the desired one out of the unit
     // Bind to texture unit (cant use bind() as includes debug call virtual fn)
 
     GL_CALL(glActiveTexture(GL_TEXTURE0 + this->textureUnit));
@@ -392,7 +392,7 @@ void Texture::setTexture(const void *data, const glm::uvec2 &dimensions, glm::iv
 
 bool Texture::supportsExtension(const std::string &fileExtension) {
     std::string _fileExtension;
-    std::transform(fileExtension.begin(), fileExtension.end(), _fileExtension.begin(), ::tolower);
+    su::toLower(fileExtension);
     // Compare each extension with and without . prepended
     for (unsigned int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*); ++i) {
         if (_fileExtension.compare(IMAGE_EXTS[i]) == 0)
@@ -415,7 +415,7 @@ void Texture::bind() const {
 
 // Texture::Format Texture::getFormat(std::shared_ptr<SDL_Surface> image)
 // {
-//     assert(image);
+//     visassert(image);
 //     switch (image->format->format)
 //     {
 //     case SDL_PIXELFORMAT_RGB332:
@@ -482,7 +482,7 @@ void Texture::bind() const {
 //     case SDL_PIXELFORMAT_INDEX8:
 //     default:
 //         fprintf(stderr, "Unable to handle SDL_PIXELFORMAT: %d\n", image->format->format);
-//         assert(false);
+//         visassert(false);
 //     }
 //     return Format(0, 0, 0, 0);
 // }

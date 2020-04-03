@@ -1,7 +1,6 @@
 #include "shader/buffer/BufferCore.h"
 
 #include <memory>
-#include <cassert>
 
 #include "util/GLcheck.h"
 
@@ -10,7 +9,9 @@ BufferCore::BufferCore(GLenum bufferType, GLint bindPoint, size_t size, void* da
     , bufferName(0)
     , bufferBindPoint(bindPoint)
     , bufferType(bufferType) {
-    assert(this->size < maxSize(bufferType));
+    if (this->size > maxSize(bufferType)) {
+        THROW VisAssert("BufferCore::BufferCore(): Size (%u) exceeds max buffer size (%u)!\n", this->size, maxSize(bufferType));
+    }
     GL_CALL(glGenBuffers(1, &bufferName));
     GL_CALL(glBindBuffer(bufferType, bufferName));
     GL_CALL(glBindBufferBase(bufferType, bufferBindPoint, bufferName));
@@ -22,13 +23,18 @@ BufferCore::~BufferCore() {
 }
 void BufferCore::setData(void *data, size_t _size) {
     this->size = _size == 0 ? this->size : _size;
-    assert(this->size < maxSize(bufferType));
+    if (this->size > maxSize(bufferType)) {
+        THROW VisAssert("BufferCore::setData(): Size (%u) exceeds max buffer size (%u)!\n", this->size, maxSize(bufferType));
+    }
     GL_CALL(glBindBuffer(bufferType, bufferName));
     GL_CALL(glBufferData(bufferType, this->size, data, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(bufferType, 0));
 }
 void BufferCore::setData(void *data, size_t _size, size_t offset) {
-    assert(_size + offset <= this->size);
+    visassert(_size + offset <= this->size);
+    if (_size + offset > maxSize(bufferType)) {
+        THROW VisAssert("BufferCore::setData(): _size (%u) + offset (%u) exceeds max buffer size (%u)!\n", _size, offset, maxSize(bufferType));
+    }
     GL_CALL(glBindBuffer(bufferType, bufferName));
     GL_CALL(glBufferSubData(bufferType, offset, _size, reinterpret_cast<void*>(data)));
     GL_CALL(glBindBuffer(bufferType, 0));
