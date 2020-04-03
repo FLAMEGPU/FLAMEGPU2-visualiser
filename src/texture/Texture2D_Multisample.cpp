@@ -31,7 +31,7 @@ GLuint Texture2D_Multisample::genTextureUnit() {
     GLint maxUnits;
     GL_CALL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits));  // 192 on Modern GPUs, spec minimum 80
 #ifdef _DEBUG
-    assert(texUnit < static_cast<GLuint>(maxUnits));
+    visassert(texUnit < static_cast<GLuint>(maxUnits));
 #endif
     if (texUnit >= static_cast<GLuint>(maxUnits)) {
         texUnit = 1;

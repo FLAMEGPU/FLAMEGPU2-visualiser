@@ -33,9 +33,9 @@ Visualiser::Visualiser(unsigned int windowWidth = DEFAULT_WINDOW_WIDTH, unsigned
     , fpsDisplay(nullptr) {
     this->isInitialised = this->init();
 
-    fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
-    fpsDisplay->setUseAA(false);
-    hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
+    // fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
+    // fpsDisplay->setUseAA(false);
+    // hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
 }
 Visualiser::~Visualiser() {
     this->close();
@@ -78,6 +78,7 @@ void Visualiser::join() {
     }
 }
 void Visualiser::stop() {
+    printf("Visualiser::stop()\n");
     this->continueRender = false;
 }
 void Visualiser::run() {
@@ -106,8 +107,7 @@ void Visualiser::run() {
         } else {
             int err = SDL_GL_MakeCurrent(this->window, this->context);
             if (err != 0) {
-                fprintf(stderr, "sdl: %s\n", SDL_GetError());
-                assert(false);
+                THROW VisAssert("Visualiser::run(): SDL_GL_MakeCurrent failed!\n", SDL_GetError());
             }
             GL_CHECK();
             this->resizeWindow();
@@ -286,9 +286,9 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
 
     //  Copy Data
     if (as.x_var && as.x_var->elementCount >= buffLen) {  //  This may fail for a single frame occasionally
-        assert(_cudaMemcpyDeviceToDevice(as.x_var->d_mappedPointer, d_x, buffLen * sizeof(float)));
-        assert(_cudaMemcpyDeviceToDevice(as.y_var->d_mappedPointer, d_y, buffLen * sizeof(float)));
-        assert(_cudaMemcpyDeviceToDevice(as.z_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
+        visassert(_cudaMemcpyDeviceToDevice(as.x_var->d_mappedPointer, d_x, buffLen * sizeof(float)));
+        visassert(_cudaMemcpyDeviceToDevice(as.y_var->d_mappedPointer, d_y, buffLen * sizeof(float)));
+        visassert(_cudaMemcpyDeviceToDevice(as.z_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
     }
 }
 //  Used in method above
@@ -384,18 +384,21 @@ void Visualiser::resizeWindow() {
 }
 void Visualiser::close() {
     continueRender = false;
+    if (this->background_thread) {
+        this->background_thread->join();
+        delete this->background_thread;
+    }
     //  This really shouldn't run if we're not the host thread, but we don't manage the render loop thread
-    assert(this->window);  // There should always be a window, it might just be hidden
-    SDL_GL_MakeCurrent(this->window, this->context);
-    // Delete objects before we delete the GL context!
-    fpsDisplay.reset();
-    this->hud->clear();
-    // if (this->scene) {
-    //     this->scene.reset();
-    // }
-    SDL_DestroyWindow(this->window);
-    this->window = nullptr;
-    SDL_GL_DeleteContext(this->context);
+    if (this->window != nullptr) {
+        SDL_GL_MakeCurrent(this->window, this->context);
+        // Delete objects before we delete the GL context!
+        deallocateGLObjects();
+        SDL_DestroyWindow(this->window);
+        this->window = nullptr;
+    }
+    if (this->context != nullptr) {
+        SDL_GL_DeleteContext(this->context);
+    }
     SDL_Quit();
 }
 void Visualiser::handleMouseMove(int x, int y) {
@@ -418,7 +421,7 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         this->setMSAA(!this->msaaState);
         break;
     case SDLK_F8:
-        this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
+        // this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
         break;
     case SDLK_F5:
         // if (this->scene)
@@ -470,9 +473,9 @@ void Visualiser::updateFPS() {
     //  If it's been more than a second, do something.
     if (this->currentTime > this->previousTime + ONE_SECOND_MS) {
         //  Calculate average fps.
-        double fps = this->frameCount / static_cast<double>(this->currentTime - this->previousTime) * ONE_SECOND_MS;
+        // double fps = this->frameCount / static_cast<double>(this->currentTime - this->previousTime) * ONE_SECOND_MS;
         // Update the FPS string
-        this->fpsDisplay->setString("%.3f fps", fps);
+        // this->fpsDisplay->setString("%.3f fps", fps);
         //  reset values;
         this->previousTime = this->currentTime;
         this->frameCount = 0;

@@ -1,13 +1,27 @@
 #include "util/cuda.h"
 
+
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+
 #include <cstring>
 #include <typeinfo>   //  operator typeid
+#include <stdexcept>
+
 
 // Drop in replacement if CUDA_CALL is missing
 #ifndef CUDA_CALL
-#include <cassert>
-#define CUDA_CALL(fn) assert(fn == cudaSuccess);
+#define CUDA_CALL(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line) {
+    if (code != cudaSuccess) {
+        // TODO: Exception with message?
+        // THROW CUDAError("CUDA Error: %s(%d): %s", file, line, cudaGetErrorString(code));
+        fprintf(stdout, "CUDA Error: %s(%d): %s", file, line, cudaGetErrorString(code));
+        throw std::exception();
+    }
+}
 #endif
+
 
 /*
 Hidden internal functions
@@ -91,7 +105,7 @@ CUDATextureBuffer<T> *mallocGLInteropTextureBuffer(const unsigned int elementCou
     // Temporary storage of return values
     GLuint glTexName;
     GLuint glTBO;
-    T *d_MappedPointer;
+    T *d_MappedPointer = nullptr;
     cudaGraphicsResource_t cuGraphicsRes;
     cudaTextureObject_t cuTextureObj;
 

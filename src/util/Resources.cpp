@@ -1,7 +1,18 @@
 #include "Resources.h"
+#include "VisException.h"
+// If earlier than VS 2019
+#if defined(_MSC_VER) && _MSC_VER < 1920
 #include <filesystem>
-#ifdef _MSC_VER
-#define filesystem tr2::sys
+using std::tr2::sys::exists;
+using std::tr2::sys::path;
+using std::tr2::sys::create_directory;
+#else
+// VS2019 requires this macro, as building pre c++17 cant use std::filesystem
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#include <experimental/filesystem>
+using std::experimental::filesystem::v1::exists;
+using std::experimental::filesystem::v1::path;
+using std::experimental::filesystem::v1::create_directory;
 #endif
 
 #include <cmrc/cmrc.hpp>
@@ -9,15 +20,15 @@
 CMRC_DECLARE(resources);
 
 namespace {
-    void recursive_create_dir(const std::filesystem::path &dir) {
-        if (std::filesystem::exists(dir)) {
+    void recursive_create_dir(const path &dir) {
+        if (exists(dir)) {
             return;
         }
-        std::filesystem::path parent_dir = dir.parent_path();
-        if (!std::filesystem::exists(parent_dir)) {
+        path parent_dir = dir.parent_path();
+        if (!exists(parent_dir)) {
             recursive_create_dir(parent_dir);
         }
-        std::filesystem::create_directory(dir);
+        create_directory(dir);
     }
 }  // namespace
 
@@ -25,27 +36,27 @@ FILE *Resources::fopen(const char * filename, const char *mode) {
     return ::fopen(locateFile(filename).c_str(), mode);
 }
 
-std::string Resources::locateFile(const std::string &path) {
+std::string Resources::locateFile(const std::string &_path) {
     // File exists in working directory, use that
     {
-        if (std::filesystem::exists(std::filesystem::path(path)))
-            return path;
+        if (exists(path(_path)))
+            return _path;
     }
-    std::filesystem::path module_dir_path = std::filesystem::path(getModuleDir());
-    module_dir_path += path;
+    path module_dir_path = path(getModuleDir());
+    module_dir_path += _path;
     // See if file exists in module dir, use that
     {
-        if (std::filesystem::exists(module_dir_path)) {
+        if (exists(module_dir_path)) {
             return module_dir_path.string();
         } else {
             // file doesn't exist in module dir, so create it there
             auto fs = cmrc::resources::get_filesystem();
-            if (fs.exists(path)) {
+            if (fs.exists(_path)) {
                 // file exists within internal resources
-                auto resource_file = fs.open(path);
+                auto resource_file = fs.open(_path);
                 // open a file to module_dir_path
                 // Check the output directory exists
-                std::filesystem::path output_dir = module_dir_path;
+                path output_dir = module_dir_path;
                 output_dir.remove_filename();
                 recursive_create_dir(output_dir);
                 // we will extract the file to here
@@ -56,7 +67,7 @@ std::string Resources::locateFile(const std::string &path) {
                 return module_dir_path.string();
             } else {
                 // Unable to locate file
-                throw std::runtime_error("Unable to open file!");  // TODO: Replace with FGPU exception
+                THROW ResourceError("Resources::locateFile(): File '%s' could not be found!", _path.c_str());
             }
         }
     }
@@ -74,7 +85,7 @@ std::string Resources::getModuleDir() {
 //    if (hModule) {
 //        char out_path[MAX_PATH];
 //        GetModuleFileName(hModule, out_path, sizeof(out_path));
-//        std::filesystem::path module_path = std::filesystem::path(out_path);
+//        std::experimental::filesystem::path module_path = std::experimental::filesystem::path(out_path);
 //        module_path.remove_filename();
 //        return module_path.string();
 //    } else {
@@ -86,10 +97,10 @@ std::string Resources::getModuleDir() {
 // #endif
 }
 
-std::string Resources::toModuleDir(const std::string &path) {
-    std::filesystem::path output_dir = Resources::getModuleDir();
-    output_dir += path;
-    const std::filesystem::path output_path = output_dir;
+std::string Resources::toModuleDir(const std::string &_path) {
+    path output_dir = getModuleDir();
+    output_dir += _path;
+    const path output_path = output_dir;
     output_dir.remove_filename();
     recursive_create_dir(output_dir);
     return output_path.string();

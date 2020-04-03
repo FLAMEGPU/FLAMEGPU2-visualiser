@@ -29,17 +29,14 @@
 
 // ---
 
-#ifndef UTIL_GTL_LIBC_ALLOCATOR_WITH_REALLOC_H_
-#define UTIL_GTL_LIBC_ALLOCATOR_WITH_REALLOC_H_
+#pragma once
 
-#include <sparsehash/internal/sparseconfig.h>
-#include <stdlib.h>           // for malloc/realloc/free
-#include <stddef.h>           // for ptrdiff_t
-#include <new>                // for placement new
+#include <cstdlib>  // for malloc/realloc/free
+#include <cstddef>  // for ptrdiff_t
+#include <new>      // for placement new
 
-_START_GOOGLE_NAMESPACE_
-
-template<class T>
+namespace google {
+template <class T>
 class libc_allocator_with_realloc {
  public:
   typedef T value_type;
@@ -55,39 +52,38 @@ class libc_allocator_with_realloc {
   libc_allocator_with_realloc(const libc_allocator_with_realloc&) {}
   ~libc_allocator_with_realloc() {}
 
-  pointer address(reference r) const  { return &r; }
-  const_pointer address(const_reference r) const  { return &r; }
+  pointer address(reference r) const { return &r; }
+  const_pointer address(const_reference r) const { return &r; }
 
   pointer allocate(size_type n, const_pointer = 0) {
     return static_cast<pointer>(malloc(n * sizeof(value_type)));
   }
-  void deallocate(pointer p, size_type) {
-    free(p);
-  }
+  void deallocate(pointer p, size_type) { free(p); }
   pointer reallocate(pointer p, size_type n) {
-    return static_cast<pointer>(realloc(p, n * sizeof(value_type)));
+    // p points to a storage array whose objects have already been destroyed
+    // cast to void* to prevent compiler warnings about calling realloc() on
+    // an object which cannot be relocated in memory
+    return static_cast<pointer>(realloc(static_cast<void*>(p), n * sizeof(value_type)));
   }
 
-  size_type max_size() const  {
+  size_type max_size() const {
     return static_cast<size_type>(-1) / sizeof(value_type);
   }
 
-  void construct(pointer p, const value_type& val) {
-    new(p) value_type(val);
-  }
+  void construct(pointer p, const value_type& val) { new (p) value_type(val); }
   void destroy(pointer p) { p->~value_type(); }
 
   template <class U>
   libc_allocator_with_realloc(const libc_allocator_with_realloc<U>&) {}
 
-  template<class U>
+  template <class U>
   struct rebind {
     typedef libc_allocator_with_realloc<U> other;
   };
 };
 
 // libc_allocator_with_realloc<void> specialization.
-template<>
+template <>
 class libc_allocator_with_realloc<void> {
  public:
   typedef void value_type;
@@ -96,24 +92,22 @@ class libc_allocator_with_realloc<void> {
   typedef void* pointer;
   typedef const void* const_pointer;
 
-  template<class U>
+  template <class U>
   struct rebind {
     typedef libc_allocator_with_realloc<U> other;
   };
 };
 
-template<class T>
+template <class T>
 inline bool operator==(const libc_allocator_with_realloc<T>&,
                        const libc_allocator_with_realloc<T>&) {
   return true;
 }
 
-template<class T>
+template <class T>
 inline bool operator!=(const libc_allocator_with_realloc<T>&,
                        const libc_allocator_with_realloc<T>&) {
   return false;
 }
 
-_END_GOOGLE_NAMESPACE_
-
-#endif  // UTIL_GTL_LIBC_ALLOCATOR_WITH_REALLOC_H_
+}  // namespace google

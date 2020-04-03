@@ -1,8 +1,9 @@
 #include "Overlay.h"
 
-#pragma warning(push, 3)
+#include "util/warnings.h"
+DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>
-#pragma warning(pop)
+DISABLE_WARNING_POP
 
 #include "shader/Shaders.h"
 

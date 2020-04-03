@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <stdexcept>
 
 #include "interface/Renderable.h"
 #include "shader/Shaders.h"
@@ -125,8 +126,9 @@ class Draw : Renderable {
      */
     void vertex(const glm::vec2 &v) { vertex(glm::vec3(v, 0.0f)); }
     void vertex(const glm::vec3 &v) {
-        if (!isDrawing)
-            throw std::runtime_error("Draw::vertex() may only be called between Draw::begin() and Draw::end() or Draw::save()\n");
+        if (!isDrawing) {
+            THROW VisAssert("Draw::vertex() may only be called between Draw::begin() and Draw::end() or Draw::save()\n");
+        }
         tVertices.push_back(v);
         tColors.push_back(tColor);
     }

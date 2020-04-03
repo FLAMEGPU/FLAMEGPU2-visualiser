@@ -2,7 +2,7 @@
 #define SRC_SPRITE2D_H_
 #include <memory>
 
-#include "Texture/Texture2D.h"
+#include "texture/Texture2D.h"
 #include "Overlay.h"
 
 class Shaders;

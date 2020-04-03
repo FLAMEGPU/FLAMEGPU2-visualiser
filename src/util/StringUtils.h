@@ -4,7 +4,10 @@
 #include <algorithm>
 #include <vector>
 #include <cstdio>
+#include <cctype>
 #include <memory>
+
+#include "util/warnings.h"
 
 namespace su {
 namespace internal {
@@ -21,10 +24,13 @@ struct MatchPathSeparator {
     }
 };
 #endif
+inline char toLower_char(char c) {
+    return static_cast<char>(std::tolower(c));
+}
 }  // namespace internal
 inline std::string toLower(const std::string &in) {
     std::string out(in.size(), '\0');  // Create empty string of null terminating
-    std::transform(in.begin(), in.end(), out.begin(), ::tolower);
+    std::transform(in.begin(), in.end(), out.begin(), su::internal::toLower_char);
     return out;
 }
 inline bool beginsWith(const std::string &str, const std::string &begin, bool caseSensitive = true) {
@@ -85,7 +91,8 @@ inline std::string removeFileExt(const std::string &filename) {
 }
 
 // https:// stackoverflow.com/a/26221725/1646387
-#pragma warning(disable : 4996)
+DISABLE_WARNING_PUSH
+DISABLE_WARNING_DEPRECATED
 template<typename ... Args>
 inline std::string format(const std::string& format, Args ... args) {
 #ifdef _MSC_VER
@@ -99,6 +106,7 @@ inline std::string format(const std::string& format, Args ... args) {
 #undef  snprintf
 #endif
 }
+DISABLE_WARNING_POP
 inline bool contains(const std::string& haystack, const std::string& needle, bool caseSensitive = true) {
     if (caseSensitive)
         return haystack.find(needle) != std::string::npos;

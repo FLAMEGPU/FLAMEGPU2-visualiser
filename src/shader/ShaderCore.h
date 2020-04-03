@@ -466,7 +466,7 @@ class ShaderCore : public Reloadable {
      * @param shaderSources The shader code to detect the version from
      * @return The detected shader version, 0 if one was not found
      */
-    static unsigned int findShaderVersion(std::vector<const char*> shaderSources);
+    static unsigned int findShaderVersion(std::vector<const char*> const & shaderSources);
     /**
      * Copies the init list to a std::vector of std:strings on the heap
      * @note You should delete the ptr returned by this yourself

@@ -6,7 +6,7 @@
 
 /**
  * Interface shared by RenderBuffer, Texture2D and Texture2D_Multisample
- * These are the 3 classes which can be rendered too in a frag shader
+ * These are the 3 classes which can be rendered to in a frag shader
  */
 class RenderTarget {
  public:

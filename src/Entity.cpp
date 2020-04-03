@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <locale>
 #include <string>
+#include <cstring>
 
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -765,7 +766,7 @@ exit_loop: {}
             if (mtllib)
                 break;
             // Check for mtllib tag
-            for (int i = 1; i < (sizeof(mtllib_tag) / sizeof(c)) - 1; i++) {
+            for (unsigned int i = 1; i < (sizeof(mtllib_tag) / sizeof(c)) - 1; i++) {
                 if ((c = static_cast<char>(fgetc(file))) != mtllib_tag[i]) {
                     // Break if tag ends early
                     break;
@@ -799,7 +800,7 @@ exit_loop: {}
             if (usemtl)
                 break;
             // Check for usemtl tag
-            for (int i = 1; i < (sizeof(usemtl_tag) / sizeof(c)) - 1; i++) {
+            for (unsigned int i = 1; i < (sizeof(usemtl_tag) / sizeof(c)) - 1; i++) {
                 if ((c = static_cast<char>(fgetc(file))) != usemtl_tag[i]) {
                     // Break if tag ends early
                     break;
@@ -991,10 +992,10 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
     while (!feof(file)) {
         if (fscanf(file, "%s", buffer) == 1) {
             if (strcmp(buffer, MATERIAL_NAME_IDENTIFIER) == 0) {
-                if (fscanf(file, "%s", &temp) == 1) {
+                if (fscanf(file, "%s", &temp[0]) == 1) {
                     this->materials.push_back(Material(materialBuffer, static_cast<unsigned int>(materials.size())));
                     materials[materials.size()-1].setName(temp);
-                    assert(materials.size() < MAX_OBJ_MATERIALS);
+                    visassert(materials.size() < MAX_OBJ_MATERIALS);
                 } else {
                     printf("Bad material file...");
                 }
@@ -1029,7 +1030,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                     printf("Bad material file...");
                 }
             } else if (materials.size() && strcmp(buffer, TEX_AMBIENT_IDENTIFIER) == 0) {
-                if (fscanf(file, "%s", &temp) == 1) {
+                if (fscanf(file, "%s", &temp[0]) == 1) {
                     // auto tex = Texture2D::load(temp, modelFolder);
                     // if (tex)
                     // {
@@ -1041,7 +1042,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                     printf("Bad material file...");
                 }
             } else if (materials.size() && strcmp(buffer, TEX_DIFFUSE_IDENTIFIER) == 0) {
-                if (fscanf(file, "%s", &temp) == 1) {
+                if (fscanf(file, "%s", &temp[0]) == 1) {
                     // auto tex = Texture2D::load(temp, modelFolder);
                     // if (tex)
                     // {
@@ -1053,7 +1054,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                     printf("Bad material file...");
                 }
             } else if (materials.size() && strcmp(buffer, TEX_SPECULAR_IDENTIFIER) == 0) {
-                if (fscanf(file, "%s", &temp) == 1) {
+                if (fscanf(file, "%s", &temp[0]) == 1) {
                     // auto tex = Texture2D::load(temp, modelFolder);
                     // if (tex)
                     // {
@@ -1191,23 +1192,22 @@ void Entity::exportModel() const {
         fprintf(stderr, "Could not open file for writing %s\n", exportPath.c_str());
     }
     // Generate export mask
-    ExportMask mask {
+    ExportMask mask{
         FILE_TYPE_FLAG,
         FILE_TYPE_VERSION,
         sizeof(float),
         sizeof(unsigned int),
         SCALE,
         vn_count,
-        positions.count&&positions.components == 3,
-        positions.count&&positions.components == 4,
-        normals.count&&normals.components == 3,
-        colors.count&&colors.components == 3,
-        colors.count&&colors.components == 4,
-        texcoords.count&&texcoords.components == 2,
-        texcoords.count&&texcoords.components == 3,
-        faces.count&&faces.components == 3,
-        0
-    };
+        positions.count && positions.components == 3,
+        positions.count && positions.components == 4,
+        normals.count && normals.components == 3,
+        colors.count && colors.components == 3,
+        colors.count && colors.components == 4,
+        texcoords.count && texcoords.components == 2,
+        texcoords.count && texcoords.components == 3,
+        faces.count && faces.components == 3,
+        0};
     // Write out the export mask
     fwrite(&mask, sizeof(ExportMask), 1, file);
     // Write out each buffer in order
@@ -1228,7 +1228,8 @@ void Entity::exportModel() const {
         fwrite(faces.data, faces.componentSize, faces.count*faces.components, file);
     }
     // Finish by writing the file type flag again
-    fwrite(&FILE_TYPE_FLAG, sizeof(char), 1, file);
+    const char temp = FILE_TYPE_FLAG;
+    fwrite(&temp, sizeof(char), 1, file);
     fclose(file);
     printf("Exported model %s\n", exportPath.c_str());
 }
@@ -1255,7 +1256,13 @@ void Entity::importModel(const char *path) {
     printf("Importing Model: %s\n", importPath.c_str());
     // Read in the export mask
     ExportMask mask;
-    fread(&mask, sizeof(ExportMask), 1, file);
+    size_t elementsRead = 0;
+    elementsRead = fread(&mask, sizeof(ExportMask), 1, file);
+    if (elementsRead != 1) {
+        fprintf(stderr, "Failed to read FILE TYPE FLAG from file header %s. Aborting import\n", importPath.c_str());
+        fclose(file);
+        return;
+    }
     // Check file type flag exists
     if (mask.FILE_TYPE_FLAG != FILE_TYPE_FLAG) {
         fprintf(stderr, "FILE TYPE FLAG missing from file header: %s. Aborting import\n", importPath.c_str());
@@ -1274,12 +1281,12 @@ void Entity::importModel(const char *path) {
     }
     // Check float/uint lengths aren't too short
     if (sizeof(float) != mask.SIZE_OF_FLOAT) {
-        fprintf(stderr, "File %s uses floats of %i bytes, this architecture has floats of %llu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
+        fprintf(stderr, "File %s uses floats of %i bytes, this architecture has floats of %lu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
         fclose(file);
         return;
     }
     if (sizeof(unsigned int) != mask.SIZE_OF_UINT) {
-        fprintf(stderr, "File %s uses uints of %i bytes, this architecture has floats of %llu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
+        fprintf(stderr, "File %s uses uints of %i bytes, this architecture has floats of %lu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
         fclose(file);
         return;
     }
@@ -1339,14 +1346,24 @@ void Entity::importModel(const char *path) {
         }
     }
     if (mask.FILE_HAS_FACES_3) {
-        fread(&faces.count, sizeof(unsigned int), 1, file);
+        elementsRead = fread(&faces.count, sizeof(unsigned int), 1, file);
+        if (elementsRead != 1) {
+            fprintf(stderr, "Failed to read faces.count oorm file header %s. Aborting import\n", importPath.c_str());
+            fclose(file);
+            return;
+        }
         faces.data = malloc(faces.componentSize*faces.components*faces.count);
         if (faces.count*faces.components != fread(faces.data, sizeof(unsigned int), faces.count*faces.components, file)) {
             fprintf(stderr, "fread err: faces\n");
         }
     }
     // Check file footer contains flag (to confirm it was closed correctly
-    fread(&mask.FILE_TYPE_FLAG, sizeof(char), 1, file);
+    elementsRead = fread(&mask.FILE_TYPE_FLAG, sizeof(char), 1, file);
+    if (elementsRead != 1) {
+        fprintf(stderr, "Failed to read FILE_TYPE_FLAG from file footer %s. Aborting import.\n", importPath.c_str());
+        fclose(file);
+        return;
+    }
     if (mask.FILE_TYPE_FLAG != FILE_TYPE_FLAG) {
         fprintf(stderr, "FILE TYPE FLAG missing from file footer: %s, model may be corrupt.\n", importPath.c_str());
         return;

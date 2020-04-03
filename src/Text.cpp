@@ -5,11 +5,16 @@
 #include <vector>
 #include <cstdarg>
 
-#pragma warning(push, 3)
+#include "util/warnings.h"
+
+DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>
-#pragma warning(pop)
+DISABLE_WARNING_POP
 
 #include "shader/Shaders.h"
+
+// TODO: Gracefully handle missing fonts
+// TODO: cross platform font loading.
 
 namespace Stock {
 /**
