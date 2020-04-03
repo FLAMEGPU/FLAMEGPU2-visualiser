@@ -7,6 +7,7 @@
 #include <memory>
 #include <mutex>
 #include <utility>
+#include <thread>
 
 #include <SDL.h>
 #undef main  // SDL breaks the regular main entry point, this fixes

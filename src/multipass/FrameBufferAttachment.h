@@ -23,7 +23,7 @@ class FrameBufferAttachment {
     GLint InternalFormat() const { return internalFormat; }
     GLenum PixelFormat() const { return pixelFormat; }
     GLenum StorageType() const { return storageType; }
-    std::shared_ptr<RenderTarget> RenderTarget() const { return rt; }
+    std::shared_ptr<::RenderTarget> RenderTarget() const { return rt; }
     virtual ~FrameBufferAttachment() {}
 
  private:

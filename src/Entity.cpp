@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <locale>
 #include <string>
+#include <cstring>
 
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -1191,23 +1192,22 @@ void Entity::exportModel() const {
         fprintf(stderr, "Could not open file for writing %s\n", exportPath.c_str());
     }
     // Generate export mask
-    ExportMask mask {
+    ExportMask mask{
         FILE_TYPE_FLAG,
         FILE_TYPE_VERSION,
         sizeof(float),
         sizeof(unsigned int),
         SCALE,
         vn_count,
-        positions.count&&positions.components == 3,
-        positions.count&&positions.components == 4,
-        normals.count&&normals.components == 3,
-        colors.count&&colors.components == 3,
-        colors.count&&colors.components == 4,
-        texcoords.count&&texcoords.components == 2,
-        texcoords.count&&texcoords.components == 3,
-        faces.count&&faces.components == 3,
-        0
-    };
+        positions.count && positions.components == 3,
+        positions.count && positions.components == 4,
+        normals.count && normals.components == 3,
+        colors.count && colors.components == 3,
+        colors.count && colors.components == 4,
+        texcoords.count && texcoords.components == 2,
+        texcoords.count && texcoords.components == 3,
+        faces.count && faces.components == 3,
+        0};
     // Write out the export mask
     fwrite(&mask, sizeof(ExportMask), 1, file);
     // Write out each buffer in order
@@ -1228,7 +1228,8 @@ void Entity::exportModel() const {
         fwrite(faces.data, faces.componentSize, faces.count*faces.components, file);
     }
     // Finish by writing the file type flag again
-    fwrite(&FILE_TYPE_FLAG, sizeof(char), 1, file);
+    const char temp = FILE_TYPE_FLAG;
+    fwrite(&temp, sizeof(char), 1, file);
     fclose(file);
     printf("Exported model %s\n", exportPath.c_str());
 }

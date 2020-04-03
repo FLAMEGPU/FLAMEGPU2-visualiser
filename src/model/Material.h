@@ -7,7 +7,7 @@
 #include <memory>
 #include <vector>
 
-#include "Texture/Texture.h"
+#include "texture/Texture.h"
 #include "interface/Renderable.h"
 #include "shader/Shaders.h"
 #include "shader/ShaderHeader.h"

@@ -141,7 +141,9 @@ void Texture2D::purgeCache(const std::string &filePath) {
 }
 void Texture2D::resize(const glm::uvec2 &_dimensions, void *data, size_t size) {
     if (immutable) {
-        throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
+        // TODO: Propper Exceptions
+        // throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
+        throw std::exception();
         return;
     }
     if (data&&size)
@@ -160,7 +162,9 @@ void Texture2D::setTexture(void *data, size_t size) {
 }
 void Texture2D::setSubTexture(void *data, glm::uvec2 _dimensions, glm::ivec2 offset, size_t size) {
     if (immutable) {
-        throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
+        // TODO: Propper Exceptions
+        // throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
+        throw std::exception();
         return;
     }
     if (size)

@@ -1,7 +1,7 @@
 #ifndef SRC_SHADER_LIGHTS_SPOTLIGHT_INL_
 #define SRC_SHADER_LIGHTS_SPOTLIGHT_INL_
 
-#include "shader/lights/Spotlight.h"
+#include "shader/lights/SpotLight.h"
 #include "shader/lights/LightsBuffer.h"
 
 inline SpotLight::SpotLight(const PointLight &old)

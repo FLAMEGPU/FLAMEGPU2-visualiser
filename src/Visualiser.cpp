@@ -33,9 +33,9 @@ Visualiser::Visualiser(unsigned int windowWidth = DEFAULT_WINDOW_WIDTH, unsigned
     , fpsDisplay(nullptr) {
     this->isInitialised = this->init();
 
-    fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
-    fpsDisplay->setUseAA(false);
-    hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
+    // fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
+    // fpsDisplay->setUseAA(false);
+    // hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
 }
 Visualiser::~Visualiser() {
     this->close();
@@ -388,7 +388,7 @@ void Visualiser::close() {
     assert(this->window);  // There should always be a window, it might just be hidden
     SDL_GL_MakeCurrent(this->window, this->context);
     // Delete objects before we delete the GL context!
-    fpsDisplay.reset();
+    // fpsDisplay.reset();
     this->hud->clear();
     // if (this->scene) {
     //     this->scene.reset();
@@ -418,7 +418,7 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         this->setMSAA(!this->msaaState);
         break;
     case SDLK_F8:
-        this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
+        // this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
         break;
     case SDLK_F5:
         // if (this->scene)
@@ -472,7 +472,7 @@ void Visualiser::updateFPS() {
         //  Calculate average fps.
         double fps = this->frameCount / static_cast<double>(this->currentTime - this->previousTime) * ONE_SECOND_MS;
         // Update the FPS string
-        this->fpsDisplay->setString("%.3f fps", fps);
+        // this->fpsDisplay->setString("%.3f fps", fps);
         //  reset values;
         this->previousTime = this->currentTime;
         this->frameCount = 0;
