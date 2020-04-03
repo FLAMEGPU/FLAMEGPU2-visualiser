@@ -37,23 +37,41 @@
 // Other functions and classes provide common code for serializing
 // and deserializing hashtables to a stream (such as a FILE*).
 
-#ifndef UTIL_GTL_HASHTABLE_COMMON_H_
-#define UTIL_GTL_HASHTABLE_COMMON_H_
+#pragma once
 
-#include <sparsehash/internal/sparseconfig.h>
-#include <assert.h>
-#include <stdio.h>
-#include <stddef.h>                  // for size_t
+#include <cassert>
+#include <cstdio>
+#include <cstddef>  // for size_t
 #include <iosfwd>
-#include <stdexcept>                 // For length_error
+#include <stdexcept>  // For length_error
 
-_START_GOOGLE_NAMESPACE_
-
-template <bool> struct SparsehashCompileAssert { };
-#define SPARSEHASH_COMPILE_ASSERT(expr, msg) \
-  __attribute__((unused)) typedef SparsehashCompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
-
+namespace google {
 namespace sparsehash_internal {
+
+template<typename... Ts> struct make_void { typedef void type;};
+template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+
+template <class HashFcn, class = void>
+struct has_is_transparent : std::false_type {};
+
+template <class HashFcn>
+struct has_is_transparent<HashFcn, void_t<typename HashFcn::transparent_key_equal::is_transparent>> : std::true_type {};
+
+template <class HashFcn, class = void, class = void>
+struct has_transparent_key_equal : std::false_type {};
+
+template <class HashFcn, class Key>
+struct has_transparent_key_equal<HashFcn, Key, void_t<typename HashFcn::transparent_key_equal>> : std::true_type {};
+
+template <class HashFcn, class EqualKey, bool = has_transparent_key_equal<HashFcn>::value>
+struct key_equal_chosen {
+  using type = EqualKey;
+};
+
+template <class HashFcn, class EqualKey>
+struct key_equal_chosen<HashFcn, EqualKey, true> {
+  using type = typename HashFcn::transparent_key_equal;
+};
 
 // Adaptor methods for reading/writing data from an INPUT or OUPTUT
 // variable passed to serialize() or unserialize().  For now we
@@ -83,15 +101,14 @@ namespace sparsehash_internal {
 
 // ----- low-level I/O for FILE* ----
 
-template<typename Ignored>
-inline bool read_data_internal(Ignored*, FILE* fp,
-                               void* data, size_t length) {
+template <typename Ignored>
+inline bool read_data_internal(Ignored*, FILE* fp, void* data, size_t length) {
   return fread(data, length, 1, fp) == 1;
 }
 
-template<typename Ignored>
-inline bool write_data_internal(Ignored*, FILE* fp,
-                                const void* data, size_t length) {
+template <typename Ignored>
+inline bool write_data_internal(Ignored*, FILE* fp, const void* data,
+                                size_t length) {
   return fwrite(data, length, 1, fp) == 1;
 }
 
@@ -101,25 +118,25 @@ inline bool write_data_internal(Ignored*, FILE* fp,
 // us, because iostream is a big header!  According to the standard,
 // it's only legal to delay the instantiation the way we want to if
 // the istream/ostream is a template type.  So we jump through hoops.
-template<typename ISTREAM>
-inline bool read_data_internal_for_istream(ISTREAM* fp,
-                                           void* data, size_t length) {
+template <typename ISTREAM>
+inline bool read_data_internal_for_istream(ISTREAM* fp, void* data,
+                                           size_t length) {
   return fp->read(reinterpret_cast<char*>(data), length).good();
 }
-template<typename Ignored>
-inline bool read_data_internal(Ignored*, std::istream* fp,
-                               void* data, size_t length) {
+template <typename Ignored>
+inline bool read_data_internal(Ignored*, std::istream* fp, void* data,
+                               size_t length) {
   return read_data_internal_for_istream(fp, data, length);
 }
 
-template<typename OSTREAM>
-inline bool write_data_internal_for_ostream(OSTREAM* fp,
-                                            const void* data, size_t length) {
+template <typename OSTREAM>
+inline bool write_data_internal_for_ostream(OSTREAM* fp, const void* data,
+                                            size_t length) {
   return fp->write(reinterpret_cast<const char*>(data), length).good();
 }
-template<typename Ignored>
-inline bool write_data_internal(Ignored*, std::ostream* fp,
-                                const void* data, size_t length) {
+template <typename Ignored>
+inline bool write_data_internal(Ignored*, std::ostream* fp, const void* data,
+                                size_t length) {
   return write_data_internal_for_ostream(fp, data, length);
 }
 
@@ -128,16 +145,15 @@ inline bool write_data_internal(Ignored*, std::ostream* fp,
 // The INPUT type needs to support a Read() method that takes a
 // buffer and a length and returns the number of bytes read.
 template <typename INPUT>
-inline bool read_data_internal(INPUT* fp, void*,
-                               void* data, size_t length) {
+inline bool read_data_internal(INPUT* fp, void*, void* data, size_t length) {
   return static_cast<size_t>(fp->Read(data, length)) == length;
 }
 
 // The OUTPUT type needs to support a Write() operation that takes
 // a buffer and a length and returns the number of bytes written.
 template <typename OUTPUT>
-inline bool write_data_internal(OUTPUT* fp, void*,
-                                const void* data, size_t length) {
+inline bool write_data_internal(OUTPUT* fp, void*, const void* data,
+                                size_t length) {
   return static_cast<size_t>(fp->Write(data, length)) == length;
 }
 
@@ -163,8 +179,8 @@ bool read_bigendian_number(INPUT* fp, IntType* value, size_t length) {
   *value = 0;
   unsigned char byte;
   // We require IntType to be unsigned or else the shifting gets all screwy.
-  SPARSEHASH_COMPILE_ASSERT(static_cast<IntType>(-1) > static_cast<IntType>(0),
-                            serializing_int_requires_an_unsigned_type);
+  static_assert(static_cast<IntType>(-1) > static_cast<IntType>(0),
+                "serializing int requires an unsigned type");
   for (size_t i = 0; i < length; ++i) {
     if (!read_data(fp, &byte, sizeof(byte))) return false;
     *value |= static_cast<IntType>(byte) << ((length - 1 - i) * 8);
@@ -176,11 +192,13 @@ template <typename OUTPUT, typename IntType>
 bool write_bigendian_number(OUTPUT* fp, IntType value, size_t length) {
   unsigned char byte;
   // We require IntType to be unsigned or else the shifting gets all screwy.
-  SPARSEHASH_COMPILE_ASSERT(static_cast<IntType>(-1) > static_cast<IntType>(0),
-                            serializing_int_requires_an_unsigned_type);
+  static_assert(static_cast<IntType>(-1) > static_cast<IntType>(0),
+                "serializing int requires an unsigned type");
   for (size_t i = 0; i < length; ++i) {
-    byte = (sizeof(value) <= length-1 - i)
-        ? 0 : static_cast<unsigned char>((value >> ((length-1 - i) * 8)) & 255);
+    byte = (sizeof(value) <= length - 1 - i)
+               ? 0
+               : static_cast<unsigned char>((value >> ((length - 1 - i) * 8)) &
+                                            255);
     if (!write_data(fp, &byte, sizeof(byte))) return false;
   }
   return true;
@@ -191,7 +209,8 @@ bool write_bigendian_number(OUTPUT* fp, IntType value, size_t length) {
 // value_type is a POD type that contains no pointers.  Note,
 // however, we don't try to normalize endianness.
 // This is the type used for NopointerSerializer.
-template <typename value_type> struct pod_serializer {
+template <typename value_type>
+struct pod_serializer {
   template <typename INPUT>
   bool operator()(INPUT* fp, value_type* value) const {
     return read_data(fp, value, sizeof(*value));
@@ -202,7 +221,6 @@ template <typename value_type> struct pod_serializer {
     return write_data(fp, &value, sizeof(value));
   }
 };
-
 
 // Settings contains parameters for growing and shrinking the table.
 // It also packages zero-size functor (ie. hasher).
@@ -216,17 +234,18 @@ template <typename value_type> struct pod_serializer {
 // for sure that the hash is the identity hash.  If it's not, this
 // is needless work (and possibly, though not likely, harmful).
 
-template<typename Key, typename HashFunc,
-         typename SizeType, int HT_MIN_BUCKETS>
+template <typename Key, typename HashFunc, typename SizeType,
+          int HT_MIN_BUCKETS>
 class sh_hashtable_settings : public HashFunc {
  public:
   typedef Key key_type;
   typedef HashFunc hasher;
   typedef SizeType size_type;
+  static_assert(!has_transparent_key_equal<HashFunc>::value || has_is_transparent<HashFunc, void>::value,
+                "hash provided non-transparent key_equal");
 
  public:
-  sh_hashtable_settings(const hasher& hf,
-                        const float ht_occupancy_flt,
+  sh_hashtable_settings(const hasher& hf, const float ht_occupancy_flt,
                         const float ht_empty_flt)
       : hasher(hf),
         enlarge_threshold_(0),
@@ -239,36 +258,21 @@ class sh_hashtable_settings : public HashFunc {
     set_shrink_factor(ht_empty_flt);
   }
 
-  size_type hash(const key_type& v) const {
+  template<typename K>
+  size_type hash(const K& v) const {
     // We munge the hash value when we don't trust hasher::operator().
     return hash_munger<Key>::MungedHash(hasher::operator()(v));
   }
 
-  float enlarge_factor() const {
-    return enlarge_factor_;
-  }
-  void set_enlarge_factor(float f) {
-    enlarge_factor_ = f;
-  }
-  float shrink_factor() const {
-    return shrink_factor_;
-  }
-  void set_shrink_factor(float f) {
-    shrink_factor_ = f;
-  }
+  float enlarge_factor() const { return enlarge_factor_; }
+  void set_enlarge_factor(float f) { enlarge_factor_ = f; }
+  float shrink_factor() const { return shrink_factor_; }
+  void set_shrink_factor(float f) { shrink_factor_ = f; }
 
-  size_type enlarge_threshold() const {
-    return enlarge_threshold_;
-  }
-  void set_enlarge_threshold(size_type t) {
-    enlarge_threshold_ = t;
-  }
-  size_type shrink_threshold() const {
-    return shrink_threshold_;
-  }
-  void set_shrink_threshold(size_type t) {
-    shrink_threshold_ = t;
-  }
+  size_type enlarge_threshold() const { return enlarge_threshold_; }
+  void set_enlarge_threshold(size_type t) { enlarge_threshold_ = t; }
+  size_type shrink_threshold() const { return shrink_threshold_; }
+  void set_shrink_threshold(size_type t) { shrink_threshold_ = t; }
 
   size_type enlarge_size(size_type x) const {
     return static_cast<size_type>(x * enlarge_factor_);
@@ -277,33 +281,19 @@ class sh_hashtable_settings : public HashFunc {
     return static_cast<size_type>(x * shrink_factor_);
   }
 
-  bool consider_shrink() const {
-    return consider_shrink_;
-  }
-  void set_consider_shrink(bool t) {
-    consider_shrink_ = t;
-  }
+  bool consider_shrink() const { return consider_shrink_; }
+  void set_consider_shrink(bool t) { consider_shrink_ = t; }
 
-  bool use_empty() const {
-    return use_empty_;
-  }
-  void set_use_empty(bool t) {
-    use_empty_ = t;
-  }
+  bool use_empty() const { return use_empty_; }
+  void set_use_empty(bool t) { use_empty_ = t; }
 
-  bool use_deleted() const {
-    return use_deleted_;
-  }
-  void set_use_deleted(bool t) {
-    use_deleted_ = t;
-  }
+  bool use_deleted() const { return use_deleted_; }
+  void set_use_deleted(bool t) { use_deleted_ = t; }
 
   size_type num_ht_copies() const {
     return static_cast<size_type>(num_ht_copies_);
   }
-  void inc_num_ht_copies() {
-    ++num_ht_copies_;
-  }
+  void inc_num_ht_copies() { ++num_ht_copies_; }
 
   // Reset the enlarge and shrink thresholds
   void reset_thresholds(size_type num_buckets) {
@@ -318,8 +308,8 @@ class sh_hashtable_settings : public HashFunc {
   void set_resizing_parameters(float shrink, float grow) {
     assert(shrink >= 0.0);
     assert(grow <= 1.0);
-    if (shrink > grow/2.0f)
-      shrink = grow / 2.0f;     // otherwise we thrash hashtable size
+    if (shrink > grow / 2.0f)
+      shrink = grow / 2.0f;  // otherwise we thrash hashtable size
     set_shrink_factor(shrink);
     set_enlarge_factor(grow);
   }
@@ -328,9 +318,9 @@ class sh_hashtable_settings : public HashFunc {
   // If you like, you can give a min #buckets as well as a min #elts
   size_type min_buckets(size_type num_elts, size_type min_buckets_wanted) {
     float enlarge = enlarge_factor();
-    size_type sz = HT_MIN_BUCKETS;             // min buckets allowed
-    while ( sz < min_buckets_wanted ||
-            num_elts >= static_cast<size_type>(sz * enlarge) ) {
+    size_type sz = HT_MIN_BUCKETS;  // min buckets allowed
+    while (sz < min_buckets_wanted ||
+           num_elts >= static_cast<size_type>(sz * enlarge)) {
       // This just prevents overflowing size_type, since sz can exceed
       // max_size() here.
       if (static_cast<size_type>(sz * 2) < sz) {
@@ -342,22 +332,23 @@ class sh_hashtable_settings : public HashFunc {
   }
 
  private:
-  template<class HashKey> class hash_munger {
+  template <class HashKey>
+  class hash_munger {
    public:
-    static size_t MungedHash(size_t hash) {
-      return hash;
-    }
+    static size_t MungedHash(size_t hash) { return hash; }
   };
   // This matches when the hashtable key is a pointer.
-  template<class HashKey> class hash_munger<HashKey*> {
+  template <class HashKey>
+  class hash_munger<HashKey*> {
    public:
     static size_t MungedHash(size_t hash) {
       // TODO(csilvers): consider rotating instead:
       //    static const int shift = (sizeof(void *) == 4) ? 2 : 3;
-      //    return (hash << (sizeof(hash) * 8) - shift)) | (hash >> shift);
+      //    return (hash << (sizeof(hash) * 8) - shift)) | (hash >>
+      //    shift);
       // This matters if we ever change sparse/dense_hash_* to compare
       // hashes before comparing actual values.  It's speedy on x86.
-      return hash / sizeof(void*);   // get rid of known-0 bits
+      return hash / sizeof(void*);  // get rid of known-0 bits
     }
   };
 
@@ -374,8 +365,4 @@ class sh_hashtable_settings : public HashFunc {
 };
 
 }  // namespace sparsehash_internal
-
-#undef SPARSEHASH_COMPILE_ASSERT
-_END_GOOGLE_NAMESPACE_
-
-#endif  // UTIL_GTL_HASHTABLE_COMMON_H_
+}  // namespace google
