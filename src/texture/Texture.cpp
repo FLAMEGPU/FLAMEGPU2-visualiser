@@ -1,7 +1,7 @@
 #include "texture/Texture.h"
 #include <cassert>
 #include <algorithm>
-#include "util\StringUtils.h"
+#include "util/StringUtils.h"
 
 // Ensure these remain lowercase without prepended '.'
 const char* Texture::IMAGE_EXTS[] = {
