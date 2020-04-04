@@ -1,7 +1,5 @@
 #include "shader/buffer/ShaderStorageBuffer.h"
 
-#include <cassert>
-
 #include "util/GLcheck.h"
 
 std::set<GLint> ShaderStorageBuffer::allocatedBindPoints;
@@ -13,12 +11,7 @@ ShaderStorageBuffer::~ShaderStorageBuffer() {
 
 GLint ShaderStorageBuffer::allocateBindPoint() {
     if (allocatedBindPoints.size() == MaxBuffers()) {
-        // TODO: Better exception implementation.
-        // char buff[1024];
-        // snprintf(buff, sizeof(buff), "Shader Storage Buffer Bindings exceeded!\nLimit = %d\n\nsdl_exp ShaderStorageBuffer objs are not designed for sharing buffer bindings.", MaxBuffers());
-        throw std::exception();
-
-        //// @TODO - upgrade exceptions.
+        THROW VisAssert("Shader Storage Buffer Bindings exceeded!\nLimit = %d\n\nsdl_exp ShaderStorageBuffer objs are not designed for sharing buffer bindings.", MaxBuffers());
     }
     for (unsigned int i = MaxBuffers() - 1; i >= 0; --i) {
         if (allocatedBindPoints.find(i) == allocatedBindPoints.end()) {
@@ -26,8 +19,7 @@ GLint ShaderStorageBuffer::allocateBindPoint() {
             return i;
         }
     }
-    assert(false);  // Should never reach here
-    return -1;
+    THROW VisAssert("ShaderStorageBuffer::allocateBindPoint(): This point should never be reached!");
 }
 
 GLint ShaderStorageBuffer::MaxSize() {

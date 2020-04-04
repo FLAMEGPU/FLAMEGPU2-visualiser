@@ -1,5 +1,4 @@
 #include "texture/TextureBuffer.h"
-#include <cassert>
 
 template<class T>
 const char *TextureBuffer<T>::RAW_TEXTURE_FLAG = "TextureBuffer";
@@ -177,7 +176,7 @@ GLuint TextureBuffer<T>::genTextureUnit() {
     GLint maxUnits;
     GL_CALL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits));  // 192 on Modern GPUs, spec minimum 80
 #ifdef _DEBUG
-    assert(TextureBuffer_T_texUnit < static_cast<GLuint>(maxUnits));
+    visassert(TextureBuffer_T_texUnit < static_cast<GLuint>(maxUnits));
 #endif
     if (TextureBuffer_T_texUnit >= static_cast<GLuint>(maxUnits)) {
         TextureBuffer_T_texUnit = 1;

@@ -255,7 +255,7 @@ void Shaders::overrideModelMat(const glm::mat4 *force) {
     int currProgram = 0;
     glGetIntegerv(GL_CURRENT_PROGRAM, &currProgram);
     if (currProgram != getProgram() || getProgram() == -1) {
-        throw std::runtime_error("Error: Shader::overrideModelMat() should only be called whilst the shader is in use.\n");
+        THROW VisAssert("Shaders::overrideModelMat() should only be called whilst the shader is in use.\n");
     }
 #endif
     _useProgramModelMatrices(force);
@@ -265,7 +265,7 @@ void Shaders::overrideMaterialID(unsigned int materialIndex) {
     int currProgram = 0;
     glGetIntegerv(GL_CURRENT_PROGRAM, &currProgram);
     if (currProgram != getProgram() || getProgram() == -1) {
-        throw std::runtime_error("Error: Shader::overrideMaterialID() should only be called whilst the shader is in use.\n");
+        THROW VisAssert("Shaders::overrideMaterialID() should only be called whilst the shader is in use.\n");
     }
 #endif
     materialIDVal = materialIndex;
@@ -446,7 +446,9 @@ void Shaders::_clearProgram() {
 void Shaders::setPositionsAttributeDetail(VertexAttributeDetail vad, bool update) {
     vad.location = this->positions.location;
     this->positions = vad;
-    assert(this->positions.vbo > 0);  // vbo must be set, else we wont render anything!
+    if (this->positions.vbo <= 0) {  // vbo must be set, else we wont render anything!
+        THROW VisAssert("Shaders::setPositionsAttributeDetail(): VBO is not set!\n");
+    }
     if (update)
         buildVAO();
 }

@@ -46,8 +46,12 @@ FrameBuffer::FrameBuffer(std::initializer_list<FBA> color, FBA depth, FBA stenci
     assert(static_cast<unsigned int>(r) >= dimensions.x);
     assert(static_cast<unsigned int>(r) >= dimensions.y);
 #endif
-    assert(depthstencil.Type() == FBA::Disabled || (depth.Type() == FBA::Disabled &&stencil.Type() == FBA::Disabled));
-    assert(color.size() <= static_cast<unsigned int>(getMaxColorAttachments()));
+    if (!(depthstencil.Type() == FBA::Disabled || (depth.Type() == FBA::Disabled && stencil.Type() == FBA::Disabled))) {
+        THROW VisAssert("FrameBuffer::FrameBuffer(): Invalid combination of depth, stencil and depthstencil FrameBufferAttachements.\n");
+    }
+    if (color.size() > static_cast<unsigned int>(getMaxColorAttachments())) {
+        THROW VisAssert("FrameBuffer::FrameBuffer(): Number of colors (%u) exceeds max color attachments(%u).\n", color.size(), static_cast<unsigned int>(getMaxColorAttachments()));
+    }
     GL_CALL(glGenFramebuffers(1, &name));     {  // Assign an attachment point to each color attachment
         unsigned int i = 0;
         for (FBA c : color) {
@@ -75,19 +79,27 @@ FrameBuffer::~FrameBuffer() {
 // Internal loaders
 void FrameBuffer::makeAttachments() {
     for (auto &&it = colors.begin(); it != colors.end(); ++it) {
-        assert(it->second.conf.Class() == FBA::Color);
+        if (it->second.conf.Class() != FBA::Color) {
+            THROW VisAssert("FrameBuffer::makeAttachments(): FrameBufferAttachment type mismatch.\n");
+        }
         makeAttachment(it->second.conf, GL_COLOR_ATTACHMENT0 + it->first, it->second.renderTarget);
     }
     if (depthStencil.conf.Type() != FBA::Disabled) {
-        assert(depthStencil.conf.Class() == FBA::DepthStencil);
+        if (depthStencil.conf.Class() != FBA::DepthStencil) {
+            THROW VisAssert("FrameBuffer::makeAttachments(): FrameBufferAttachment type mismatch.\n");
+        }
         makeAttachment(depthStencil.conf, GL_DEPTH_STENCIL_ATTACHMENT, depthStencil.renderTarget);
     } else {
         if (depth.conf.Type() != FBA::Disabled) {
-            assert(depth.conf.Class() == FBA::Depth);
+            if (depth.conf.Class() != FBA::Depth) {
+                THROW VisAssert("FrameBuffer::makeAttachments(): FrameBufferAttachment type mismatch.\n");
+            }
             makeAttachment(depth.conf, GL_DEPTH_ATTACHMENT, depth.renderTarget);
         }
         if (stencil.conf.Type() != FBA::Disabled) {
-            assert(stencil.conf.Class() == FBA::Stencil);
+            if (stencil.conf.Class() != FBA::Stencil) {
+                THROW VisAssert("FrameBuffer::makeAttachments(): FrameBufferAttachment type mismatch.\n");
+            }
             makeAttachment(stencil.conf, GL_STENCIL_ATTACHMENT, stencil.renderTarget);
         }
     }
@@ -111,9 +123,13 @@ void FrameBuffer::makeAttachment(const FBA &attachmentConfig, GLenum attachPoint
                 } else {  // Texture is unmanaged
                     // Ensure format is correct
                     if (samples) {
-                        assert(std::dynamic_pointer_cast<Texture2D_Multisample>(attachmentConfig.RenderTarget()));
+                        if (!std::dynamic_pointer_cast<Texture2D_Multisample>(attachmentConfig.RenderTarget())) {
+                            THROW VisAssert("FrameBuffer::makeAttachment(): Attachment with samples must be type Texture2D_Multisample.\n");
+                        }
                     } else {
-                        assert(std::dynamic_pointer_cast<Texture2D>(attachmentConfig.RenderTarget()));
+                        if (!std::dynamic_pointer_cast<Texture2D>(attachmentConfig.RenderTarget())) {
+                            THROW VisAssert("FrameBuffer::makeAttachment(): Attachment without samples must be type Texture2D.\n");
+                        }
                     }
                     renderTarget = attachmentConfig.RenderTarget();
                     // Bind the tex to our framebuffer

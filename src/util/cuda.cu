@@ -5,8 +5,7 @@
 
 // Drop in replacement if CUDA_CALL is missing
 #ifndef CUDA_CALL
-#include <cassert>
-#define CUDA_CALL(fn) assert(fn == cudaSuccess);
+#define CUDA_CALL(fn) visassert(fn == cudaSuccess);
 #endif
 
 /*

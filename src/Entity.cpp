@@ -995,7 +995,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                 if (fscanf(file, "%s", &temp[0]) == 1) {
                     this->materials.push_back(Material(materialBuffer, static_cast<unsigned int>(materials.size())));
                     materials[materials.size()-1].setName(temp);
-                    assert(materials.size() < MAX_OBJ_MATERIALS);
+                    visassert(materials.size() < MAX_OBJ_MATERIALS);
                 } else {
                     printf("Bad material file...");
                 }

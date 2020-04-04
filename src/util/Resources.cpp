@@ -1,4 +1,5 @@
 #include "Resources.h"
+#include "VisException.h"
 // If earlier than VS 2019
 #if defined(_MSC_VER) && _MSC_VER < 1920
 #include <filesystem>
@@ -66,7 +67,7 @@ std::string Resources::locateFile(const std::string &_path) {
                 return module_dir_path.string();
             } else {
                 // Unable to locate file
-                throw std::runtime_error("Unable to open file!");  // TODO: Replace with FGPU exception
+                THROW ResourceError("Resources::locateFile(): File '%s' could not be found!", _path.c_str());
             }
         }
     }

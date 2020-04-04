@@ -106,8 +106,7 @@ void Visualiser::run() {
         } else {
             int err = SDL_GL_MakeCurrent(this->window, this->context);
             if (err != 0) {
-                fprintf(stderr, "sdl: %s\n", SDL_GetError());
-                assert(false);
+                THROW VisAssert("Visualiser::run(): SDL_GL_MakeCurrent failed!\n", SDL_GetError());
             }
             GL_CHECK();
             this->resizeWindow();
@@ -286,9 +285,9 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
 
     //  Copy Data
     if (as.x_var && as.x_var->elementCount >= buffLen) {  //  This may fail for a single frame occasionally
-        assert(_cudaMemcpyDeviceToDevice(as.x_var->d_mappedPointer, d_x, buffLen * sizeof(float)));
-        assert(_cudaMemcpyDeviceToDevice(as.y_var->d_mappedPointer, d_y, buffLen * sizeof(float)));
-        assert(_cudaMemcpyDeviceToDevice(as.z_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
+        visassert(_cudaMemcpyDeviceToDevice(as.x_var->d_mappedPointer, d_x, buffLen * sizeof(float)));
+        visassert(_cudaMemcpyDeviceToDevice(as.y_var->d_mappedPointer, d_y, buffLen * sizeof(float)));
+        visassert(_cudaMemcpyDeviceToDevice(as.z_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
     }
 }
 //  Used in method above
@@ -385,10 +384,10 @@ void Visualiser::resizeWindow() {
 void Visualiser::close() {
     continueRender = false;
     //  This really shouldn't run if we're not the host thread, but we don't manage the render loop thread
-    assert(this->window);  // There should always be a window, it might just be hidden
+    visassert(this->window);  // There should always be a window, it might just be hidden
     SDL_GL_MakeCurrent(this->window, this->context);
     // Delete objects before we delete the GL context!
-    // fpsDisplay.reset();
+    fpsDisplay.reset();
     this->hud->clear();
     // if (this->scene) {
     //     this->scene.reset();

@@ -28,7 +28,7 @@ std::unordered_map<std::string, std::weak_ptr<const Texture2D>> Texture2D::cache
 //     , dimensions(image->w, image->h)
 //     , immutable(true)
 // {
-//     assert(image);
+//     visassert(image);
 //     allocateTextureImmutable(image);
 //     applyOptions();
 // }
@@ -144,13 +144,10 @@ void Texture2D::purgeCache(const std::string &filePath) {
 }
 void Texture2D::resize(const glm::uvec2 &_dimensions, void *data, size_t size) {
     if (immutable) {
-        // TODO: Propper Exceptions
-        // throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
-        throw std::exception();
-        return;
+        THROW VisAssert("Texture2D::resize(): Textures loaded from images are immutable and cannot be changed.\n");
     }
     if (data&&size)
-        assert(size == format.pixelSize*compMul(_dimensions));
+        visassert(size == format.pixelSize*compMul(_dimensions));
     this->dimensions = _dimensions;
     allocateTextureMutable(_dimensions, data);
     //  If image data has been updated, regen mipmap
@@ -165,13 +162,10 @@ void Texture2D::setTexture(void *data, size_t size) {
 }
 void Texture2D::setSubTexture(void *data, glm::uvec2 _dimensions, glm::ivec2 offset, size_t size) {
     if (immutable) {
-        // TODO: Propper Exceptions
-        // throw std::exception("Textures loaded from image are immutable and cannot be changed.\n");
-        throw std::exception();
-        return;
+        THROW VisAssert("Texture2D::setSubTexture(): Textures loaded from images are immutable and cannot be changed.\n");
     }
     if (size)
-        assert(size == format.pixelSize*compMul(_dimensions));
+        visassert(size == format.pixelSize*compMul(_dimensions));
     this->dimensions = _dimensions;
     Texture::setTexture(data, _dimensions, offset);
     //  If image data has been updated, regen mipmap
@@ -189,7 +183,7 @@ GLuint Texture2D::genTextureUnit() {
     GLint maxUnits;
     GL_CALL(glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxUnits));  //  192 on Modern GPUs, spec minimum 80
 #ifdef _DEBUG
-    assert(texUnit < static_cast<GLuint>(maxUnits));
+    visassert(texUnit < static_cast<GLuint>(maxUnits));
 #endif
     if (texUnit >= static_cast<GLuint>(maxUnits)) {
         texUnit = 1;
@@ -210,7 +204,7 @@ bool Texture2D::isBound() const {
 // #ifdef __GaussianBlur_h__
 // void GaussianBlur::blurR32F(std::shared_ptr<Texture2D> inTex, std::shared_ptr<Texture2D> outTex) {
 // #ifdef _DEBUG
-//     assert(inTex->getDimensions() == outTex->getDimensions());
+//     visassert(inTex->getDimensions() == outTex->getDimensions());
 // #endif
 //     blurR32F(inTex->getName(), outTex->getName(), inTex->getDimensions());
 // }

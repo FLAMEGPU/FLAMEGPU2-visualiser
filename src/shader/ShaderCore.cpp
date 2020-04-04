@@ -187,7 +187,9 @@ void ShaderCore::prepare(bool autoClear) {
             }
             // Updated textures use unique buffers, if for some reason this fails we have exceeded GL_MAX_COMBINED_TEXTURE_UNITS
             // and must start reusing texture units (for the given texture type) based on a static flag/counter
-            assert(static_cast<GLuint>(whichID) == utd.second.name);
+            if (static_cast<GLuint>(whichID) != utd.second.name) {
+                THROW VisAssert("ShaderCore::prepare(): Buffer binding point does not match!\n");
+            }
         }
         // Reset to texture unit 0 for doing work
         GL_CALL(glActiveTexture(GL_TEXTURE0));
@@ -437,7 +439,9 @@ bool ShaderCore::addTexture(const char *textureNameInShader, GLenum type, GLint 
             a = textures.erase(a);
         } else {
             // Check for collision of texture unit
-            assert(a->first != static_cast<GLint>(textureUnit));
+            if (a->first == static_cast<GLint>(textureUnit)) {
+                THROW VisAssert("Multiple textures in shader cannot use the same texture unit!\n");
+            }
             ++a;
         }
     }

@@ -191,11 +191,13 @@ SET(VISUALISER_INCLUDE
 # Prepare list of source files
 SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Visualiser.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/util/VisException.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/Resources.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FLAMEGPU_Visualisation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Visualiser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config/AgentStateConfig.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/config/ModelConfig.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/util/VisException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/Resources.cpp
     # .h from sdl_exp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/camera/NoClipCamera.h

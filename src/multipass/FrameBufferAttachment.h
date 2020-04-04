@@ -39,7 +39,7 @@ class FrameBufferAttachment {
         , internalFormat(internalFormat)
         , pixelFormat(pixelFormat)
         , storageType(storageType)
-        , rt(rt) { }
+        , rt(tex) { }
     /**
      * Which class of attachment is it: Color, Depth, Stencil or DepthStencil
      */
@@ -202,15 +202,17 @@ class FBAFactory {
     static FrameBufferAttachment ManagedDepthStencilRenderBuffer32() {
         return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::RenderBufferRT, GL_DEPTH32F_STENCIL8, 0, 0, nullptr);
     }
-    // // // // // // // // // // // // // //
-    //     Unmanaged FBA's     //
-    // // // // // // // // // // // // // //
+    ////////////////////////////
+    //     Unmanaged FBA's    //
+    ////////////////////////////
     /**
      * Defines an unmanaged color texture FBA
      * The named texture will not be managed by sdl_exp
      */
     static FrameBufferAttachment UnmanagedColorTexture(std::shared_ptr<::RenderTarget> tex) {
-        assert(std::dynamic_pointer_cast<Texture>(tex));
+        if (!std::dynamic_pointer_cast<Texture>(tex)) {
+            THROW VisAssert("FrameBufferAttachment UnmanagedColorTexture(): tex must not be a RenderBuffer!\n");
+        }
         return FrameBufferAttachment(FrameBufferAttachment::Color, FrameBufferAttachment::TextureRT, 0, 0, 0, tex);
     }
     /**
@@ -218,7 +220,9 @@ class FBAFactory {
      * The named texture will not be managed by sdl_exp
      */
     static FrameBufferAttachment UnmanagedDepthTexture(std::shared_ptr<::RenderTarget> tex) {
-        assert(std::dynamic_pointer_cast<Texture>(tex));
+        if (!std::dynamic_pointer_cast<Texture>(tex)) {
+            THROW VisAssert("FrameBufferAttachment UnmanagedDepthTexture(): tex must not be a RenderBuffer!\n");
+        }
         return FrameBufferAttachment(FrameBufferAttachment::Depth, FrameBufferAttachment::TextureRT, 0, 0, 0, tex);
     }
     /**
@@ -226,7 +230,9 @@ class FBAFactory {
      * The named texture will not be managed by sdl_exp
      */
     static FrameBufferAttachment UnmanagedStencilTexture(std::shared_ptr<::RenderTarget> tex) {
-        assert(std::dynamic_pointer_cast<Texture>(tex));
+        if (!std::dynamic_pointer_cast<Texture>(tex)) {
+            THROW VisAssert("FrameBufferAttachment UnmanagedStencilTexture(): tex must not be a RenderBuffer!\n");
+        }
         return FrameBufferAttachment(FrameBufferAttachment::Stencil, FrameBufferAttachment::TextureRT, 0, 0, 0, tex);
     }
     /**
@@ -234,7 +240,9 @@ class FBAFactory {
      * The named texture will not be managed by sdl_exp
      */
     static FrameBufferAttachment UnmanagedDepthStencilTexture(std::shared_ptr<::RenderTarget> tex) {
-        assert(std::dynamic_pointer_cast<Texture>(tex));
+        if (!std::dynamic_pointer_cast<Texture>(tex)) {
+            THROW VisAssert("FrameBufferAttachment UnmanagedDepthStencilTexture(): tex must not be a RenderBuffer!\n");
+        }
         return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::TextureRT, 0, 0, 0, tex);
     }
     /**

@@ -1,7 +1,6 @@
 #include "shader/buffer/UniformBuffer.h"
 
 #include <memory>
-#include <cassert>
 
 #include "util/GLcheck.h"
 
@@ -14,10 +13,7 @@ UniformBuffer::~UniformBuffer() {
 
 GLint UniformBuffer::allocateBindPoint() {
     if (allocatedBindPoints.size() == MaxBuffers()) {
-        // TODO: Better exception implementation.
-        // char buff[1024];
-        // snprintf(buff, sizeof(buff), "Uniform Buffer Bindings exceeded!\nLimit = %d\n\nsdl_exp UniformBuffer objs are not designed for sharing buffer bindings.", MaxBuffers());
-        throw std::exception();
+        THROW VisAssert("Uniform Buffer Bindings exceeded!\nLimit = %d\n\nsdl_exp UniformBuffer objs are not designed for sharing buffer bindings.", MaxBuffers());
     }
     for (unsigned int i = MaxBuffers() - 1; i >= 0; --i) {
         if (allocatedBindPoints.find(i) == allocatedBindPoints.end()) {
@@ -25,8 +21,7 @@ GLint UniformBuffer::allocateBindPoint() {
             return i;
         }
     }
-    assert(false);  // Should never reach here
-    return -1;
+    THROW VisAssert("UniformBuffer::allocateBindPoint(): This point should never be reached!");
 }
 
 GLint UniformBuffer::MaxSize() {
