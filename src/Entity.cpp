@@ -766,7 +766,7 @@ exit_loop: {}
             if (mtllib)
                 break;
             // Check for mtllib tag
-            for (int i = 1; i < (sizeof(mtllib_tag) / sizeof(c)) - 1; i++) {
+            for (unsigned int i = 1; i < (sizeof(mtllib_tag) / sizeof(c)) - 1; i++) {
                 if ((c = static_cast<char>(fgetc(file))) != mtllib_tag[i]) {
                     // Break if tag ends early
                     break;
@@ -800,7 +800,7 @@ exit_loop: {}
             if (usemtl)
                 break;
             // Check for usemtl tag
-            for (int i = 1; i < (sizeof(usemtl_tag) / sizeof(c)) - 1; i++) {
+            for (unsigned int i = 1; i < (sizeof(usemtl_tag) / sizeof(c)) - 1; i++) {
                 if ((c = static_cast<char>(fgetc(file))) != usemtl_tag[i]) {
                     // Break if tag ends early
                     break;
@@ -1256,7 +1256,13 @@ void Entity::importModel(const char *path) {
     printf("Importing Model: %s\n", importPath.c_str());
     // Read in the export mask
     ExportMask mask;
-    fread(&mask, sizeof(ExportMask), 1, file);
+    size_t elementsRead = 0;
+    elementsRead = fread(&mask, sizeof(ExportMask), 1, file);
+    if (elementsRead != 1) {
+        fprintf(stderr, "Failed to read FILE TYPE FLAG from file header %s. Aborting import\n", importPath.c_str());
+        fclose(file);
+        return;
+    }
     // Check file type flag exists
     if (mask.FILE_TYPE_FLAG != FILE_TYPE_FLAG) {
         fprintf(stderr, "FILE TYPE FLAG missing from file header: %s. Aborting import\n", importPath.c_str());
@@ -1340,14 +1346,24 @@ void Entity::importModel(const char *path) {
         }
     }
     if (mask.FILE_HAS_FACES_3) {
-        fread(&faces.count, sizeof(unsigned int), 1, file);
+        elementsRead = fread(&faces.count, sizeof(unsigned int), 1, file);
+        if (elementsRead != 1) {
+            fprintf(stderr, "Failed to read faces.count oorm file header %s. Aborting import\n", importPath.c_str());
+            fclose(file);
+            return;
+        }
         faces.data = malloc(faces.componentSize*faces.components*faces.count);
         if (faces.count*faces.components != fread(faces.data, sizeof(unsigned int), faces.count*faces.components, file)) {
             fprintf(stderr, "fread err: faces\n");
         }
     }
     // Check file footer contains flag (to confirm it was closed correctly
-    fread(&mask.FILE_TYPE_FLAG, sizeof(char), 1, file);
+    elementsRead = fread(&mask.FILE_TYPE_FLAG, sizeof(char), 1, file);
+    if (elementsRead != 1) {
+        fprintf(stderr, "Failed to read FILE_TYPE_FLAG from file footer %s. Aborting import.\n", importPath.c_str());
+        fclose(file);
+        return;
+    }
     if (mask.FILE_TYPE_FLAG != FILE_TYPE_FLAG) {
         fprintf(stderr, "FILE TYPE FLAG missing from file footer: %s, model may be corrupt.\n", importPath.c_str());
         return;

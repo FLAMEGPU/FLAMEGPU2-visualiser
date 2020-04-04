@@ -1,9 +1,11 @@
 #include "HUD.h"
 
-#pragma warning(push, 3)
+#include "util/warnings.h"
+
+DISABLE_WARNING_PUSH
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#pragma warning(pop)
+DISABLE_WARNING_POP
 
 #include "Overlay.h"
 #include "shader/Shaders.h"

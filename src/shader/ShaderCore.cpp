@@ -1,9 +1,10 @@
 #include "shader/ShaderCore.h"
 #include <cstdlib>  // < _splitpath() Windows only, need to rewrite linux ver
 #include <regex>
-#pragma warning(push, 3)
+#include "util/warnings.h"
+DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>
-#pragma warning(pop)
+DISABLE_WARNING_POP
 #include "util/StringUtils.h"
 #include "shader/Shaders.h"
 #include "util/Resources.h"
@@ -629,7 +630,10 @@ char* ShaderCore::loadShaderSource(const char* file) {
         int64_t length = ftell(fptr);
         char* buf = static_cast<char*>(malloc(length + 1));  //  Allocate a buffer for the entire length of the file and a null terminator
         fseek(fptr, 0, SEEK_SET);
-        fread(buf, length, 1, fptr);
+        size_t elementsRead = fread(buf, length, 1, fptr);
+        if (elementsRead != 1) {
+            fprintf(stdout, "Error: Incorrect number of elements read for resource %s\n", file);
+        }
         fclose(fptr);
         buf[length] = '\0';  //  Null terminator
         return buf;
@@ -683,7 +687,7 @@ bool ShaderCore::checkProgramLinkError(const GLuint _programId) const {
     }
     return true;
 }
-unsigned int ShaderCore::findShaderVersion(std::vector<const char*> shaderSources) {
+unsigned int ShaderCore::findShaderVersion(std::vector<const char*> const& shaderSources) {
     static std::regex versionRegex("#version ([0-9]+)", std::regex::ECMAScript | std::regex_constants::icase);
     std::cmatch match;
     for (auto shaderSource : shaderSources)

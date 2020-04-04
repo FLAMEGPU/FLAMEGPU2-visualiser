@@ -78,6 +78,7 @@ void Visualiser::join() {
     }
 }
 void Visualiser::stop() {
+    printf("Visualiser::stop()\n");
     this->continueRender = false;
 }
 void Visualiser::run() {
@@ -384,17 +385,25 @@ void Visualiser::resizeWindow() {
 void Visualiser::close() {
     continueRender = false;
     //  This really shouldn't run if we're not the host thread, but we don't manage the render loop thread
-    visassert(this->window);  // There should always be a window, it might just be hidden
-    SDL_GL_MakeCurrent(this->window, this->context);
-    // Delete objects before we delete the GL context!
-    fpsDisplay.reset();
-    this->hud->clear();
-    // if (this->scene) {
-    //     this->scene.reset();
-    // }
-    SDL_DestroyWindow(this->window);
-    this->window = nullptr;
-    SDL_GL_DeleteContext(this->context);
+    if (this->window != nullptr) {
+        SDL_GL_MakeCurrent(this->window, this->context);
+        // Delete objects before we delete the GL context!
+        // fpsDisplay.reset();
+        this->hud->clear();
+        // if (this->scene) {
+        //     this->scene.reset();
+        // }
+        SDL_DestroyWindow(this->window);
+        this->window = nullptr;
+    }
+    if (this->context != nullptr) {
+        SDL_GL_DeleteContext(this->context);
+    }
+
+    if (this->background_thread) {
+        this->background_thread->join();
+        delete this->background_thread;
+    }
     SDL_Quit();
 }
 void Visualiser::handleMouseMove(int x, int y) {
@@ -469,7 +478,7 @@ void Visualiser::updateFPS() {
     //  If it's been more than a second, do something.
     if (this->currentTime > this->previousTime + ONE_SECOND_MS) {
         //  Calculate average fps.
-        double fps = this->frameCount / static_cast<double>(this->currentTime - this->previousTime) * ONE_SECOND_MS;
+        // double fps = this->frameCount / static_cast<double>(this->currentTime - this->previousTime) * ONE_SECOND_MS;
         // Update the FPS string
         // this->fpsDisplay->setString("%.3f fps", fps);
         //  reset values;

@@ -1,12 +1,24 @@
 #include "util/cuda.h"
 
+
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+
 #include <cstring>
 #include <typeinfo>   //  operator typeid
+#include <stdexcept>
+
 
 // Drop in replacement if CUDA_CALL is missing
 #ifndef CUDA_CALL
-#define CUDA_CALL(fn) visassert(fn == cudaSuccess);
+#define CUDA_CALL(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line) {
+    if (code != cudaSuccess) {
+        throw VisAssert("CUDA Error: %s(%d): %s", file, line, cudaGetErrorString(code));
+    }
+}
 #endif
+
 
 /*
 Hidden internal functions
@@ -90,7 +102,7 @@ CUDATextureBuffer<T> *mallocGLInteropTextureBuffer(const unsigned int elementCou
     // Temporary storage of return values
     GLuint glTexName;
     GLuint glTBO;
-    T *d_MappedPointer;
+    T *d_MappedPointer = nullptr;
     cudaGraphicsResource_t cuGraphicsRes;
     cudaTextureObject_t cuTextureObj;
 
@@ -107,7 +119,7 @@ CUDATextureBuffer<T> *mallocGLInteropTextureBuffer(const unsigned int elementCou
     GL_CALL(glGenBuffers(1, &glTBO));
     // Size buffer and tie to tex
     GL_CALL(glBindBuffer(GL_TEXTURE_BUFFER, glTBO));
-    GL_CALL(glBufferData(GL_TEXTURE_BUFFER, bufferSize, 0, GL_STATIC_DRAW));                                    // TODO dynamic draw better?
+    GL_CALL(glBufferData(GL_TEXTURE_BUFFER, bufferSize, 0, GL_STATIC_DRAW));  // TODO dynamic draw better?
 
     GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, glTexName));
     GL_CALL(glTexBuffer(GL_TEXTURE_BUFFER, internalFormat, glTBO));

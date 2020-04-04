@@ -15,7 +15,7 @@ GLint UniformBuffer::allocateBindPoint() {
     if (allocatedBindPoints.size() == MaxBuffers()) {
         THROW VisAssert("Uniform Buffer Bindings exceeded!\nLimit = %d\n\nsdl_exp UniformBuffer objs are not designed for sharing buffer bindings.", MaxBuffers());
     }
-    for (unsigned int i = MaxBuffers() - 1; i >= 0; --i) {
+    for (unsigned int i = static_cast<size_t>(MaxBuffers()) - 1; i >= 0; --i) {
         if (allocatedBindPoints.find(i) == allocatedBindPoints.end()) {
             allocatedBindPoints.insert(i);
             return i;
