@@ -45,6 +45,5 @@ std::string VisException::parseArgs(const char * format, va_list argp) {
         rtn = std::string(buffer);
     }
     free(buffer);
-    printf("Exception: %s\n", rtn.c_str());
     return rtn;
 }
