@@ -34,9 +34,11 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , modelConfig(modelcfg) {
     this->isInitialised = this->init();
     BackBuffer::setClear(true, *reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]));
-    // fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
-    // fpsDisplay->setUseAA(false);
-    // hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
+    if (modelcfg.fpsVisible) {
+        // fpsDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3*>(&modelcfg.fpsColor[0]), Stock::Font::ARIAL);
+        // fpsDisplay->setUseAA(false);
+        // hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
+        }
 }
 Visualiser::~Visualiser() {
     this->close();
@@ -389,7 +391,7 @@ void Visualiser::close() {
     if (this->window != nullptr) {
         SDL_GL_MakeCurrent(this->window, this->context);
         // Delete objects before we delete the GL context!
-        // fpsDisplay.reset();
+        fpsDisplay.reset();
         this->hud->clear();
         // if (this->scene) {
         //     this->scene.reset();
@@ -427,7 +429,8 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         this->setMSAA(!this->msaaState);
         break;
     case SDLK_F8:
-        // this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
+        if (this->fpsDisplay)
+            this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
         break;
     case SDLK_F5:
         // if (this->scene)
@@ -479,9 +482,10 @@ void Visualiser::updateFPS() {
     //  If it's been more than a second, do something.
     if (this->currentTime > this->previousTime + ONE_SECOND_MS) {
         //  Calculate average fps.
-        // double fps = this->frameCount / static_cast<double>(this->currentTime - this->previousTime) * ONE_SECOND_MS;
+        double fps = this->frameCount / static_cast<double>(this->currentTime - this->previousTime) * ONE_SECOND_MS;
         // Update the FPS string
-        // this->fpsDisplay->setString("%.3f fps", fps);
+        if (this->fpsDisplay)
+            this->fpsDisplay->setString("%.3f fps", fps);
         //  reset values;
         this->previousTime = this->currentTime;
         this->frameCount = 0;

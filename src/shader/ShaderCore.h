@@ -471,7 +471,7 @@ class ShaderCore : public Reloadable {
      * Copies the init list to a std::vector of std:strings on the heap
      * @note You should delete the ptr returned by this yourself
      */
-    static std::vector<std::string> *buildFileVector(std::initializer_list<const char *>);
+    static std::vector<std::string> *buildFileVector(std::initializer_list<std::string>);
     /**
      * Checks whether the specified shader program linked succesfully.
      * Linking errors are printed to stderr and compileSuccessflag is set to false on failure.

@@ -32,11 +32,11 @@ Shaders::Shaders(Stock::Shaders::ShaderSet set)
     :Shaders(set.vertex, set.fragment, set.geometry) {}
 Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, const char *geometryShaderPath)
     : Shaders(
-        vertexShaderPath ? std::initializer_list<const char *>{vertexShaderPath } : std::initializer_list<const char *>{},
-        fragmentShaderPath ? std::initializer_list<const char *>{fragmentShaderPath } : std::initializer_list<const char *>{},
-        geometryShaderPath ? std::initializer_list<const char *>{geometryShaderPath } : std::initializer_list<const char *>{}
+        vertexShaderPath ? std::initializer_list<std::string>{vertexShaderPath } : std::initializer_list<std::string>{},
+        fragmentShaderPath ? std::initializer_list<std::string>{fragmentShaderPath } : std::initializer_list<std::string>{},
+        geometryShaderPath ? std::initializer_list<std::string>{geometryShaderPath } : std::initializer_list<std::string>{}
     ) { }
-Shaders::Shaders(std::initializer_list<const char *> vertexShaderPath, std::initializer_list<const char *> fragmentShaderPath, std::initializer_list<const char *> geometryShaderPath)
+Shaders::Shaders(std::initializer_list<std::string> vertexShaderPath, std::initializer_list<std::string> fragmentShaderPath, std::initializer_list<std::string> geometryShaderPath)
     : ShaderCore()
     , fbo(0)
     , vao(0)
