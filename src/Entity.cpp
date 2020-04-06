@@ -1248,8 +1248,7 @@ void Entity::importModel(const char *path) {
         return;
     }
     // Open file
-    FILE * file;
-    file = Resources::fopen(importPath.c_str(), "rb");
+    FILE * file = Resources::fopen(importPath.c_str(), "rb");
     if (!file) {
         fprintf(stderr, "Could not open file for reading: %s. Aborting import\n", importPath.c_str());
     }

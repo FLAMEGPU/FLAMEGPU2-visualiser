@@ -16,6 +16,8 @@ struct ModelConfig {
     const char* windowTitle;
     unsigned int windowDimensions[2];
     float clearColor[3];
+    bool fpsVisible;
+    float fpsColor[3];
 
  private:
      /**

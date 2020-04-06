@@ -172,7 +172,7 @@ class Shaders : public ShaderCore {
      * @param geometryShaderFiles Path to the GLSL geometry shader ({} if not required)
      * @note You must provide atleast 1 shader path, however it can be of any of the 3 types
      */
-    Shaders(std::initializer_list<const char *> vertexShaderPath, std::initializer_list<const char *> fragmentShaderPath = {}, std::initializer_list<const char *> geometryShaderPath = {});
+    Shaders(std::initializer_list<std::string> vertexShaderPath, std::initializer_list<std::string> fragmentShaderPath = {}, std::initializer_list<std::string> geometryShaderPath = {});
     /**
      * Copy constructor
      * @note This does not duplicate linked external objects, e.g. buffers, textures.
