@@ -1,5 +1,6 @@
 #include "Visualiser.h"
 #include "util/cuda.h"
+#include "util/fonts.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -35,9 +36,9 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     this->isInitialised = this->init();
     BackBuffer::setClear(true, *reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]));
     if (modelcfg.fpsVisible) {
-        // fpsDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3*>(&modelcfg.fpsColor[0]), Stock::Font::ARIAL);
-        // fpsDisplay->setUseAA(false);
-        // hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
+        fpsDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3 *>(&modelcfg.fpsColor[0]), fonts::findFont("Arial", fonts::GenericFontFamily::SANS).c_str());
+        fpsDisplay->setUseAA(false);
+        hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
         }
 }
 Visualiser::~Visualiser() {
