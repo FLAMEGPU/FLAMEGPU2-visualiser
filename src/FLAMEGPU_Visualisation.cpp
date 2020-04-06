@@ -11,8 +11,8 @@ class LockHolder {
     std::lock_guard<std::mutex> guard;
 };
 
-FLAMEGPU_Visualisation::FLAMEGPU_Visualisation(const unsigned int width, const unsigned int height)
-    : vis(new Visualiser(width, height)) { }
+FLAMEGPU_Visualisation::FLAMEGPU_Visualisation(const ModelConfig& modelcfg)
+    : vis(new Visualiser(modelcfg)) { }
 FLAMEGPU_Visualisation::~FLAMEGPU_Visualisation() {
     if (vis)
         delete vis;
