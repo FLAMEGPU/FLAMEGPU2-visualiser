@@ -19,6 +19,7 @@
 #include "HUD.h"
 #include "Text.h"
 
+#include "config/ModelConfig.h"
 #include "config/AgentStateConfig.h"
 #include "Entity.h"
 
@@ -65,7 +66,7 @@ class Visualiser : public ViewportExt {
     };
 
  public:
-    Visualiser(unsigned int windowWidth, unsigned int windowHeight);
+    explicit Visualiser(const ModelConfig& modelcfg);
     ~Visualiser();
     /**
      * Starts the render loop running
@@ -186,6 +187,7 @@ class Visualiser : public ViewportExt {
     unsigned int frameCount = 0;
     std::shared_ptr<Text> fpsDisplay;
 
+    ModelConfig modelConfig;
     std::unordered_map<NamePair, RenderInfo, NamePairHash> agentStates;
 
     /**

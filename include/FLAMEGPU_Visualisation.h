@@ -4,6 +4,7 @@
 #include <string>
 
 struct AgentStateConfig;
+struct ModelConfig;
 class Visualiser;
 class LockHolder;
 
@@ -13,7 +14,7 @@ class LockHolder;
  */
 class FLAMEGPU_Visualisation {
  public:
-    explicit FLAMEGPU_Visualisation(const unsigned int window_width = 1280, const unsigned int window_height = 720);
+    explicit FLAMEGPU_Visualisation(const ModelConfig &modelcfg);
     ~FLAMEGPU_Visualisation();
     void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc) {
         addAgentState(agent_name.c_str(), state_name.c_str(), vc);
