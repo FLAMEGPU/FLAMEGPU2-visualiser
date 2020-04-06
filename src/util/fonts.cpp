@@ -112,7 +112,7 @@ namespace fonts {
 
         // if none were found, an error has occured. @todo
         if (!fontpath.length() == 0) {
-            THROW FontLoadingError("Windows Font Loading Error at %s::%u", __FILE__, __LINE__); // @todo exception.
+            THROW FontLoadingError("Fontconfig Font Loading Error at %s::%u", __FILE__, __LINE__); // @todo exception.
         }
         // Return the path to the font.
         return fontpath;
@@ -123,7 +123,7 @@ namespace fonts {
         std::string query = fontQueryString(fontName, generic);
         std::string fontpath = fontSearch(query);
         if (!fontpath.length() == 0) {
-            THROW FontLoadingError("Windows Font Loading Error at %s::%u", __FILE__, __LINE__); // @todo exception.
+            THROW FontLoadingError("Fontconfig Font Loading Error at %s::%u", __FILE__, __LINE__); // @todo exception.
         }
         // Return the path to the font.
         return fontpath;
@@ -131,31 +131,26 @@ namespace fonts {
 
 }
 
-// Windows implementation
+// Windows implementation using directwrite.
 #elif defined(_MSC_VER)
 
+// https://docs.microsoft.com/en-us/windows/win32/api/dwrite/nn-dwrite-idwritefontcollection
 #include <dwrite.h>
 
 namespace fonts {
 
-// private stuff
+// anonymous namespace to emulate private:
 namespace {
 
-    const std::map<GenericFontFamily, const char*> genericFontNameMap = {
-        {SANS, "sans-serif"},
-        {SERIF, "serif"},
-        {MONOSPACE, "monospace"},
-        {CURSIVE, "cursive"} };
-    /**
-    *  Generic fallback font name, in case the genericFontNameMap is incomplete for some reason
-    */
-    const char* FALLBACK_FONTNAME = "sans-serif";
-
-    // https://docs.microsoft.com/en-us/windows/win32/api/dwrite/nn-dwrite-idwritefontcollection
-
+	/**
+	 * Find the path to a single named font on windows using directwrite
+	 * @param fontName the name of the font. I.e. Arial, Papyrus
+	 * @return full path to the font, if found. Empty string if not.
+	 */
     std::string fontSearch(std::string fontName) {
 
-        std::string fontpath = std::string("");
+		// Initialise default empty string return value.
+        std::string retval = std::string("");
 
         // Get a the directwrite factory object
         IDWriteFactory* directWriteFactory = NULL;
@@ -176,16 +171,25 @@ namespace {
             THROW FontLoadingError("Windows Font Loading Error at %s::%u", __FILE__, __LINE__);
         }
 
-        // Get the number of font families in the collection.
-        UINT32 familyCount = fontCollection->GetFontFamilyCount();
+		// Search for a family name within a collection.
+		unsigned int targetLength = MultiByteToWideChar(CP_UTF8, 0, fontName.c_str(), -1, NULL, 0);
+		WCHAR* targetFamilyName = new WCHAR[targetLength];
+		MultiByteToWideChar(CP_UTF8, 0, fontName.c_str(), -1, targetFamilyName, targetLength);
 
-
-        // Iterate the families
-        for (UINT32 i = 0; i < familyCount; i++) {
+		UINT32 matchIndex = 0;
+		BOOL targetFound = false;
+		dwriteResult = fontCollection->FindFamilyName(targetFamilyName, &matchIndex, &targetFound);
+		if (!SUCCEEDED(dwriteResult)) {
+			delete targetFamilyName;
+			THROW FontLoadingError("Windows Font Loading Error at %s::%u", __FILE__, __LINE__);
+		}
+		delete targetFamilyName;
+		// If the target was found, select it via indexing.
+		if(targetFound){
             IDWriteFontFamily* fontFamily = NULL;
 
             // Get the font family.
-            dwriteResult = fontCollection->GetFontFamily(i, &fontFamily);
+            dwriteResult = fontCollection->GetFontFamily(matchIndex, &fontFamily);
             if (!SUCCEEDED(dwriteResult)) {
                 THROW FontLoadingError("Windows Font Loading Error at %s::%u", __FILE__, __LINE__);
             }
@@ -257,23 +261,18 @@ namespace {
                         int filePathLength = WideCharToMultiByte(CP_UTF8, 0, wFilePath, -1, NULL, 0, NULL, NULL);
                         char *filePath = new char[filePathLength];
                         WideCharToMultiByte(CP_UTF8, 0, wFilePath, -1, filePath, filePathLength, NULL, NULL);
-
-						/*char* postscriptName = getString(font, DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME);
-						char* family = getString(font, DWRITE_INFORMATIONAL_STRING_WIN32_FAMILY_NAMES);
-						char* style = getString(font, DWRITE_INFORMATIONAL_STRING_WIN32_SUBFAMILY_NAMES);*/
 						
 
-						printf("filePath %s\n", filePath);
-
-						/*delete postscriptName;
-						delete family;
-						delete style;*/
-
+						// Put it into a std string to return.
+						retval = std::string(filePath);
 
 						delete filePath;
 						filePath = nullptr;
 						delete wFilePath;
 						wFilePath = nullptr;
+
+						// Also break out the loop so that the first matching filepath is used.
+						break;
                     }
 
 					if (fontFileLoader) {
@@ -301,17 +300,38 @@ namespace {
             directWriteFactory->Release();
             directWriteFactory = nullptr;
         }
-		exit(1);
-        return fontpath;
+        return retval;
 
     }
 
+	/*
+	 * Define default font names for Generic families. These should exist on (almost) all windows systems.
+	 */
     std::string genericFontName(GenericFontFamily generic) {
-        // @todo - map.
-        return std::string("Arial");
+		// @note - doesn't seem to be an actual way of detecting generic fonts through directwrite.
+		switch (generic) {
+			default:
+			case SANS:
+				return "Arial";
+				break;
+			case SERIF:
+				return "Times New Roman";
+				break;
+			case CURSIVE:
+				return "Comic Sans MS";
+				break;
+			case MONOSPACE:
+				return "Courier New";
+				break;
+		}
     }
 
-}
+	/*
+	 * Define the name of a fallback font.
+	 * @todo - this should probably actually just be a selected font which meets some properties, rather than a specific named value.
+	 */
+	const char* FALLBACK_FONTNAME = "Arial";
+}  // Anonymous namespace
 
 // Public things.
 
@@ -339,8 +359,7 @@ std::string findFont(std::vector<std::string> fontNames, const GenericFontFamily
     }
 
     // Otherwise we need to bail out  without any fonts.
-    // @todo raise an exception
-    return "";
+	THROW FontLoadingError("Windows Font Loading Error at %s::%u", __FILE__, __LINE__);
 }
 
 std::string findFont(std::string fontName, const GenericFontFamily generic) {
@@ -366,8 +385,7 @@ std::string findFont(std::string fontName, const GenericFontFamily generic) {
     }
 
     // Otherwise we need to bail out  without any fonts.
-    // @todo raise an exception
-    return "";
+	THROW FontLoadingError("Windows Font Loading Error at %s::%u", __FILE__, __LINE__);
 }
 } // namespace fonts
 
