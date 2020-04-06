@@ -35,7 +35,12 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , modelConfig(modelcfg) {
     this->isInitialised = this->init();
     BackBuffer::setClear(true, *reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]));
+	std::string fontpath = fonts::findFont("Arial", fonts::GenericFontFamily::SANS).c_str();
+	printf("fontpath: %s\n", fontpath.c_str());
+	exit(1);
     if (modelcfg.fpsVisible) {
+		
+
         fpsDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3 *>(&modelcfg.fpsColor[0]), fonts::findFont("Arial", fonts::GenericFontFamily::SANS).c_str());
         fpsDisplay->setUseAA(false);
         hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
