@@ -329,6 +329,9 @@ target_link_libraries("${PROJECT_NAME}" Threads::Threads)
 if(Fontconfig_FOUND)
     target_link_libraries("${PROJECT_NAME}" Fontconfig::Fontconfig)
 endif()
+if(WIN32)
+target_link_libraries("${PROJECT_NAME}" "dwrite.lib")
+endif()
 
 
 # Enable parallel compilation

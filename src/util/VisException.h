@@ -81,6 +81,12 @@ DERIVED_VisException(GLError, "OpenGL returned an error code!");
 DERIVED_VisException(ResourceError, "Resource was not found!");
 
 /**
+ * Defines a type of object to be thrown as exception.
+ * It reports errors that are due to Font loading
+ */
+DERIVED_VisException(FontLoadingError, "Error during font loading!");
+
+/**
  * Lazy replacement for assert()
  */
 #define visassert(cdn) if (!(cdn)) { THROW VisAssert("VisAssert: '#cdn' failed!\n");}
