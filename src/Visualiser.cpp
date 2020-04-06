@@ -21,18 +21,19 @@
 #define DEFAULT_WINDOW_WIDTH 1280
 #define DEFAULT_WINDOW_HEIGHT 720
 
-Visualiser::Visualiser(unsigned int windowWidth = DEFAULT_WINDOW_WIDTH, unsigned int windowHeight = DEFAULT_WINDOW_HEIGHT)
-    : hud(std::make_shared<HUD>(windowWidth, windowHeight))
+Visualiser::Visualiser(const ModelConfig& modelcfg)
+    : hud(std::make_shared<HUD>(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1]))
     , camera(std::make_shared<NoClipCamera>(glm::vec3(150, 150, 150)))
     // , scene(nullptr)
     , isInitialised(false)
     , continueRender(false)
     , msaaState(true)
-    , windowTitle("FLAMEGPU2 Visualiser")
-    , windowDims(windowWidth, windowHeight)
-    , fpsDisplay(nullptr) {
+    , windowTitle(modelcfg.windowTitle)
+    , windowDims(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1])
+    , fpsDisplay(nullptr)
+    , modelConfig(modelcfg) {
     this->isInitialised = this->init();
-
+    BackBuffer::setClear(true, *reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]));
     // fpsDisplay = std::make_shared<Text>("", 10, glm::vec3(1.0f), Stock::Font::ARIAL);
     // fpsDisplay->setUseAA(false);
     // hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
