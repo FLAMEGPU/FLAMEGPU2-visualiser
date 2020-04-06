@@ -141,6 +141,11 @@ if (UNIX)
       message(FATAL_ERROR "freetype is required for building, install it via your package manager.\n"
                           "e.g. sudo apt install libglu1-mesa-dev")
     endif ()
+    find_package(Fontconfig)
+    if (NOT Fontconfig_FOUND)
+        message(FATAL_ERROR "Fontconfig is required for visualisation, install it via your package manager.\n"
+                          "e.g. sudo apt install libfontconfig1-dev")
+    endif()
 else()
     if (NOT TARGET OpenGL::GLU)
       message(FATAL_ERROR "GLU is required for building")
@@ -200,6 +205,8 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/VisException.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/Resources.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/warnings.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/util/fonts.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/util/fonts.cpp
     # .h from sdl_exp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/camera/NoClipCamera.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/interface/Camera.h
@@ -292,8 +299,11 @@ target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${CMAKE_CURRENT_BINA
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${GLEW_INCLUDE_DIRS})
 if (FREETYPE_FOUND) # Only use this if we aren't building it ourselves
-target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS})
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS})
 endif ()
+if(Fontconfig_FOUND)
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${Fontconfig_INCLUDE_DIRS})
+endif()
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/external")
 target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -305,7 +315,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 # If gcc, need to add flag for std::experimental::filesystem
-message("CMAKE_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID}" )
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries("${PROJECT_NAME}" "-lstdc++fs")
 endif()
@@ -317,6 +326,10 @@ target_link_libraries("${PROJECT_NAME}" freetype)
 target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
 target_link_libraries("${PROJECT_NAME}" OpenGL::GLU)
 target_link_libraries("${PROJECT_NAME}" Threads::Threads)
+if(Fontconfig_FOUND)
+    target_link_libraries("${PROJECT_NAME}" Fontconfig::Fontconfig)
+endif()
+
 
 # Enable parallel compilation
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
