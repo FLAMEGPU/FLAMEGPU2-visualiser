@@ -1,5 +1,7 @@
 #include "config/ModelConfig.h"
 
+#include <cstring>
+
 ModelConfig::ModelConfig(const char* _windowTitle)
     : windowTitle(nullptr)
     , fpsVisible(true) {

@@ -9,7 +9,7 @@ BufferCore::BufferCore(GLenum bufferType, GLint bindPoint, size_t size, void* da
     , bufferName(0)
     , bufferBindPoint(bindPoint)
     , bufferType(bufferType) {
-    if (this->size > maxSize(bufferType)) {
+    if (this->size > static_cast<size_t>(maxSize(bufferType))) {
         THROW VisAssert("BufferCore::BufferCore(): Size (%u) exceeds max buffer size (%u)!\n", this->size, maxSize(bufferType));
     }
     GL_CALL(glGenBuffers(1, &bufferName));
@@ -23,7 +23,7 @@ BufferCore::~BufferCore() {
 }
 void BufferCore::setData(void *data, size_t _size) {
     this->size = _size == 0 ? this->size : _size;
-    if (this->size > maxSize(bufferType)) {
+    if (this->size > static_cast<size_t>(maxSize(bufferType))) {
         THROW VisAssert("BufferCore::setData(): Size (%u) exceeds max buffer size (%u)!\n", this->size, maxSize(bufferType));
     }
     GL_CALL(glBindBuffer(bufferType, bufferName));
@@ -32,7 +32,7 @@ void BufferCore::setData(void *data, size_t _size) {
 }
 void BufferCore::setData(void *data, size_t _size, size_t offset) {
     visassert(_size + offset <= this->size);
-    if (_size + offset > maxSize(bufferType)) {
+    if (_size + offset > static_cast<size_t>(maxSize(bufferType))) {
         THROW VisAssert("BufferCore::setData(): _size (%u) + offset (%u) exceeds max buffer size (%u)!\n", _size, offset, maxSize(bufferType));
     }
     GL_CALL(glBindBuffer(bufferType, bufferName));
