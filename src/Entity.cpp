@@ -1280,12 +1280,12 @@ void Entity::importModel(const char *path) {
     }
     // Check float/uint lengths aren't too short
     if (sizeof(float) != mask.SIZE_OF_FLOAT) {
-        fprintf(stderr, "File %s uses floats of %i bytes, this architecture has floats of %llu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
+        fprintf(stderr, "File %s uses floats of %i bytes, this architecture has floats of %zu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
         fclose(file);
         return;
     }
     if (sizeof(unsigned int) != mask.SIZE_OF_UINT) {
-        fprintf(stderr, "File %s uses uints of %i bytes, this architecture has floats of %llu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
+        fprintf(stderr, "File %s uses uints of %i bytes, this architecture has floats of %zu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
         fclose(file);
         return;
     }
