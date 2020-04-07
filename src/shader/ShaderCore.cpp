@@ -699,7 +699,8 @@ std::vector<std::string> *ShaderCore::buildFileVector(std::initializer_list<std:
     std::vector<std::string> *rtn = new std::vector<std::string>();
 
     for (auto i : sources) {
-        rtn->push_back(i);
+      if (!i.empty())
+            rtn->push_back(i);
     }
     return rtn;
 }

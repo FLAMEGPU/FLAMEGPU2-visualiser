@@ -30,12 +30,35 @@ const char *Shaders::TEXCOORD_ATTRIBUTE_NAME = "_texCoords";
 
 Shaders::Shaders(Stock::Shaders::ShaderSet set)
     :Shaders(set.vertex, set.fragment, set.geometry) {}
-Shaders::Shaders(const char *vertexShaderPath, const char *fragmentShaderPath, const char *geometryShaderPath)
-    : Shaders(
-        vertexShaderPath ? std::initializer_list<std::string>{vertexShaderPath } : std::initializer_list<std::string>{},
-        fragmentShaderPath ? std::initializer_list<std::string>{fragmentShaderPath } : std::initializer_list<std::string>{},
-        geometryShaderPath ? std::initializer_list<std::string>{geometryShaderPath } : std::initializer_list<std::string>{}
-    ) { }
+Shaders::Shaders(const std::string &vertexShaderPath, const std::string &fragmentShaderPath, const std::string &geometryShaderPath)
+    : ShaderCore()
+    , fbo(0)
+    , vao(0)
+    , modelMat()
+    , viewMat()
+    , projectionMat()
+    , materialIDLocation(-1)
+    , materialIDVal(INT_MAX)
+    , modelviewprojectionMatLoc(-1)
+    , modelviewMatLoc(-1)
+    , normalMatLoc(-1)
+    , rotationPtr(nullptr)
+    , translationPtr(nullptr)
+    , positions(GL_FLOAT, 3, sizeof(float))
+    , normals(GL_FLOAT, NORMALS_SIZE, sizeof(float))
+    , colors(GL_FLOAT, 3, sizeof(float))
+    , texcoords(GL_FLOAT, 2, sizeof(float))
+    , colorUniformLocation(-1)
+    , colorUniformValue(1, 0, 0, 1)  // Red
+    , vertexShaderFiles(buildFileVector({vertexShaderPath}))
+    , fragmentShaderFiles(buildFileVector({fragmentShaderPath}))
+    , geometryShaderFiles(buildFileVector({geometryShaderPath}))
+    , vertexShaderVersion(-1)
+    , fragmentShaderVersion(-1)
+    , geometryShaderVersion(-1) {
+    GL_CALL(glGenVertexArrays(1, &vao));
+    reload();
+}
 Shaders::Shaders(std::initializer_list<std::string> vertexShaderPath, std::initializer_list<std::string> fragmentShaderPath, std::initializer_list<std::string> geometryShaderPath)
     : ShaderCore()
     , fbo(0)
