@@ -12,23 +12,6 @@
 #include "model/Material.h"
 #include "shader/ShadersVec.h"
 
-namespace Stock {
-namespace Models {
-struct Model {
-    const char *modelPath;
-    const char *texturePath;
-    Stock::Shaders::ShaderSet defaultShaders;
-};
-const Model SPHERE{ "../models/sphere.obj", "", Stock::Shaders::PHONG };
-const Model ICOSPHERE{ "../models/icosphere.obj", "", Stock::Shaders::FLAT };
-const Model ICOSPHERE_COLOR{ "../models/icosphere_color.obj", "", Stock::Shaders::COLOR };  // Remove texture?
-const Model CUBE{ "../models/cube.obj", "", Stock::Shaders::COLOR };
-const Model ROTHWELL{ "../models/rothwell-wy-1.obj", "", Stock::Shaders::PHONG };
-const Model DEER{ "../models/deer.obj", "../textures/deer.tga", Stock::Shaders::PHONG };
-const Model TEAPOT{ "../models/teapot.obj", "", Stock::Shaders::PHONG };
-const Model PLANE{ "../models/plane.obj", "", Stock::Shaders::FLAT };
-}  // namespace Models
-}  // namespace Stock
 /*
 A renderable model loaded from a .obj file
 */
@@ -37,58 +20,34 @@ class Entity : public Renderable {
 
  public:
     explicit Entity(
-        Stock::Models::Model const model,
-        float scale = 1.0f,
-        std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr));
-    explicit Entity(
-        Stock::Models::Model const model,
-        float scale,
-        Stock::Shaders::ShaderSet const ss,
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr));
-    explicit Entity(
         const char *modelPath,
-        float modelScale = 1.0f,
+        const glm::vec3 &scale = glm::vec3(1.0f),
         Stock::Shaders::ShaderSet const ss = Stock::Shaders::FIXED_FUNCTION,
         std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr));
     explicit Entity(
         const char *modelPath,
-        float modelScale,
+        const glm::vec3 &modelScale,
         std::shared_ptr<Shaders> shaders = std::shared_ptr<Shaders>(nullptr),
         std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr));
     explicit Entity(
-        Stock::Models::Model const model,
-        float scale = 1.0f,
-        std::initializer_list<std::shared_ptr<Shaders>> shaders = {},
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr));
-    Entity(
-        Stock::Models::Model const model,
-        float scale,
-        std::initializer_list<const Stock::Shaders::ShaderSet> ss,
-        std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr));
-    explicit Entity(
         const char *modelPath,
-        float modelScale = 1.0f,
+        const glm::vec3 &scale = glm::vec3(1.0f),
         std::initializer_list<const Stock::Shaders::ShaderSet> ss = {},
         std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr));
-    explicit Entity(
+    Entity(
         const char *modelPath,
-        float modelScale,
+        const glm::vec3 &modelScale,
         std::initializer_list<std::shared_ptr<Shaders>> shaders = {},
         std::shared_ptr<const Texture> texture = std::shared_ptr<Texture2D>(nullptr));
     explicit Entity(
         const char *modelPath,
-        float modelScale,
+        const glm::vec3 &modelScale,
         std::vector<std::shared_ptr<Shaders>> shaders,
         std::shared_ptr<const Texture> texture);
     explicit Entity(
         const char *modelPath,
         Stock::Materials::Material const material,
-        float modelScale = 1.0f);
-    explicit Entity(
-        Stock::Models::Model const model,
-        Stock::Materials::Material const material,
-        float modelScale = 1.0f);
+        const glm::vec3 &scale = glm::vec3(1.0f));
     virtual ~Entity();
     virtual void render(unsigned int shaderIndex = 0);
     void renderInstances(int count, unsigned int shaderIndex = 0);
@@ -129,9 +88,10 @@ class Entity : public Renderable {
     GLuint lightBufferBindPt;
     std::vector<std::shared_ptr<Shaders>> shaders;
     std::shared_ptr<const Texture> texture;
-    // World scale of the longest side (in the axis x, y or z)
-    const float SCALE;
-    float scaleFactor;
+    // World scale of each side (in the axis x, y or z)
+    const glm::vec3 SCALE;
+    // Model is scaled using model-mat, so we use vec4 for safety
+    glm::vec4 scaleFactor;
     const char *modelPath;
     // Model vertex and face counts
     unsigned int vn_count;
@@ -171,7 +131,7 @@ class Entity : public Renderable {
         unsigned char VERSION_FLAG;
         unsigned char SIZE_OF_FLOAT;
         unsigned char SIZE_OF_UINT;
-        float         SCALE;
+        float     SCALE;
         unsigned int  VN_COUNT;
         unsigned int  FILE_HAS_VERTICES_3 : 1;
         unsigned int  FILE_HAS_VERTICES_4 : 1;
