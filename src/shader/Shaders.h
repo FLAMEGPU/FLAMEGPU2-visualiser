@@ -21,27 +21,27 @@ struct ShaderSet {
     const char *fragment;
     const char *geometry;
 };
-const ShaderSet FIXED_FUNCTION{ nullptr, nullptr, nullptr };
-const ShaderSet FULLBRIGHT{ "resources/default.vert", "resources/fullbright_phong.frag", nullptr };
-const ShaderSet FULLBRIGHT_FLAT{ "resources/default.vert", "resources/material_fullbright_flat.frag", nullptr };
-const ShaderSet FULLBRIGHT_PHONG{ "resources/default.vert", "resources/material_fullbright_phong.frag", nullptr };
-const ShaderSet FLAT{ "resources/default.vert", "resources/material_flat.frag", nullptr };
-const ShaderSet PHONG{ "resources/default.vert", "resources/material_phong.frag", nullptr };
-const ShaderSet COLOR{ "resources/color.vert", "resources/color.frag", nullptr };
-const ShaderSet COLOR_NOSHADE{ "resources/color.vert", "resources/color_noshade.frag", nullptr };
-const ShaderSet SKYBOX{ "resources/skybox.vert", "skybox.frag", nullptr };
-const ShaderSet INSTANCED_FLAT{ "resources/instanced_flat.vert", "resources/material_flat.frag", nullptr };
-const ShaderSet INSTANCED_PHONG{ "resources/instanced_default.vert", "resources/material_phong.frag", nullptr };
-const ShaderSet TEXT{ "resources/default.vert", "resources/text.frag", nullptr };
-const ShaderSet SPRITE2D{ "resources/default.vert", "resources/sprite2d.frag", nullptr };
-const ShaderSet SPRITE2D_HEAT{ "resources/default.vert", "resources/sprite2dHeat.frag", nullptr };
-const ShaderSet BILLBOARD{ "resources/billboard.vert", "resources/particle.frag", nullptr };
-const ShaderSet LINEAR_DEPTH{ "resources/default.vert", "resources/linear_depth.frag", nullptr };
-const ShaderSet FLAT_SHADOW{ "resources/shadow.vert", "resources/material_flat_shadow.frag", nullptr };
-const ShaderSet PHONG_SHADOW{ "resources/shadow.vert", "resources/material_phong_shadow.frag", nullptr };
-const ShaderSet BONE{ "resources/bone.vert", "resources/material_phong.frag", nullptr };
-const ShaderSet BONE_LINEAR_DEPTH{ "resources/bone.vert", "resources/linear_depth.frag", nullptr };
-const ShaderSet BONE_SHADOW{ "resources/bone_shadow.vert", "resources/material_phong_shadow.frag", nullptr };
+const ShaderSet FIXED_FUNCTION{ "", "", "" };
+const ShaderSet FULLBRIGHT{ "resources/default.vert", "resources/fullbright_phong.frag", "" };
+const ShaderSet FULLBRIGHT_FLAT{ "resources/default.vert", "resources/material_fullbright_flat.frag", "" };
+const ShaderSet FULLBRIGHT_PHONG{ "resources/default.vert", "resources/material_fullbright_phong.frag", "" };
+const ShaderSet FLAT{ "resources/default.vert", "resources/material_flat.frag", "" };
+const ShaderSet PHONG{ "resources/default.vert", "resources/material_phong.frag", "" };
+const ShaderSet COLOR{ "resources/color.vert", "resources/color.frag", "" };
+const ShaderSet COLOR_NOSHADE{ "resources/color.vert", "resources/color_noshade.frag", "" };
+const ShaderSet SKYBOX{ "resources/skybox.vert", "skybox.frag", "" };
+const ShaderSet INSTANCED_FLAT{ "resources/instanced_flat.vert", "resources/material_flat.frag", "" };
+const ShaderSet INSTANCED_PHONG{ "resources/instanced_default.vert", "resources/material_phong.frag", "" };
+const ShaderSet TEXT{ "resources/default.vert", "resources/text.frag", "" };
+const ShaderSet SPRITE2D{ "resources/default.vert", "resources/sprite2d.frag", "" };
+const ShaderSet SPRITE2D_HEAT{ "resources/default.vert", "resources/sprite2dHeat.frag", "" };
+const ShaderSet BILLBOARD{ "resources/billboard.vert", "resources/particle.frag", "" };
+const ShaderSet LINEAR_DEPTH{ "resources/default.vert", "resources/linear_depth.frag", "" };
+const ShaderSet FLAT_SHADOW{ "resources/shadow.vert", "resources/material_flat_shadow.frag", "" };
+const ShaderSet PHONG_SHADOW{ "resources/shadow.vert", "resources/material_phong_shadow.frag", "" };
+const ShaderSet BONE{ "resources/bone.vert", "resources/material_phong.frag", "" };
+const ShaderSet BONE_LINEAR_DEPTH{ "resources/bone.vert", "resources/linear_depth.frag", "" };
+const ShaderSet BONE_SHADOW{ "resources/bone_shadow.vert", "resources/material_phong_shadow.frag", "" };
 }  // namespace Shaders
 }  // namespace Stock
 /**
