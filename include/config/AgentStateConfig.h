@@ -7,19 +7,15 @@
 * This class holds the common components for a visualisation
 */
 struct AgentStateConfig {
+    friend class AgentVis;
+    friend class AgentStateVis;
     AgentStateConfig();
     ~AgentStateConfig();
     AgentStateConfig(const AgentStateConfig &other);
     AgentStateConfig &operator=(const AgentStateConfig &other);
 
-    const char *model_path = nullptr;  // "icosphere.obj"
-
-    /**
-    * Inline string to char* util
-    */
-    void setModel(const std::string &_model_path) {
-        setString(&model_path, _model_path);
-    }
+    const char *model_path = nullptr;
+    float model_scale[3];
 
  private:
     static void setString(const char ** target, const std::string &src) {

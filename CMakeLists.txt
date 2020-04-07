@@ -191,6 +191,7 @@ SET(VISUALISER_INCLUDE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/FLAMEGPU_Visualisation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/config/AgentStateConfig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/config/ModelConfig.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/config/Stock.h
     # Items from sdl_exp
 )
 # Prepare list of source files
@@ -349,6 +350,9 @@ SET(RESOURCES_ALL
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/default.vert
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/text.frag
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/icosphere.obj
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/sphere.obj
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/cube.obj
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/teapot.obj
 )
 cmrc_add_resource_library(resources ${RESOURCES_ALL})
 message(STATUS "${PROJECT_NAME}")
