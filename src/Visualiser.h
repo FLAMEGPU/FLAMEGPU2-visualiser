@@ -134,6 +134,10 @@ class Visualiser : public ViewportExt {
      */
      bool init();
      /**
+      * Util method which handles deallocating all objects which contains GLbuffers, shaders etc
+      */
+     void deallocateGLObjects();
+     /**
      * Provides destruction of the object, deletes child objects, removes the GL context, closes the window and calls SDL_quit()
      */
      void close();

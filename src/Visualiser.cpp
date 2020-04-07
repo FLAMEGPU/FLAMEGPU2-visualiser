@@ -68,17 +68,17 @@ void Visualiser::join() {
         delete this->background_thread;
         this->background_thread = nullptr;
         // Recreate hidden window in current thread, so context is stable
-        SDL_GL_MakeCurrent(this->window, NULL);
-        SDL_DestroyWindow(this->window);
-        this->window = SDL_CreateWindow
-        (
-            this->windowTitle,
-            this->windowedBounds.x,
-            this->windowedBounds.y,
-            this->windowedBounds.w,
-            this->windowedBounds.h,
-            SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);  // | SDL_WINDOW_BORDERLESS
-        SDL_GL_MakeCurrent(this->window, this->context);
+        // SDL_GL_MakeCurrent(this->window, NULL);
+        // SDL_DestroyWindow(this->window);
+        // this->window = SDL_CreateWindow
+        // (
+        //     this->windowTitle,
+        //     this->windowedBounds.x,
+        //     this->windowedBounds.y,
+        //     this->windowedBounds.w,
+        //     this->windowedBounds.h,
+        //     SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);  // | SDL_WINDOW_BORDERLESS
+        // SDL_GL_MakeCurrent(this->window, this->context);
     }
 }
 void Visualiser::stop() {
@@ -131,9 +131,11 @@ void Visualiser::run() {
             }
             // Hide window
             SDL_HideWindow(window);
+            deallocateGLObjects();
             //  New, might not be required
             SDL_DestroyWindow(this->window);
             this->window = nullptr;
+            printf("Render thread has exited.\n");
         }
     }
 }
@@ -386,25 +388,31 @@ void Visualiser::resizeWindow() {
     //     this->scene->_resize(this->windowDims);  //  Not required unless we use multipass framebuffering
     resizeBackBuffer(this->windowDims);
 }
+void Visualiser::deallocateGLObjects() {
+    fpsDisplay.reset();
+    this->hud->clear();
+    // Don't clear the map, as update buffer methods might still be called
+    for (auto &as : agentStates) {
+        as.second.entity.reset();
+    }
+}
+
 void Visualiser::close() {
     continueRender = false;
+    if (this->background_thread) {
+        this->background_thread->join();
+        delete this->background_thread;
+    }
     //  This really shouldn't run if we're not the host thread, but we don't manage the render loop thread
     if (this->window != nullptr) {
         SDL_GL_MakeCurrent(this->window, this->context);
         // Delete objects before we delete the GL context!
-        fpsDisplay.reset();
-        this->hud->clear();
-        this->agentStates.clear();
+        deallocateGLObjects();
         SDL_DestroyWindow(this->window);
         this->window = nullptr;
     }
     if (this->context != nullptr) {
         SDL_GL_DeleteContext(this->context);
-    }
-
-    if (this->background_thread) {
-        this->background_thread->join();
-        delete this->background_thread;
     }
     SDL_Quit();
 }
