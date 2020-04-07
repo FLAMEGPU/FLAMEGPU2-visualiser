@@ -393,9 +393,7 @@ void Visualiser::close() {
         // Delete objects before we delete the GL context!
         fpsDisplay.reset();
         this->hud->clear();
-        // if (this->scene) {
-        //     this->scene.reset();
-        // }
+        this->agentStates.clear();
         SDL_DestroyWindow(this->window);
         this->window = nullptr;
     }
