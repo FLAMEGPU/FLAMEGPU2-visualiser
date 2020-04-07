@@ -70,8 +70,7 @@ void Visualiser::join() {
         // Recreate hidden window in current thread, so context is stable
         SDL_GL_MakeCurrent(this->window, NULL);
         SDL_DestroyWindow(this->window);
-        this->window = SDL_CreateWindow
-        (
+        this->window = SDL_CreateWindow(
             this->windowTitle,
             this->windowedBounds.x,
             this->windowedBounds.y,
@@ -231,7 +230,9 @@ void Visualiser::addAgentState(const std::string &agent_name, const std::string 
 }
 
 void Visualiser::renderAgentStates() {
-    std::lock_guard<std::mutex> guard(render_buffer_mutex);
+    std::lock_guard<std::mutex> *guard = nullptr;
+    if (!pause_guard)
+        guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
     // Resize if necessary
     for (auto &_as : agentStates) {
         auto &as = _as.second;
@@ -278,6 +279,8 @@ void Visualiser::renderAgentStates() {
         if (as.second.x_var && as.second.x_var->elementCount)  //  Needs to understand struct to see element count
             as.second.entity->renderInstances(as.second.x_var->elementCount);
     }
+    if (guard)
+        delete guard;
 }
 void Visualiser::requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned buffLen) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
@@ -386,6 +389,15 @@ void Visualiser::resizeWindow() {
     //     this->scene->_resize(this->windowDims);  //  Not required unless we use multipass framebuffering
     resizeBackBuffer(this->windowDims);
 }
+void Visualiser::deallocateGLObjects() {
+    fpsDisplay.reset();
+    this->hud->clear();
+    // Don't clear the map, as update buffer methods might still be called
+    for (auto &as : agentStates) {
+        as.second.entity.reset();
+    }
+}
+
 void Visualiser::close() {
     continueRender = false;
     if (this->background_thread) {
@@ -432,6 +444,14 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         // if (this->scene)
         //     this->scene->_reload();
         this->hud->reload();
+        break;
+    case SDLK_p:
+        if (this->pause_guard) {
+            delete pause_guard;
+            pause_guard = nullptr;
+        } else {
+            pause_guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
+        }
         break;
     default:
         //  Do nothing?
