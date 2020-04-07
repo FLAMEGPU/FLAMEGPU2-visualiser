@@ -68,17 +68,16 @@ void Visualiser::join() {
         delete this->background_thread;
         this->background_thread = nullptr;
         // Recreate hidden window in current thread, so context is stable
-        // SDL_GL_MakeCurrent(this->window, NULL);
-        // SDL_DestroyWindow(this->window);
-        // this->window = SDL_CreateWindow
-        // (
-        //     this->windowTitle,
-        //     this->windowedBounds.x,
-        //     this->windowedBounds.y,
-        //     this->windowedBounds.w,
-        //     this->windowedBounds.h,
-        //     SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);  // | SDL_WINDOW_BORDERLESS
-        // SDL_GL_MakeCurrent(this->window, this->context);
+        SDL_GL_MakeCurrent(this->window, NULL);
+        SDL_DestroyWindow(this->window);
+        this->window = SDL_CreateWindow(
+            this->windowTitle,
+            this->windowedBounds.x,
+            this->windowedBounds.y,
+            this->windowedBounds.w,
+            this->windowedBounds.h,
+            SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);  // | SDL_WINDOW_BORDERLESS
+        SDL_GL_MakeCurrent(this->window, this->context);
     }
 }
 void Visualiser::stop() {
@@ -131,11 +130,9 @@ void Visualiser::run() {
             }
             // Hide window
             SDL_HideWindow(window);
-            deallocateGLObjects();
             //  New, might not be required
             SDL_DestroyWindow(this->window);
             this->window = nullptr;
-            printf("Render thread has exited.\n");
         }
     }
 }
