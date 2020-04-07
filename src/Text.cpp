@@ -14,9 +14,6 @@ DISABLE_WARNING_POP
 
 #include "shader/Shaders.h"
 
-// TODO: Gracefully handle missing fonts
-// TODO: cross platform font loading.
-
 Text::Text(const char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile, unsigned int faceIndex)
     :Text(string, fontHeight, glm::vec4(color, 1.0f), fontFile, faceIndex) {}
 Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char const *fontFile, unsigned int faceIndex)
@@ -35,8 +32,9 @@ Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char c
     getShaders()->addStaticUniform("_col", glm::value_ptr(this->color), 4);
     getShaders()->addStaticUniform("_backCol", glm::value_ptr(this->backgroundColor), 4);
     getShaders()->addTexture("_texture", tex);
-	if (!fontFile)
-		fontFile = fonts::findFont("Arial", fonts::GenericFontFamily::SANS).c_str();
+    if (!fontFile) {
+        fontFile = fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str();
+    }
     FT_Error error = FT_Init_FreeType(&library);
     if (error) {
         fprintf(stderr, "An unexpected error occured whilst initialising FreeType: %i\n", error);
@@ -48,7 +46,7 @@ Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char c
         &font);
     if (error == FT_Err_Unknown_File_Format) {
         fprintf(stderr, "The font file %s is of an unsupport format, defaulting to Arial\n", fontFile);
-        fontFile = fonts::findFont("Arial", fonts::GenericFontFamily::SANS).c_str();
+        fontFile = fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str();
         error = FT_New_Face(library,
             fontFile,
             0,
@@ -56,7 +54,7 @@ Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char c
     }
     if (error) {
         fprintf(stderr, "An unexpected error occured whilst loading font file %s: %i, defaulting to Arial\n", fontFile, error);
-        fontFile = fonts::findFont("Arial", fonts::GenericFontFamily::SANS).c_str();
+        fontFile = fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str();
         error = FT_New_Face(library,
             fontFile,
             0,
