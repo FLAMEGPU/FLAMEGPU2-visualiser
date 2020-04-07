@@ -200,6 +200,10 @@ class Visualiser : public ViewportExt {
      */
     std::thread *background_thread = nullptr;
     std::mutex render_buffer_mutex;
+    /**
+     * When this is not set to nullptr, it blocks the simulation from continuing
+     */
+    std::lock_guard<std::mutex> *pause_guard = nullptr;
 };
 
 #endif  // SRC_VISUALISER_H_
