@@ -318,15 +318,16 @@ const char* FALLBACK_FONTNAME = "Arial";
 
 /**
  * Find a font from an ordered list of desired fonts, or use a fallback font
- * @param fontnames a list of fontnames as constant character arrays
+ * @param fontNames a list of fontnames as constant character arrays
  * @param generic enum specifying a fallback font type in case the target font could not be found.
  * @return path to font to use, or empty string if nothing found (if no system fonts installed)
  * 
  * @note this does not use a list of std::strings as this complicated initialisation.
  */
-std::string findFont(std::initializer_list<std::string> fontNames, const GenericFontFamily generic) {
+std::string findFont(std::initializer_list<const char *> fontNames, const GenericFontFamily generic) {
     // For each font in the list, search for it. Return if found.
-    for (auto fontName : fontNames) {
+    for (auto _fontName : fontNames) {
+        std::string fontName(_fontName);
         if (fontName.length() > 0) {
             std::string fontpath = fontSearch(fontName);
             if (fontpath.length() > 0) {
@@ -334,7 +335,7 @@ std::string findFont(std::initializer_list<std::string> fontNames, const Generic
             }
         }
     }
-    // Try the generic font
+    // Try the _generic font
     std::string genericFontpath = fontSearch(genericFontName(generic));
     if (genericFontpath.length() > 0) {
         return genericFontpath;
