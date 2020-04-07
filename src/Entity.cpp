@@ -20,30 +20,13 @@
 
 const char *Entity::OBJ_TYPE = ".obj";
 const char *Entity::EXPORT_TYPE = ".obj.sdl_export";
-/*
-Convenience constructor.
-*/
-Entity::Entity(
-    Stock::Models::Model const model,
-    float modelScale,
-    std::shared_ptr<Shaders> shaders,
-    std::shared_ptr<const Texture> texture)
-    : Entity(model, modelScale, { shaders }, texture) { }
-/*
-Convenience constructor.
-*/
-Entity::Entity(
-    Stock::Models::Model const model,
-    float modelScale,
-    Stock::Shaders::ShaderSet const ss,
-    std::shared_ptr<const Texture> texture)
-    : Entity(model, modelScale, { ss }, texture) { }
+
 /*
 Convenience constructor.
 */
 Entity::Entity(
     const char *modelPath,
-    float modelScale,
+    const glm::vec3 &modelScale,
     Stock::Shaders::ShaderSet const ss,
     std::shared_ptr<const Texture> texture)
 : Entity(modelPath, modelScale, { ss }, texture) { }
@@ -52,43 +35,17 @@ Convenience constructor.
 */
 Entity::Entity(
     const char *modelPath,
-    float modelScale,
+    const glm::vec3 &modelScale,
     std::shared_ptr<Shaders> shaders,
     std::shared_ptr<const Texture> texture)
     : Entity(modelPath, modelScale, { shaders }, texture) { }
-/*
-Convenience constructor.
-*/
-Entity::Entity(
-    Stock::Models::Model const model,
-    float modelScale,
-    std::initializer_list<std::shared_ptr<Shaders>> shaders,
-    std::shared_ptr<const Texture> texture)
-    : Entity(
-        model.modelPath,
-        modelScale,
-        shaders.size() > 0 ? shaders : std::vector<std::shared_ptr<Shaders>>({std::make_shared<Shaders>(model.defaultShaders)}),
-        texture ? texture : nullptr  /* Texture2D::load(model.texturePath) */  ) {}
-/*
-Convenience constructor.
-*/
-Entity::Entity(
-    Stock::Models::Model const model,
-    float modelScale,
-    std::initializer_list<const Stock::Shaders::ShaderSet> ss,
-    std::shared_ptr<const Texture> texture)
-    : Entity(
-        model.modelPath,
-        modelScale,
-        convertToShader(ss),
-        texture.get() ? texture : nullptr  /* Texture2D::load(model.texturePath) */  ) {}
 
 /*
 Convenience constructor.
 */
 Entity::Entity(
     const char *modelPath,
-    float modelScale,
+    const glm::vec3 &modelScale,
     std::initializer_list<const Stock::Shaders::ShaderSet> ss,
     std::shared_ptr<const Texture> texture)
     : Entity(
@@ -98,7 +55,7 @@ Entity::Entity(
         texture) { }
 Entity::Entity(
     const char *modelPath,
-    float modelScale,
+    const glm::vec3 &modelScale,
     std::initializer_list<std::shared_ptr<Shaders>> shaders,
     std::shared_ptr<const Texture> texture)
     : Entity(
@@ -106,18 +63,11 @@ Entity::Entity(
         modelScale,
         std::vector<std::shared_ptr<Shaders>>(shaders),
         texture) { }
-Entity::Entity(
-    Stock::Models::Model const model,
-    Stock::Materials::Material const material,
-    float modelScale) : Entity(
-    model.modelPath,
-    material,
-    modelScale) { }
 const unsigned int MAX_OBJ_MATERIALS = 10;
 Entity::Entity(
     const char *modelPath,
     Stock::Materials::Material const material,
-    float modelScale)
+    const glm::vec3 &modelScale)
     : viewMatPtr(nullptr)
     , projectionMatPtr(nullptr)
     , lightBufferBindPt(UINT_MAX)
@@ -171,7 +121,7 @@ Constructs an entity from the provided .obj model
 */
 Entity::Entity(
     const char *modelPath,
-    float modelScale,
+    const glm::vec3 &modelScale,
     std::vector<std::shared_ptr<Shaders>> shaders,
     std::shared_ptr<const Texture> texture)
     : viewMatPtr(nullptr)
@@ -262,7 +212,7 @@ glm::mat4 Entity::getModelMat() const {
         modelMat = glm::rotate(modelMat, glm::radians(this->rotation.w), glm::vec3(this->rotation));
 
     // Only bother scaling if we were asked to
-    if (this->scaleFactor != 1.0f)
+    if (this->scaleFactor != glm::vec4(1.0f))
         modelMat = glm::scale(modelMat, glm::vec3(this->scaleFactor));
     return modelMat;
 }
@@ -884,10 +834,18 @@ exit_loop2: {}
         bufferSize += vn_count * texcoords.components * texcoords.componentSize;
     }
     // Calculate scale factor
-    // float scaleFactor = 1.0;
-    modelDims = modelMax - modelMin;
-    if (SCALE > 0)
-        this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
+    this->modelDims = modelMax - modelMin;
+    this->scaleFactor = glm::vec4(1.0);
+    if (SCALE.x < 0) {
+        // Special case, negative scale means scale uniformly according to longest edge
+        this->scaleFactor.x = -SCALE.x / glm::compMax(modelDims);
+        this->scaleFactor.y = scaleFactor.x;
+        this->scaleFactor.z = scaleFactor.x;
+    } else {
+        if (SCALE.x > 0) this->scaleFactor.x = SCALE.x / modelDims.x;
+        if (SCALE.y > 0) this->scaleFactor.y = SCALE.y / modelDims.y;
+        if (SCALE.z > 0) this->scaleFactor.z = SCALE.z / modelDims.z;
+    }
     printf("\rLoading Model: %s [Assigning Elements]            ", su::getFilenameFromPath(modelPath).c_str());
     unsigned int vn_assigned = 0;
     for (unsigned int i = 0; i < faces.count * faces.components; i++) {
@@ -899,7 +857,7 @@ exit_loop2: {}
         if ((*vn_pairs)[{static_cast<unsigned int>(i_vert), static_cast<unsigned int>(i_norm), static_cast<unsigned int>(i_tex)}] == UINT_MAX) {
             // Set all n components of vertices and attributes to that id
             for (unsigned int k = 0; k < positions.components; k++)
-                reinterpret_cast<float*>(positions.data)[(vn_assigned*positions.components) + k] = t_vertices[(i_vert*positions.components) + k];  //  *scaleFactor;  // We now scale with model matrix
+                reinterpret_cast<float*>(positions.data)[(vn_assigned*positions.components) + k] = t_vertices[(i_vert*positions.components) + k];  //  * this->scaleFactor[k];  // We now scale with model matrix
             if (face_hasNormals) {  // Normalise normals
                 t_normalised_norm = normalize(glm::vec3(t_normals[(t_norm_pos[i] * normals.components)], t_normals[(t_norm_pos[i] * normals.components) + 1], t_normals[(t_norm_pos[i] * normals.components) + 2]));
                 for (unsigned int k = 0; k < normals.components; k++)
@@ -1197,7 +1155,7 @@ void Entity::exportModel() const {
         FILE_TYPE_VERSION,
         sizeof(float),
         sizeof(unsigned int),
-        SCALE,
+        glm::compMax(SCALE),  // scale isn't actually used on import anymore, so this value doesn't matter if they have 3D scale
         vn_count,
         positions.count && positions.components == 3,
         positions.count && positions.components == 4,
@@ -1389,9 +1347,18 @@ void Entity::importModel(const char *path) {
         modelMax = glm::max(modelMax, position);
         modelMin = glm::min(modelMin, position);
     }
-    modelDims = modelMax - modelMin;
-    if (SCALE > 0)
-        this->scaleFactor = SCALE / glm::compMax(modelMax - modelMin);
+    this->modelDims = modelMax - modelMin;
+    this->scaleFactor = glm::vec4(1.0);
+    if (SCALE.x < 0) {
+        // Special case, negative scale means scale uniformly according to longest edge
+        this->scaleFactor.x = -SCALE.x / glm::compMax(modelDims);
+        this->scaleFactor.y = scaleFactor.x;
+        this->scaleFactor.z = scaleFactor.x;
+    } else {
+        if (SCALE.x > 0) this->scaleFactor.x = SCALE.x / modelDims.x;
+        if (SCALE.y > 0) this->scaleFactor.y = SCALE.y / modelDims.y;
+        if (SCALE.z > 0) this->scaleFactor.z = SCALE.z / modelDims.z;
+    }
     // Allocate VBOs
     generateVertexBufferObjects();
     printf("Model import was successful: %s\n", importPath.c_str());

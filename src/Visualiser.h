@@ -44,7 +44,7 @@ class Visualiser : public ViewportExt {
             , z_var(nullptr)
             , entity(std::make_shared<Entity>(
                 vc.model_path,
-                1.0f,
+                *reinterpret_cast<const glm::vec3*>(vc.model_scale),
                 std::make_shared<Shaders>(
                     "resources/instanced_flat.vert",
                     "resources/material_flat.frag")))
