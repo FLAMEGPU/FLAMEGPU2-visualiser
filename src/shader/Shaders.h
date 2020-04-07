@@ -158,12 +158,12 @@ class Shaders : public ShaderCore {
     explicit Shaders(Stock::Shaders::ShaderSet set);
     /*
      * Constructs a shader program from the provided shader files
-     * @param vertexShaderFiles Path to the GLSL vertex shader (nullptr if not required)
-     * @param fragmentShaderFiles Path to the GLSL fragment shader (nullptr if not required)
-     * @param geometryShaderFiles Path to the GLSL geometry shader (nullptr if not required)
+     * @param vertexShaderFiles Path to the GLSL vertex shader (empty string if not required)
+     * @param fragmentShaderFiles Path to the GLSL fragment shader (empty string if not required)
+     * @param geometryShaderFiles Path to the GLSL geometry shader (empty string if not required)
      * @note You must provide atleast 1 shader path, however it can be of any of the 3 types
      */
-    explicit Shaders(const char *vertexShaderPath = nullptr, const char *fragmentShaderPath = nullptr, const char *geometryShaderPath = nullptr);
+    explicit Shaders(const std::string &vertexShaderPath = "", const std::string &fragmentShaderPath = "", const std::string &geometryShaderPath = "");
     /*
      * Constructs a shader program from the provided shader files
      * Use this constructor if you wish to constructor a shader from multiple files (e.g. a common functions file)
