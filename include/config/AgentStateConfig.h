@@ -2,6 +2,7 @@
 #define INCLUDE_CONFIG_AGENTSTATECONFIG_H_
 
 #include <string>
+#include <cstring>
 
 /**
 * This class holds the common components for a visualisation
