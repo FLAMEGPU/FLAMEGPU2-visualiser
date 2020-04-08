@@ -320,10 +320,11 @@ void Entity::loadModelFromFile() {
             importModel(modelPath);
             return;
         }
-        FILE* file = fopen(exportPath.c_str(), "r");
+        std::string exportModulePath = Resources::toModuleDir(exportPath);
+        FILE* file = fopen(exportModulePath.c_str(), "r");
         if (file) {
             fclose(file);
-            importModel(exportPath.c_str());
+            importModel(exportModulePath.c_str());
             return;
         }
     } else {
