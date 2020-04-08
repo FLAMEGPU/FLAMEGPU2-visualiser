@@ -27,4 +27,24 @@ struct AgentStateConfig {
     }
 };
 
-#endif  //  INCLUDE_CONFIG_AGENTSTATECONFIG_H_
+/**
+ * This struct mirrors AgentStateConfig, however each variable has a single bit
+ * This is used by states to flag whether they have had their value set
+ */
+struct AgentStateConfigFlags {
+    AgentStateConfigFlags() {
+        memset(this, 0, sizeof(AgentStateConfigFlags));
+    }
+// This code is not used on the device
+// However if nvcc sees it, it reports an error as the device does not support bitfields inside lists??
+// >C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.25.28610\include\list(288): error :
+// "Bitfields and field types containing bitfields are not supported in packed structures and unions for device compilation!"
+// So we wrap in ifndef to stop nvcc seeing it, potentially harmful that nvcc will see it's size incorrectly but it seems to work
+// Other solution would be to point to this structure and ensure the bitfield is never included by any .cu files
+#ifndef __CUDACC__
+    unsigned int model_path : 1;
+    unsigned int model_scale : 1;
+#endif  // __CUDACC__
+};
+
+#endif  // INCLUDE_CONFIG_AGENTSTATECONFIG_H_
