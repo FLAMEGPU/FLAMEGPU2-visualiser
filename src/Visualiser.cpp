@@ -5,16 +5,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #define FOVY 60.0f
-#define NEAR_CLIP 0.05f
-#define FAR_CLIP 5000.0f
 #define DELTA_THETA_PHI 0.01f
 #define MOUSE_SPEED 0.001f
-#define SHIFT_MULTIPLIER 5.0f
 
 #define MOUSE_SPEED_FPS 0.05f
-#define DELTA_MOVE 0.05f
-#define DELTA_STRAFE 0.05f
-#define DELTA_ASCEND 0.05f
 #define DELTA_ROLL 0.01f
 #define ONE_SECOND_MS 1000
 #define VSYNC 1
@@ -24,7 +18,7 @@
 
 Visualiser::Visualiser(const ModelConfig& modelcfg)
     : hud(std::make_shared<HUD>(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1]))
-    , camera(std::make_shared<NoClipCamera>(glm::vec3(150, 150, 150)))
+    , camera(std::make_shared<NoClipCamera>(*reinterpret_cast<const glm::vec3*>(&modelcfg.cameraLocation[0]), *reinterpret_cast<const glm::vec3*>(&modelcfg.cameraTarget[0])))
     // , scene(nullptr)
     , isInitialised(false)
     , continueRender(false)
@@ -139,26 +133,32 @@ void Visualiser::run() {
 void Visualiser::render() {
     // Static fn var for tracking the time to send to scene->update()
     static unsigned int updateTime = 0;
-    unsigned int t_updateTime = SDL_GetTicks();
+    const unsigned int t_updateTime = SDL_GetTicks();
     // If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
-    unsigned int frameTime = t_updateTime < updateTime ? (t_updateTime + (UINT_MAX - updateTime)) : t_updateTime - updateTime;
+    const unsigned int frameTime = t_updateTime < updateTime ? (t_updateTime + (UINT_MAX - updateTime)) : t_updateTime - updateTime;
     updateTime = t_updateTime;
     SDL_Event e;
     //  Handle continuous key presses (movement)
     const Uint8 *state = SDL_GetKeyboardState(NULL);
-    float turboMultiplier = state[SDL_SCANCODE_LSHIFT] ? SHIFT_MULTIPLIER : 1.0f;
-    turboMultiplier *= frameTime;
+    float speed = modelConfig.cameraSpeed[0];
+    if (state[SDL_SCANCODE_LSHIFT]) {
+        speed *= modelConfig.cameraSpeed[1];
+    }
+    if (state[SDL_SCANCODE_LCTRL]) {
+        speed /= modelConfig.cameraSpeed[1];
+    }
+    const float distance = speed * static_cast<float>(frameTime);
     if (state[SDL_SCANCODE_W]) {
-        this->camera->move(DELTA_MOVE*turboMultiplier);
+        this->camera->move(distance);
     }
     if (state[SDL_SCANCODE_A]) {
-        this->camera->strafe(-DELTA_STRAFE*turboMultiplier);
+        this->camera->strafe(-distance);
     }
     if (state[SDL_SCANCODE_S]) {
-        this->camera->move(-DELTA_MOVE*turboMultiplier);
+        this->camera->move(-distance);
     }
     if (state[SDL_SCANCODE_D]) {
-        this->camera->strafe(DELTA_STRAFE*turboMultiplier);
+        this->camera->strafe(distance);
     }
     if (state[SDL_SCANCODE_Q]) {
         this->camera->roll(-DELTA_ROLL);
@@ -166,12 +166,12 @@ void Visualiser::render() {
     if (state[SDL_SCANCODE_E]) {
         this->camera->roll(DELTA_ROLL);
     }
-    if (state[SDL_SCANCODE_SPACE]) {
-        this->camera->ascend(DELTA_ASCEND*turboMultiplier);
-    }
-    if (state[SDL_SCANCODE_LCTRL]) {
-        this->camera->ascend(-DELTA_ASCEND*turboMultiplier);
-    }
+    // if (state[SDL_SCANCODE_SPACE]) {
+    //     this->camera->ascend(distance);
+    // }
+    // if (state[SDL_SCANCODE_LCTRL]) {  // Ctrl now moves slower
+    //     this->camera->ascend(-distance);
+    // }
 
     //  handle each event on the queue
     while (SDL_PollEvent(&e) != 0) {
@@ -276,8 +276,8 @@ void Visualiser::renderAgentStates() {
     }
     //  Render agents
     for (auto &as : agentStates) {
-        if (as.second.x_var && as.second.x_var->elementCount)  //  Needs to understand struct to see element count
-            as.second.entity->renderInstances(as.second.x_var->elementCount);
+        if (as.second.x_var)  // Extra check to make sure buffer has been allocated successfully
+            as.second.entity->renderInstances(as.second.requiredSize);
     }
     if (guard)
         delete guard;
@@ -382,7 +382,12 @@ void Visualiser::resizeWindow() {
         this->windowDims = tDims;
     }
     //  Get the view frustum using GLM. Alternatively glm::perspective could be used.
-    this->projMat = glm::perspectiveFov<float>(glm::radians(FOVY), static_cast<float>(this->windowDims.x), static_cast<float>(this->windowDims.y), NEAR_CLIP, FAR_CLIP);
+    this->projMat = glm::perspectiveFov<float>(
+        glm::radians(FOVY),
+        static_cast<float>(this->windowDims.x),
+        static_cast<float>(this->windowDims.y),
+        modelConfig.nearFarClip[0],
+        modelConfig.nearFarClip[1]);
     //  Notify other elements
     this->hud->resizeWindow(this->windowDims);
     //  if (this->scene)
