@@ -22,6 +22,7 @@ struct ModelConfig {
     float cameraTarget[3];
     float cameraSpeed[2];
     float nearFarClip[2];
+    bool stepVisible;
 
  private:
      /**
