@@ -20,7 +20,6 @@ void main()
   vec4 vert = _modelMat * vec4(_vertex,1.0f);
   //Grab model offset from texture array
   vec3 loc_data = vec3(texelFetch(x_pos, gl_InstanceID).x, texelFetch(y_pos, gl_InstanceID).x, texelFetch(z_pos, gl_InstanceID).x);
-  loc_data *= 10;
   // Apply loc_data translation to vert
   vert.xyz += loc_data;
   // Calculate eye vertex

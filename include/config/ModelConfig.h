@@ -18,6 +18,10 @@ struct ModelConfig {
     float clearColor[3];
     bool fpsVisible;
     float fpsColor[3];
+    float cameraLocation[3];
+    float cameraTarget[3];
+    float cameraSpeed[2];
+    float nearFarClip[2];
 
  private:
      /**
