@@ -26,6 +26,7 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , windowTitle(modelcfg.windowTitle)
     , windowDims(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1])
     , fpsDisplay(nullptr)
+    , stepDisplay(nullptr)
     , modelConfig(modelcfg) {
     this->isInitialised = this->init();
     BackBuffer::setClear(true, *reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]));
@@ -33,7 +34,12 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
         fpsDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3 *>(&modelcfg.fpsColor[0]), fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str());
         fpsDisplay->setUseAA(false);
         hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
-        }
+    }
+    if (modelcfg.stepVisible) {
+        stepDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3 *>(&modelcfg.fpsColor[0]), fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str());
+        stepDisplay->setUseAA(false);
+        hud->add(stepDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, modelcfg.fpsVisible ? 10 : 0), INT_MAX);
+    }
 }
 Visualiser::~Visualiser() {
     this->close();
@@ -114,7 +120,8 @@ void Visualiser::run() {
             while (this->continueRender) {
                 //  Update the fps in the window title
                 this->updateFPS();
-
+                if (this->stepDisplay)
+                    this->stepDisplay->setString("Step %u", stepCount);
                 this->render();
             }
             SDL_StopTextInput();
@@ -511,6 +518,9 @@ void Visualiser::updateFPS() {
         this->previousTime = this->currentTime;
         this->frameCount = 0;
     }
+}
+void Visualiser::setStepCount(const unsigned int &_stepCount) {
+    stepCount = _stepCount;
 }
 //  Overrides
 unsigned Visualiser::getWindowWidth() const {

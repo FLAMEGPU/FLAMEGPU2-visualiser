@@ -4,7 +4,8 @@
 
 ModelConfig::ModelConfig(const char* _windowTitle)
     : windowTitle(nullptr)
-    , fpsVisible(true) {
+    , fpsVisible(true)
+    , stepVisible(true) {
     setString(&windowTitle, _windowTitle);
     windowDimensions[0] = 1280;
     windowDimensions[1] = 720;
@@ -44,5 +45,6 @@ ModelConfig &ModelConfig::operator=(const ModelConfig &other) {
     memcpy(cameraTarget, other.cameraTarget, sizeof(cameraTarget));
     memcpy(cameraSpeed, other.cameraSpeed, sizeof(cameraSpeed));
     memcpy(nearFarClip, other.nearFarClip, sizeof(nearFarClip));
+    stepVisible = other.stepVisible;
     return *this;
 }
