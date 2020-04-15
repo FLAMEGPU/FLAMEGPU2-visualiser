@@ -264,7 +264,7 @@ void Text::setFontHeight(unsigned int pixels, bool refreshTex) {
         0,      /* pixel_width           */
         this->fontHeight);/* pixel_height          */
     if (error) {
-        fprintf(stderr, "An unexpected error occured whilst setting font size: %i\n", error);
+        fprintf(stderr, "An unexpected error occurred whilst setting font size: %i\n", error);
         return;
     }
     if (refreshTex)

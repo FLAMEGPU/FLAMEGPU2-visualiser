@@ -163,6 +163,7 @@ class Visualiser : public ViewportExt {
     const char * getWindowTitle() const override;
     void setWindowTitle(const char *windowTitle) override;
     std::mutex &getRenderBufferMutex() { return render_buffer_mutex; }
+    void setStepCount(const unsigned int &stepCount);
 
  private:
     SDL_Window* window;
@@ -190,6 +191,8 @@ class Visualiser : public ViewportExt {
     unsigned int currentTime;
     unsigned int frameCount = 0;
     std::shared_ptr<Text> fpsDisplay;
+    std::shared_ptr<Text> stepDisplay;
+    unsigned int stepCount = 0;
 
     ModelConfig modelConfig;
     std::unordered_map<NamePair, RenderInfo, NamePairHash> agentStates;

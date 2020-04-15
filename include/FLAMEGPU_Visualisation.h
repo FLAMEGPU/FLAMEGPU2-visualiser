@@ -27,6 +27,7 @@ class FLAMEGPU_Visualisation {
     void updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z) {
         updateAgentStateBuffer(agent_name.c_str(), state_name.c_str(), buffLen, d_x, d_y, d_z);
     }
+    void setStepCount(const unsigned int stepCount);
     /*
      * Start visualiser in background thread
      */

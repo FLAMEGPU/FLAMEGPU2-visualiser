@@ -28,7 +28,9 @@ void FLAMEGPU_Visualisation::requestBufferResizes(const char *agent_name, const 
 void FLAMEGPU_Visualisation::updateAgentStateBuffer(const char *agent_name, const char *state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z) {
     vis->updateAgentStateBuffer(agent_name, state_name, buffLen, d_x, d_y, d_z);
 }
-
+void FLAMEGPU_Visualisation::setStepCount(const unsigned int stepCount) {
+  vis->setStepCount(stepCount);
+}
 void FLAMEGPU_Visualisation::start() {
     vis->start();
 }
