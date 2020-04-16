@@ -345,8 +345,9 @@ endif ()
 # NOTE: The build step for resources embeds them as base64, this should not be used for large files.
 include(cmake/CMakeRC/CMakeRC.cmake)
 SET(RESOURCES_ALL
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_flat.vert
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default.vert
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_phong.frag
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/default.vert
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/text.frag
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/icosphere.obj

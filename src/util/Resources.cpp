@@ -21,11 +21,11 @@ CMRC_DECLARE(resources);
 
 namespace {
     void recursive_create_dir(const path &dir) {
-        if (exists(dir)) {
+        if (::exists(dir)) {
             return;
         }
         path parent_dir = dir.parent_path();
-        if (!exists(parent_dir)) {
+        if (!::exists(parent_dir)) {
             recursive_create_dir(parent_dir);
         }
         create_directory(dir);
@@ -39,21 +39,21 @@ FILE *Resources::fopen(const char * filename, const char *mode) {
 std::string Resources::locateFile(const std::string &_path) {
     // File exists in working directory, use that
     {
-        if (exists(path(_path)))
+        if (::exists(path(_path)))
             return _path;
     }
     path module_dir_path = path(getModuleDir());
     module_dir_path += _path;
     // See if file exists in module dir, use that
     {
-        if (exists(module_dir_path)) {
+        if (::exists(module_dir_path)) {
             return module_dir_path.string();
         } else {
             // file doesn't exist in module dir, so create it there
-            auto fs = cmrc::resources::get_filesystem();
+            const auto fs = cmrc::resources::get_filesystem();
             if (fs.exists(_path)) {
                 // file exists within internal resources
-                auto resource_file = fs.open(_path);
+                const auto resource_file = fs.open(_path);
                 // open a file to module_dir_path
                 // Check the output directory exists
                 path output_dir = module_dir_path;
@@ -73,6 +73,10 @@ std::string Resources::locateFile(const std::string &_path) {
     }
 }
 
+bool Resources::exists(const std::string &path) {
+    const auto fs = cmrc::resources::get_filesystem();
+    return fs.exists(path);
+}
 std::string Resources::getModuleDir() {
     char *t = SDL_GetBasePath();
     std::string rtn = t;
@@ -98,6 +102,9 @@ std::string Resources::getModuleDir() {
 }
 
 std::string Resources::toModuleDir(const std::string &_path) {
+    // Can't add an absolute path to module dir
+    if (path(_path).is_absolute())
+        return _path;
     path output_dir = getModuleDir();
     output_dir += _path;
     const path output_path = output_dir;

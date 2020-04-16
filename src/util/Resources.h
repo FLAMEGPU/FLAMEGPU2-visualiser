@@ -9,16 +9,25 @@ class Resources {
     /**
      * fopen wrapper, this should be preferred for shaders/models
      * Attempts to load file from module directory or internal resources if path does not exist
+     * @note Instead of returning null, throws exception on failure
      */
     static FILE *fopen(const char *filename, const char *mode);
     /**
-     * Apppends the path to module dir, and creates any missing directories
+     * Appends the path to module dir, and creates any missing directories
      */
     static std::string toModuleDir(const std::string &path);
+    /**
+     * Returns the path to a file
+     * If the file is only in resources, it will be extracted to module dir
+     */
+    static std::string locateFile(const std::string &path);
+    /**
+     * Returns true if path is a valid resource path
+     */
+    static bool exists(const std::string &path);
 
  private:
     static std::string getModuleDir();
-    static std::string locateFile(const std::string &path);
 };
 
 #endif  // SRC_UTIL_RESOURCES_H_

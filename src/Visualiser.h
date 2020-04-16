@@ -42,14 +42,27 @@ class Visualiser : public ViewportExt {
             , x_var(nullptr)
             , y_var(nullptr)
             , z_var(nullptr)
-            , entity(std::make_shared<Entity>(
-                vc.model_path,
-                *reinterpret_cast<const glm::vec3*>(vc.model_scale),
-                std::make_shared<Shaders>(
-                    "resources/instanced_flat.vert",
-                    "resources/material_flat.frag")))
+            , entity(nullptr)
             , requiredSize(0) {
-            entity->setMaterial(glm::vec3(0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.7f));
+            if (vc.model_texture) {
+                // Entity has texture
+                entity = std::make_shared<Entity>(
+                    vc.model_path,
+                    *reinterpret_cast<const glm::vec3*>(vc.model_scale),
+                    std::make_shared<Shaders>(
+                        "resources/instanced_default.vert",
+                        "resources/material_phong.frag"),
+                    Texture2D::load(vc.model_texture));
+            } else {
+                // Entity does not have a texture
+                entity = std::make_shared<Entity>(
+                    vc.model_path,
+                    *reinterpret_cast<const glm::vec3*>(vc.model_scale),
+                    std::make_shared<Shaders>(
+                        "resources/instanced_default.vert",
+                        "resources/material_flat.frag"));
+                entity->setMaterial(glm::vec3(0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.7f));
+            }
         }
         RenderInfo(const RenderInfo &vc) = default;
         RenderInfo& operator= (const RenderInfo &vc) = default;

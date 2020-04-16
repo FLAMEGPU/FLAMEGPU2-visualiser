@@ -7,7 +7,6 @@
 #include <string>
 #include <algorithm>
 
-//  #include <SDL/SDL_image.h>
 #include <glm/vec2.hpp>
 
 #include "util/GLcheck.h"
@@ -21,14 +20,14 @@
 class Texture2D : public Texture, public RenderTarget {
  public:
     /**
-     * Returns an immutable std::shared_ptr<Texture2D> of the specified file
+     * Returns an immutable std::shared_ptr<ImageData> of the specified file
      * @param filepath The path to the image to be loaded
      * @param options A bitmask of options which correspond to various GL texture options
      * @param skipCache If false the returned Texture2D will be added to or loaded from the cache
      * @param folder A surplus folder to search for the texture in, useful for finding model textures
      */
-    // static std::shared_ptr<const Texture2D> load(const std::string &filepath, const std::string &folder, const uint64_t options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT, bool skipCache = false);
-    // static std::shared_ptr<const Texture2D> load(const std::string &filepath, const uint64_t options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT, bool skipCache = false);
+    static std::shared_ptr<const Texture2D> load(const std::string &filepath, const std::string &folder, const uint64_t options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT, bool skipCache = false);
+    static std::shared_ptr<const Texture2D> load(const std::string &filepath, const uint64_t options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT, bool skipCache = false);
     /**
      * Creates a mutable texture with the given paremeters
      * @param dimensions Size of the texture
@@ -117,7 +116,7 @@ class Texture2D : public Texture, public RenderTarget {
      * Private constructor
      * @see load(...)
      */
-    //  Texture2D(std::shared_ptr<SDL_Surface> image, const std::string reference, const uint64_t options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
+    Texture2D(std::shared_ptr<ImageData> image, const std::string reference, const uint64_t options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
     /**
      * Private constructor
      * @see make(...)
