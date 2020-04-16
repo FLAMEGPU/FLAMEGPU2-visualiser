@@ -1,5 +1,7 @@
 #include "texture/Texture2D.h"
 #include <cassert>
+
+#include "util/Resources.h"
 // If earlier than VS 2019
 #if defined(_MSC_VER) && _MSC_VER < 1920
 #include <filesystem>
@@ -23,15 +25,14 @@ std::unordered_map<std::string, std::weak_ptr<const Texture2D>> Texture2D::cache
 /**
 * Constructors
 */
-// Texture2D::Texture2D(std::shared_ptr<SDL_Surface> image, const std::string reference, const uint64_t options)
-//     : Texture(GL_TEXTURE_2D, genTextureUnit(), getFormat(image), reference, options)
-//     , dimensions(image->w, image->h)
-//     , immutable(true)
-// {
-//     visassert(image);
-//     allocateTextureImmutable(image);
-//     applyOptions();
-// }
+Texture2D::Texture2D(std::shared_ptr<ImageData> image, const std::string reference, const uint64_t options)
+    : Texture(GL_TEXTURE_2D, genTextureUnit(), getFormat(image), reference, options)
+    , dimensions(image->width, image->height)
+    , immutable(true) {
+    visassert(image);
+    allocateTextureImmutable(image);
+    applyOptions();
+}
 Texture2D::Texture2D(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data, const uint64_t &options)
     : Texture(GL_TEXTURE_2D, genTextureUnit(), format, RAW_TEXTURE_FLAG, options)
     , dimensions(dimensions)
@@ -77,53 +78,47 @@ std::shared_ptr<const Texture2D> Texture2D::loadFromCache(const std::string &fil
     }
     return nullptr;
 }
-// std::shared_ptr<const Texture2D> Texture2D::load(const std::string &texPath, const std::string &modelFolder, const uint64_t options, bool skipCache)
-// {
-//     // Locate the file
-//     std::string filePath;
-//     // Raw exists
-//     if (exists(path(texPath)))
-//         filePath = texPath;
-//     // Exists in model dir
-//     else if (!modelFolder.empty()&&exists(path((modelFolder + texPath).c_str())))
-//         filePath = modelFolder + texPath;
-//     // Exists in model dir [path incorrect]
-//     else if (!modelFolder.empty() && exists(path((modelFolder + su::getFilenameFromPath(texPath)).c_str())))
-//         filePath = std::string(modelFolder) + su::getFilenameFromPath(texPath);
-//
-//     return load(filePath, options, skipCache);
-// }
-// std::shared_ptr<const Texture2D> Texture2D::load(const std::string &filePath, const uint64_t options, bool skipCache)
-// {
-//     // Attempt from cache
-//     std::shared_ptr<const Texture2D> rtn;
-//     if (!filePath.empty())
-//     {
-//         if (!skipCache)
-//         {
-//             rtn = loadFromCache(filePath);
-//         }
-//         // Load using loader
-//         if (!rtn)
-//         {
-//             auto image = loadImage(filePath);
-//             if (image)
-//             {
-//                 rtn = std::shared_ptr<const Texture2D>(new Texture2D(image, filePath, options),
-//                     [&](Texture2D *ptr) {  // Custom deleter, which purges cache of item
-//                     Texture2D::purgeCache(ptr->getReference());
-//                     delete ptr;
-//                 });
-//             }
-//         }
-//         // If we've loaded something, store in cache
-//         if (rtn&&!skipCache)
-//         {
-//             cache.emplace(filePath, rtn);
-//         }
-//     }
-//     return rtn;
-// }
+std::shared_ptr<const Texture2D> Texture2D::load(const std::string &texPath, const std::string &modelFolder, const uint64_t options, bool skipCache) {
+     // Locate the file
+     std::string filePath;
+     // Raw exists
+     if (exists(path(texPath)))
+         filePath = texPath;
+     // Exists in model dir
+     else if (!modelFolder.empty() && exists(path((modelFolder + texPath).c_str())))
+         filePath = modelFolder + texPath;
+     // Exists in model dir [path incorrect]
+     else if (!modelFolder.empty() && exists(path((modelFolder + su::getFilenameFromPath(texPath)).c_str())))
+         filePath = std::string(modelFolder) + su::getFilenameFromPath(texPath);
+     // Exists in resources
+     else if (Resources::exists(texPath))
+         filePath = Resources::locateFile(texPath);
+     return load(filePath, options, skipCache);
+}
+std::shared_ptr<const Texture2D> Texture2D::load(const std::string &filePath, const uint64_t options, bool skipCache) {
+    // Attempt from cache
+    std::shared_ptr<const Texture2D> rtn;
+    if (!filePath.empty()) {
+        if (!skipCache) {
+            rtn = loadFromCache(filePath);
+        }
+        // Load using loader
+        if (!rtn) {
+            auto image = loadImage(filePath);
+            if (image) {
+                rtn = std::shared_ptr<const Texture2D>(new Texture2D(image, filePath, options),
+                 [&](Texture2D *ptr) {  // Custom deleter, which purges cache of item
+                 Texture2D::purgeCache(ptr->getReference());
+                 delete ptr;});
+            }
+        }
+        // If we've loaded something, store in cache
+        if (rtn&&!skipCache) {
+            cache.emplace(filePath, rtn);
+        }
+    }
+    return rtn;
+}
 bool Texture2D::isCached(const std::string &filePath) {
     auto a = cache.find(filePath);
     if (a != cache.end()) {

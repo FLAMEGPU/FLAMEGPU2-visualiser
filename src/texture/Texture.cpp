@@ -1,14 +1,23 @@
 #include "texture/Texture.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 #include <algorithm>
+
 #include "util/StringUtils.h"
+
+Texture::ImageData::~ImageData() {
+    if (data) {
+        stbi_image_free(data);
+        data = nullptr;
+    }
+}
 
 // Ensure these remain lowercase without prepended '.'
 const char* Texture::IMAGE_EXTS[] = {
     "tga",
     "png",
     "bmp",
-    "jpg",
-    "webp"
+    "jpg", "jpeg"
 };
 
 // Filter Ext Options
@@ -244,116 +253,43 @@ void Texture::applyOptions() {
     }
     GL_CALL(glBindTexture(type, 0));
 }
-// std::shared_ptr<SDL_Surface> Texture::findLoadImage(const std::string &imagePath)
-// {
-//     // Attempt without appending extension
-//     std::shared_ptr<SDL_Surface> image = loadImage(imagePath, false, true);
-//     for (int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*) && !image; i++)
-//     {
-//         image = loadImage(std::string(imagePath).append(".").append(IMAGE_EXTS[i]), false, true);
-//     }
-//     return image;
-// }
-// std::shared_ptr<SDL_Surface> Texture::loadImage(const std::string &imagePath, bool flipVertical, bool silenceErrors)
-// {
-//     std::shared_ptr<SDL_Surface> image = std::shared_ptr<SDL_Surface>(IMG_Load(imagePath.c_str()), SDL_FreeSurface);
-//     if (!image)
-//     {
-//         if (!silenceErrors)
-//             fprintf(stderr, "%s\n", IMG_GetError());
-//         return std::shared_ptr<SDL_Surface>();
-//     }
-//     // This was used before I bothered to write in support for all GL'able formats
-//     // else if (image->format->BytesPerPixel != 3 && image->format->BytesPerPixel != 4)
-//     // {
-//     //     if (!silenceErrors)
-//     //         fprintf(stderr, "'%s': Textures must be 3 or 4 channel with 8 bits per colour.\n", imagePath.c_str());
-//     //     return std::shared_ptr<SDL_Surface>();
-//     // }
-//     // else if (image->format->Rshift>image->format->Bshift)
-//     // {   // If the texture is BGR order rather than RGB order, switch bytes
-//     //     SDL_PixelFormat desiredFormat;
-//     //     memcpy(&desiredFormat, image->format, sizeof(SDL_PixelFormat));
-//     //     desiredFormat.Bloss = image->format->Rloss;
-//     //     desiredFormat.Bmask = image->format->Rmask;
-//     //     desiredFormat.Bshift = image->format->Rshift;
-//     //     desiredFormat.Rloss = image->format->Bloss;
-//     //     desiredFormat.Rmask = image->format->Bmask;
-//     //     desiredFormat.Rshift = image->format->Bshift;
-//     //     if (image->format->BytesPerPixel == 3)
-//     //         desiredFormat.format = SDL_PIXELFORMAT_RGB888;
-//     //     else
-//     //         desiredFormat.format = SDL_PIXELFORMAT_RGBA8888;
-//     //     image = std::shared_ptr<SDL_Surface>(SDL_ConvertSurface(image.get(), &desiredFormat, 0), SDL_FreeSurface);
-//     // }
-//     SDL_ClearError();  // Clear any img errors
-//     if (image&&flipVertical)
-//         flipRows(image);
-//     return image;
-// }
-
-// bool Texture::flipRows(std::shared_ptr<SDL_Surface> img)
-// {
-//     if (!img)
-//     {
-//         SDL_SetError("Surface is NULL");
-//         return false;
-//     }
-//     int pitch = img->pitch;
-//     int height = img->h;
-//     void* image_pixels = img->pixels;
-//     int index;
-//     void* temp_row;
-//     int height_div_2;
-//
-//     temp_row = (void *)malloc(pitch);
-//     if (NULL == temp_row)
-//     {
-//         SDL_SetError("Not enough memory for image inversion");
-//         return false;
-//     }
-//     // if height is odd, don't need to swap middle row
-//     height_div_2 = (int)(height * .5);
-//     for (index = 0; index < height_div_2; index++)     {
-//         // uses string.h
-//         memcpy((Uint8 *)temp_row,
-//             (Uint8 *)(image_pixels)+
-//             pitch * index,
-//             pitch);
-//
-//         memcpy(
-//             (Uint8 *)(image_pixels)+
-//             pitch * index,
-//             (Uint8 *)(image_pixels)+
-//             pitch * (height - index - 1),
-//             pitch);
-//         memcpy(
-//             (Uint8 *)(image_pixels)+
-//             pitch * (height - index - 1),
-//             temp_row,
-//             pitch);
-//     }
-//     free(temp_row);
-//     return true;
-// }
-// void Texture::allocateTextureImmutable(std::shared_ptr<SDL_Surface> image, GLenum target)
-// {
-//     target = target == 0 ? type : target;
-//     GL_CALL(glBindTexture(type, glName));
-//     // If the image is stored with a pitch different to width*bytes per pixel, temp change setting
-//     if (image->pitch / image->format->BytesPerPixel != image->w)
-//     {
-//         GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, image->pitch / image->format->BytesPerPixel));
-//     }
-//     GL_CALL(glTexStorage2D(target, enableMipMapOption() ? 4 : 1, format.internalFormat, image->w, image->h));  // Must not be called twice on the same gl tex
-//     GL_CALL(glTexSubImage2D(target, 0, 0, 0, image->w, image->h, format.format, format.type, image->pixels));
-//     // Disable custom pitch
-//     if (image->pitch / image->format->BytesPerPixel != image->w)
-//     {
-//         GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
-//     }
-//     GL_CALL(glBindTexture(type, 0));
-// }
+std::shared_ptr<Texture::ImageData> Texture::findLoadImage(const std::string &imagePath) {
+    // Attempt without appending extension
+    std::shared_ptr<ImageData> image = loadImage(imagePath, false, true);
+    for (int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*) && !image; i++) {
+        image = loadImage(std::string(imagePath).append(".").append(IMAGE_EXTS[i]), false, true);
+    }
+    return image;
+}
+std::shared_ptr<Texture::ImageData> Texture::loadImage(const std::string &imagePath, bool flipVertical, bool silenceErrors) {
+    std::shared_ptr<ImageData> image = std::make_shared<ImageData>();
+    stbi_set_flip_vertically_on_load(flipVertical);
+    image->data = stbi_load(imagePath.c_str(), &image->width, &image->height, &image->channels, 0);
+    if (!image) {
+        if (!silenceErrors)
+            fprintf(stderr, "Image file '%s' could not be read.\n", imagePath.c_str());
+        return std::shared_ptr<ImageData>();
+    }
+    return image;
+}
+void Texture::allocateTextureImmutable(std::shared_ptr<ImageData> image, GLenum target) {
+     target = target == 0 ? type : target;
+     GL_CALL(glBindTexture(type, glName));
+     // If the image is stored with a pitch different to width*bytes per pixel, temp change setting
+     // (Disabled, stb_image never outputs files in this format)
+     // if (image->pitch / image->format->BytesPerPixel != image->w)
+     // {
+     //     GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, image->pitch / image->format->BytesPerPixel));
+     // }
+     GL_CALL(glTexStorage2D(target, enableMipMapOption() ? 4 : 1, format.internalFormat, image->width, image->height));  // Must not be called twice on the same gl tex
+     GL_CALL(glTexSubImage2D(target, 0, 0, 0, image->width, image->height, format.format, format.type, image->data));
+     // Disable custom pitch
+     // if (image->pitch / image->format->BytesPerPixel != image->w)
+     // {
+     //     GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
+     // }
+     GL_CALL(glBindTexture(type, 0));
+}
 void Texture::allocateTextureImmutable(const glm::uvec2 &dimensions, const void *data, GLenum target) {
     target = target == 0 ? type : target;
     GL_CALL(glBindTexture(type, glName));
@@ -391,13 +327,12 @@ void Texture::setTexture(const void *data, const glm::uvec2 &dimensions, glm::iv
 }
 
 bool Texture::supportsExtension(const std::string &fileExtension) {
-    std::string _fileExtension;
-    su::toLower(fileExtension);
+    const std::string _fileExtension = su::toLower(fileExtension);
     // Compare each extension with and without . prepended
     for (unsigned int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*); ++i) {
-        if (_fileExtension.compare(IMAGE_EXTS[i]) == 0)
+        if (_fileExtension == IMAGE_EXTS[i])
             return true;
-        if (_fileExtension.compare(std::string(".") + IMAGE_EXTS[i]) == 0)
+        if (_fileExtension == (std::string(".") + IMAGE_EXTS[i]))
             return true;
     }
     return false;
@@ -413,79 +348,22 @@ void Texture::bind() const {
     GL_CALL(glActiveTexture(GL_TEXTURE0));
 }
 
-// Texture::Format Texture::getFormat(std::shared_ptr<SDL_Surface> image)
-// {
-//     visassert(image);
-//     switch (image->format->format)
-//     {
-//     case SDL_PIXELFORMAT_RGB332:
-//         return Format(GL_RGB, GL_R3_G3_B2, 1, GL_UNSIGNED_BYTE_3_3_2);
-//     case SDL_PIXELFORMAT_RGB444:
-//         return Format(GL_RGB, GL_RGB4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
-//     case SDL_PIXELFORMAT_BGR555:
-//         return Format(GL_BGR, GL_RGB5, 2, GL_UNSIGNED_SHORT_5_5_5_1);
-//     case SDL_PIXELFORMAT_RGB555:
-//         return Format(GL_RGB, GL_RGB5, 2, GL_UNSIGNED_SHORT_5_5_5_1);
-//     case SDL_PIXELFORMAT_ABGR4444:
-//         return Format(GL_ABGR_EXT, GL_RGBA4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
-//     case SDL_PIXELFORMAT_RGBA4444:
-//         return Format(GL_RGBA, GL_RGBA4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
-//     case SDL_PIXELFORMAT_BGRA4444:
-//         return Format(GL_BGRA, GL_RGBA4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
-//     case SDL_PIXELFORMAT_BGRA5551:
-//         return Format(GL_BGRA, GL_RGB5_A1, 2, GL_UNSIGNED_SHORT_5_5_5_1);
-//     case SDL_PIXELFORMAT_RGBA5551:
-//         return Format(GL_RGBA, GL_RGB5_A1, 2, GL_UNSIGNED_SHORT_5_5_5_1);
-//     case SDL_PIXELFORMAT_RGB565:
-//         return Format(GL_RGB, GL_RGB, 2, GL_UNSIGNED_SHORT_5_6_5);
-//     case SDL_PIXELFORMAT_BGR565:
-//         return Format(GL_BGR, GL_RGB, 2, GL_UNSIGNED_SHORT_5_6_5);
-//     case SDL_PIXELFORMAT_RGB24:
-//         return Format(GL_RGB, GL_RGB8, 3, GL_UNSIGNED_BYTE);  // Is this correct?
-//     case SDL_PIXELFORMAT_BGR24:
-//         return Format(GL_BGR, GL_RGB8, 3, GL_UNSIGNED_BYTE);  // Is this correct?
-//     case SDL_PIXELFORMAT_RGB888:
-//         return Format(GL_RGB, GL_RGB8, 3, GL_UNSIGNED_BYTE);  // Is this correct?
-//     case SDL_PIXELFORMAT_BGR888:
-//         return Format(GL_BGR, GL_RGB8, 3, GL_UNSIGNED_BYTE);  // Is this correct?
-//     case SDL_PIXELFORMAT_RGBA8888:
-//         return Format(GL_RGBA, GL_RGBA8, 4, GL_UNSIGNED_INT_8_8_8_8);
-//     case SDL_PIXELFORMAT_ABGR8888:
-//         return Format(GL_ABGR_EXT, GL_RGBA8, 4, GL_UNSIGNED_INT_8_8_8_8);
-//     case SDL_PIXELFORMAT_BGRA8888:
-//         return Format(GL_BGRA, GL_RGBA8, 4, GL_UNSIGNED_INT_8_8_8_8);
-//     // Possible if we bother to write reorder to RGBA functions
-//     case SDL_PIXELFORMAT_ARGB4444:
-//         // return Format(GL_RGBA, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4);
-//     case SDL_PIXELFORMAT_ARGB1555:
-//         // return Format(GL_RGBA, GL_RGB5_A1, GL_UNSIGNED_SHORT_5_5_5_1);
-//     case SDL_PIXELFORMAT_ABGR1555:
-//         // return Format(GL_RGBA, GL_RGB5_A1, GL_UNSIGNED_SHORT_5_5_5_1);
-//     case SDL_PIXELFORMAT_ARGB8888:
-//         // return Format(GL_RGBA, GL_RGBA8, GL_UNSIGNED_INT_8_8_8_8);
-//     // Unknown
-//     case SDL_PIXELFORMAT_ARGB2101010:
-//     case SDL_PIXELFORMAT_RGBX8888:
-//     case SDL_PIXELFORMAT_BGRX8888:
-//     case SDL_PIXELFORMAT_NV21:
-//     case SDL_PIXELFORMAT_NV12:
-//     case SDL_PIXELFORMAT_YVYU:
-//     case SDL_PIXELFORMAT_UYVY:
-//     case SDL_PIXELFORMAT_YUY2:
-//     case SDL_PIXELFORMAT_IYUV:
-//     case SDL_PIXELFORMAT_YV12:
-//     case SDL_PIXELFORMAT_UNKNOWN:
-//     case SDL_PIXELFORMAT_INDEX1LSB:
-//     case SDL_PIXELFORMAT_INDEX1MSB:
-//     case SDL_PIXELFORMAT_INDEX4LSB:
-//     case SDL_PIXELFORMAT_INDEX4MSB:
-//     case SDL_PIXELFORMAT_INDEX8:
-//     default:
-//         fprintf(stderr, "Unable to handle SDL_PIXELFORMAT: %d\n", image->format->format);
-//         visassert(false);
-//     }
-//     return Format(0, 0, 0, 0);
-// }
+Texture::Format Texture::getFormat(std::shared_ptr<ImageData> image) {
+    visassert(image);
+    switch (image->channels) {
+    case 1:
+        return Format(GL_RED, GL_R8, 1, GL_UNSIGNED_BYTE);  // Is this correct?
+    case 2:
+        return Format(GL_RG, GL_RG8, 2, GL_UNSIGNED_BYTE);  // Is this correct?
+    case 3:
+        return Format(GL_RGB, GL_RGB8, 3, GL_UNSIGNED_BYTE);  // Is this correct?
+    case 4:
+        return Format(GL_RGBA, GL_RGBA8, 4, GL_UNSIGNED_INT_8_8_8_8);
+    default:
+        fprintf(stderr, "Unable to handle channels: %d\n", image->channels);
+        visassert(false);
+    }
+}
 // Comment out this include if not making use of Shaders/ShaderCore
 #include "shader/ShaderCore.h"
 #ifdef SRC_SHADER_SHADERCORE_H_

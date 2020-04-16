@@ -86,7 +86,8 @@ void Material::addTexture(TextureFrame texFrame, TextureType type) {
     updatePropertiesUniform();
     if (hasBaked) {
         if (textures[type].size() == 1) {
-            defaultShader->addTexture(TEX_NAME[type], texFrame.texture);
+            if (defaultShader)
+                defaultShader->addTexture(TEX_NAME[type], texFrame.texture);
             for (const auto &i : this->shaders)
                 i->addTexture(TEX_NAME[type], texFrame.texture);
         }
@@ -135,14 +136,14 @@ void Material::setCustomShaders(const std::vector<std::shared_ptr<Shaders>> &_sh
 void Material::prepare(unsigned int index) {
     if (index < shaders.size())
         shaders[index]->prepare();
-    else
+    else if (defaultShader)
         defaultShader->prepare();
 }
 void Material::use(glm::mat4 &transform, unsigned int index, bool requiresPrepare) {
     if (index < shaders.size()) {
         shaders[index]->useProgram(requiresPrepare);
         shaders[index]->overrideModelMat(&transform);
-    } else {
+    } else if (defaultShader) {
         defaultShader->useProgram(requiresPrepare);
         defaultShader->overrideModelMat(&transform);
     }
