@@ -40,6 +40,37 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
         stepDisplay->setUseAA(false);
         hud->add(stepDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, modelcfg.fpsVisible ? 10 : 0), INT_MAX);
     }
+    for (auto &sm : modelcfg.staticModels) {
+        std::shared_ptr<Entity> entity;
+        if (sm.texture.empty()) {
+            // Entity does not have a texture
+            entity = std::make_shared<Entity>(
+                sm.path.c_str(),
+                *reinterpret_cast<const glm::vec3*>(sm.scale),
+                std::make_shared<Shaders>(
+                    "resources/default.vert",
+                    "resources/material_flat.frag"));
+            entity->setMaterial(glm::vec3(0.1f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.7f));
+        } else {
+            // Entity has texture
+            entity = std::make_shared<Entity>(
+                sm.path.c_str(),
+                *reinterpret_cast<const glm::vec3*>(&sm.scale),
+                std::make_shared<Shaders>(
+                    "resources/default.vert",
+                    "resources/material_phong.frag"),
+                Texture2D::load(sm.texture));
+        }
+        if (entity) {
+            entity->setLocation(*reinterpret_cast<const glm::vec3*>(sm.location));
+            entity->setRotation(*reinterpret_cast<const glm::vec4*>(sm.rotation));
+            entity->setViewMatPtr(camera->getViewMatPtr());
+            entity->setProjectionMatPtr(&this->projMat);
+            // entity->setLightsBuffer(this->lighting);  //  No lighting yet
+
+            staticModels.push_back(entity);
+        }
+    }
 }
 Visualiser::~Visualiser() {
     this->close();
@@ -207,11 +238,10 @@ void Visualiser::render() {
             break;
         }
     }
-    //  update
-    // this->scene->_update(frameTime);
     //  render
     BackBuffer::useStatic();
-    // this->scene->_render();
+    for (auto &sm : staticModels)
+        sm->render();
     renderAgentStates();
     GL_CALL(glViewport(0, 0, windowDims.x, windowDims.y));
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
