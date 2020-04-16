@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include <memory>
 
 /**
  * This class holds the common components for a visualisation
@@ -101,7 +102,7 @@ struct ModelConfig {
     /**
      * Store of static models to be rendered in visualisation
      */
-    std::list<StaticModel> staticModels;
+    std::list<std::shared_ptr<StaticModel>> staticModels;
 
  private:
      /**

@@ -42,11 +42,11 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     }
     for (auto &sm : modelcfg.staticModels) {
         std::shared_ptr<Entity> entity;
-        if (sm.texture.empty()) {
+        if (sm->texture.empty()) {
             // Entity does not have a texture
             entity = std::make_shared<Entity>(
-                sm.path.c_str(),
-                *reinterpret_cast<const glm::vec3*>(sm.scale),
+                sm->path.c_str(),
+                *reinterpret_cast<const glm::vec3*>(sm->scale),
                 std::make_shared<Shaders>(
                     "resources/default.vert",
                     "resources/material_flat.frag"));
@@ -54,16 +54,16 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
         } else {
             // Entity has texture
             entity = std::make_shared<Entity>(
-                sm.path.c_str(),
-                *reinterpret_cast<const glm::vec3*>(&sm.scale),
+                sm->path.c_str(),
+                *reinterpret_cast<const glm::vec3*>(&sm->scale),
                 std::make_shared<Shaders>(
                     "resources/default.vert",
                     "resources/material_phong.frag"),
-                Texture2D::load(sm.texture));
+                Texture2D::load(sm->texture));
         }
         if (entity) {
-            entity->setLocation(*reinterpret_cast<const glm::vec3*>(sm.location));
-            entity->setRotation(*reinterpret_cast<const glm::vec4*>(sm.rotation));
+            entity->setLocation(*reinterpret_cast<const glm::vec3*>(sm->location));
+            entity->setRotation(*reinterpret_cast<const glm::vec4*>(sm->rotation));
             entity->setViewMatPtr(camera->getViewMatPtr());
             entity->setProjectionMatPtr(&this->projMat);
             // entity->setLightsBuffer(this->lighting);  //  No lighting yet
