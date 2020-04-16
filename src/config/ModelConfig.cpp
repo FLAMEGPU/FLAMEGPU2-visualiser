@@ -1,30 +1,24 @@
 #include "config/ModelConfig.h"
 
 #include <cstring>
-
+ModelConfig::StaticModel::StaticModel()
+    : path("")
+    , texture("")
+    , scale{-1, 0, 0}
+    , location{0, 0, 0}
+    , rotation{1, 0, 0, 0} { }
 ModelConfig::ModelConfig(const char* _windowTitle)
     : windowTitle(nullptr)
+    , windowDimensions{1280, 720}
+    , clearColor{0, 0, 0}
     , fpsVisible(true)
+    , fpsColor{1, 1, 1}
+    , cameraLocation{1.5f, 1.5f, 1.5f}
+    , cameraTarget{0, 0, 0}
+    , cameraSpeed{0.05f, 5}
+    , nearFarClip{0.05f, 5000}
     , stepVisible(true) {
     setString(&windowTitle, _windowTitle);
-    windowDimensions[0] = 1280;
-    windowDimensions[1] = 720;
-    clearColor[0] = 0.0f;
-    clearColor[1] = 0.0f;
-    clearColor[2] = 0.0f;
-    fpsColor[0] = 1.0f;
-    fpsColor[1] = 1.0f;
-    fpsColor[2] = 1.0f;
-    cameraLocation[0] = 1.5f;
-    cameraLocation[1] = 1.5f;
-    cameraLocation[2] = 1.5f;
-    cameraTarget[0] = 0.0f;
-    cameraTarget[1] = 0.0f;
-    cameraTarget[2] = 0.0f;
-    cameraSpeed[0] = 0.05f;
-    cameraSpeed[1] = 5.0f;
-    nearFarClip[0] = 0.05f;
-    nearFarClip[1] = 5000.0f;
 }
 ModelConfig::~ModelConfig() {
     if (windowTitle)

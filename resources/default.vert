@@ -16,7 +16,7 @@ void main()
 {
   gl_Position = _modelViewProjectionMat * vec4(_vertex,1.0f);
 
-  eyeNormal = normalize(_normalMat * _normal) ;
+  eyeNormal = normalize(_normalMat * normalize(_normal)) ;
   eyeVertex = (_modelViewMat * vec4(_vertex, 1.0f)).rgb;
   texCoords = _texCoords;
 }

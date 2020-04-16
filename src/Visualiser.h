@@ -8,6 +8,7 @@
 #include <mutex>
 #include <utility>
 #include <thread>
+#include <list>
 
 #include <SDL.h>
 #undef main  // SDL breaks the regular main entry point, this fixes
@@ -209,6 +210,7 @@ class Visualiser : public ViewportExt {
 
     ModelConfig modelConfig;
     std::unordered_map<NamePair, RenderInfo, NamePairHash> agentStates;
+    std::list<std::shared_ptr<Entity>> staticModels;
 
     /**
      * Background thread in which visualiser executes
