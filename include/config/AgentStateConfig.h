@@ -44,6 +44,7 @@ struct AgentStateConfigFlags {
 // So we wrap in ifndef to stop nvcc seeing it, potentially harmful that nvcc will see it's size incorrectly but it seems to work
 // Other solution would be to point to this structure and ensure the bitfield is never included by any .cu files
 #ifndef __CUDACC__
+    // Shared by model_path and model_texture
     unsigned int model_path : 1;
     unsigned int model_scale : 1;
 #endif  // __CUDACC__
