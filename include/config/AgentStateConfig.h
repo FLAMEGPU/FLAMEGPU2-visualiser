@@ -16,6 +16,7 @@ struct AgentStateConfig {
     AgentStateConfig &operator=(const AgentStateConfig &other);
 
     const char *model_path = nullptr;
+    const char *model_texture = nullptr;
     float model_scale[3];
 
  private:

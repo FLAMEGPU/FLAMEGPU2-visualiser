@@ -316,16 +316,22 @@ void Entity::loadModelFromFile() {
         std::string exportPath(modelPath);
         std::string objPath(OBJ_TYPE);
         exportPath = exportPath.substr(0, exportPath.length() - objPath.length()).append(EXPORT_TYPE);
-        if (su::endsWith(modelPath, EXPORT_TYPE, false)) {
-            importModel(modelPath);
-            return;
+        {  // Attempt export path
+            FILE* file = fopen(exportPath.c_str(), "r");
+            if (file) {
+                fclose(file);
+                importModel(exportPath.c_str());
+                return;
+            }
         }
-        std::string exportModulePath = Resources::toModuleDir(exportPath);
-        FILE* file = fopen(exportModulePath.c_str(), "r");
-        if (file) {
-            fclose(file);
-            importModel(exportModulePath.c_str());
-            return;
+        {  // Attempt resource export (fails if provided path is absolute)
+            std::string exportModulePath = Resources::toModuleDir(exportPath);
+            FILE* file = fopen(exportModulePath.c_str(), "r");
+            if (file) {
+                fclose(file);
+                importModel(exportModulePath.c_str());
+                return;
+            }
         }
     } else {
         fprintf(stderr, "Model file '%s' is of an unsupported format, aborting load.\n Support types: %s, %s\n", modelPath, OBJ_TYPE, EXPORT_TYPE);

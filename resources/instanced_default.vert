@@ -1,10 +1,12 @@
 #version 430
 
+uniform mat3 _normalMat;
 uniform mat4 _projectionMat;
 uniform mat4 _viewMat;
 uniform mat4 _modelMat;
 
 in vec3 _vertex;
+in vec3 _normal;
 in vec2 _texCoords;
 
 uniform samplerBuffer x_pos;
@@ -12,6 +14,7 @@ uniform samplerBuffer y_pos;
 uniform samplerBuffer z_pos;
 
 out vec3 eyeVertex;
+out vec3 eyeNormal;
 out vec2 texCoords;
 
 void main()
@@ -25,7 +28,12 @@ void main()
   // Calculate eye vertex
   eyeVertex = (_viewMat * vert).rgb;
   // Calculate frag vertex
-  gl_Position = _projectionMat * vec4(eyeVertex,1.0f);
-
+  gl_Position = _projectionMat * vec4(eyeVertex, 1.0f);
+  
+  
+  // Calc eye normal
+  // From testing with deer model i'm not 100% happy that phong (full bright) works properly, bottom of each foot had different normal (before _normalMat transform)
+  eyeNormal = normalize(_normalMat * normalize(_normal));
+  // Calc tex coords
   texCoords = _texCoords;
 }
