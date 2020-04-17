@@ -5,21 +5,22 @@ Constructs a new axis object
 */
 Axis::Axis(float length)
     : pen(6) {
-    pen.begin(Draw::Lines, "axis"); {
-        // x
-        pen.color(1, 0, 0);
-        pen.vertex(0, 0, 0);
-        pen.vertex(length, 0, 0);
-        // y
-        pen.color(0, 1, 0);
-        pen.vertex(0, 0, 0);
-        pen.vertex(0, length, 0);
-        // z
-        pen.color(0, 0, 1);
-        pen.vertex(0, 0, 0);
-        pen.vertex(0, 0, length);
-    }
-    pen.save();
+        pen.begin(Draw::Type::Lines, "axis");
+        {
+            // x
+            pen.color(1, 0, 0);
+            pen.vertex(0, 0, 0);
+            pen.vertex(length, 0, 0);
+            // y
+            pen.color(0, 1, 0);
+            pen.vertex(0, 0, 0);
+            pen.vertex(0, length, 0);
+            // z
+            pen.color(0, 0, 1);
+            pen.vertex(0, 0, 0);
+            pen.vertex(0, 0, length);
+        }
+        pen.save();
 }
 void Axis::render() {
     pen.render("axis");

@@ -191,6 +191,7 @@ SET(VISUALISER_INCLUDE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/FLAMEGPU_Visualisation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/config/AgentStateConfig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/config/ModelConfig.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/config/LineConfig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/config/Stock.h
     # Items from sdl_exp
 )
@@ -350,6 +351,8 @@ SET(RESOURCES_ALL
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_phong.frag
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/default.vert
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/text.frag
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/color.vert
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/color_noshade.frag
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/icosphere.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/sphere.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/cube.obj

@@ -40,6 +40,10 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
         stepDisplay->setUseAA(false);
         hud->add(stepDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, modelcfg.fpsVisible ? 10 : 0), INT_MAX);
     }
+    lines = std::make_shared<Draw>();
+    lines->setViewMatPtr(camera->getViewMatPtr());
+    lines->setProjectionMatPtr(&this->projMat);
+    // Process static models
     for (auto &sm : modelcfg.staticModels) {
         std::shared_ptr<Entity> entity;
         if (sm->texture.empty()) {
@@ -70,6 +74,26 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
 
             staticModels.push_back(entity);
         }
+    }
+    // Process lines
+    for (auto &line : modelcfg.lines) {
+        // Check it's valid
+        if (line->lineType == LineConfig::Type::Polyline) {
+            if (line->vertices.size() < 6 || line->vertices.size() % 3 != 0 || line->colors.size() % 4 != 0 || (line->colors.size() / 4) * 3 != line->vertices.size()) {
+                THROW SketchError("Polyline sketch contains invalid number of vertices (%d/3) or colours (%d/4).\n", line->vertices.size(), line->colors.size());
+            }
+        } else if (line->lineType == LineConfig::Type::Lines) {
+            if (line->vertices.size() < 6 || line->vertices.size() % 6 != 0 || line->colors.size() % 4 != 0 || (line->colors.size() / 4) * 3 != line->vertices.size()) {
+                THROW SketchError("Lines sketch contains invalid number of vertices (%d/3) or colours (%d/4).\n", line->vertices.size(), line->colors.size());
+            }
+        }
+        // Convert to Draw
+        lines->begin(line->lineType == LineConfig::Type::Polyline ? Draw::Type::Polyline : Draw::Type::Lines, std::to_string(totalLines++));
+        for (size_t i = 0; i < line->vertices.size() / 3; ++i) {
+            lines->color(*reinterpret_cast<const glm::vec4*>(&line->colors[i * 4]));
+            lines->vertex(*reinterpret_cast<const glm::vec3*>(&line->vertices[i * 3]));
+        }
+        lines->save();
     }
 }
 Visualiser::~Visualiser() {
@@ -243,6 +267,14 @@ void Visualiser::render() {
     for (auto &sm : staticModels)
         sm->render();
     renderAgentStates();
+    // Render lines last, as they may contain alpha
+    if (renderLines) {
+        GL_CALL(glEnable(GL_BLEND));
+        GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        for (unsigned int i = 0; i < totalLines; ++i)
+            lines->render(std::to_string(i));
+        GL_CALL(glDisable(GL_BLEND));
+    }
     GL_CALL(glViewport(0, 0, windowDims.x, windowDims.y));
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     this->hud->render();
@@ -494,6 +526,9 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         } else {
             pause_guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
         }
+        break;
+    case SDLK_l:
+        renderLines = !renderLines;
         break;
     default:
         //  Do nothing?
