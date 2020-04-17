@@ -22,6 +22,7 @@
 
 #include "config/ModelConfig.h"
 #include "config/AgentStateConfig.h"
+#include "Draw.h"
 #include "Entity.h"
 
 template<typename T>
@@ -211,7 +212,9 @@ class Visualiser : public ViewportExt {
     ModelConfig modelConfig;
     std::unordered_map<NamePair, RenderInfo, NamePairHash> agentStates;
     std::list<std::shared_ptr<Entity>> staticModels;
-
+    std::shared_ptr<Draw> lines;
+    unsigned int totalLines = 0;
+    bool renderLines = true;
     /**
      * Background thread in which visualiser executes
      * (Timestep independent visualiser)

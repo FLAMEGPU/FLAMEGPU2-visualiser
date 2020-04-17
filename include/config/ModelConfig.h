@@ -5,6 +5,8 @@
 #include <list>
 #include <memory>
 
+#include "LineConfig.h"
+
 /**
  * This class holds the common components for a visualisation
  * @note I had wanted to avoid including C++ types in the Visualisation interface Lib,
@@ -103,6 +105,10 @@ struct ModelConfig {
      * Store of static models to be rendered in visualisation
      */
     std::list<std::shared_ptr<StaticModel>> staticModels;
+    /**
+     * Store of user defined line renderings
+     */
+    std::list<std::shared_ptr<LineConfig>> lines;
 
  private:
      /**
