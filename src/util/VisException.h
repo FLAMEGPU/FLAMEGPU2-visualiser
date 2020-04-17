@@ -85,6 +85,11 @@ DERIVED_VisException(ResourceError, "Resource was not found!");
  * It reports errors that are due to Font loading
  */
 DERIVED_VisException(FontLoadingError, "Error during font loading!");
+/**
+ * Defines a type of object to be thrown as exception.
+ * It reports errors that are due to bad data being passed to Draw class
+ */
+DERIVED_VisException(SketchError, "Error during font loading!");
 
 /**
  * Lazy replacement for assert()

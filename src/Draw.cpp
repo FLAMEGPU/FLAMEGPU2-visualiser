@@ -89,7 +89,7 @@ void Draw::save(bool replaceExisting) {
     stateDirectory.insert({ tName, std::move(tState) });
 }
 Draw::State Draw::_save(bool isTemporary) {
-    if (tType == Lines && tVertices.size() % 2 != 0) {
+    if (tType == Type::Lines && tVertices.size() % 2 != 0) {
         THROW VisAssert("Draw::_save(): Line drawings require an even number of vertices.\n");
     }
     visassert(tVertices.size() == tColors.size());
@@ -163,32 +163,32 @@ void Draw::render(const State &state) const {
     clearWidth(state.mType);
 }
 GLenum Draw::toGL(const Type &t) {
-    if (t == Lines) {
+    if (t == Type::Lines) {
         return GL_LINES;
-    } else if (t == Polyline) {
+    } else if (t == Type::Polyline) {
         return GL_LINE_STRIP;
-    } else if (t == Points) {
+    } else if (t == Type::Points) {
         return GL_POINTS;
     }
     THROW VisAssert("Draw::toGL(): Unexpected Type pased to Draw::toGL()\n");
 }
 void Draw::setWidth(const Type &t, const float &w) {
-    if (t == Lines) {
+    if (t == Type::Lines) {
         GL_CALL(glLineWidth(w));
-    } else if (t == Polyline) {
+    } else if (t == Type::Polyline) {
         GL_CALL(glLineWidth(w));
-    } else if (t == Points) {
+    } else if (t == Type::Points) {
         GL_CALL(glPointSize(w));
     } else {
         THROW VisAssert("Draw::setWidth(): Unexpected Type passed to Draw::setWidth()\n");
     }
 }
 void Draw::clearWidth(const Type &t) {
-    if (t == Lines) {
+    if (t == Type::Lines) {
         GL_CALL(glLineWidth(1.0f));
-    } else if (t == Polyline) {
+    } else if (t == Type::Polyline) {
         GL_CALL(glLineWidth(1.0f));
-    } else if (t == Points) {
+    } else if (t == Type::Points) {
         GL_CALL(glPointSize(1.0f));
     } else {
         THROW VisAssert("Draw::clearWidth(): Unexpected Type passed to Draw::clearWidth()\n");

@@ -16,7 +16,7 @@
  */
 class Draw : Renderable {
  public:
-    enum Type {
+    enum class Type {
         Points,
         Lines,
         Polyline,
