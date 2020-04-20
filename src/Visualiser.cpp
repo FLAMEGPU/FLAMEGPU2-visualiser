@@ -184,6 +184,11 @@ void Visualiser::run() {
             if (SDL_GetRelativeMouseMode()) {
                 SDL_SetRelativeMouseMode(SDL_FALSE);
             }
+            // Un-pause the simulation if required.
+            if (this->pause_guard) {
+                delete this->pause_guard;
+                this->pause_guard = nullptr;
+            }
             // Hide window
             SDL_HideWindow(window);
             //  New, might not be required
@@ -474,6 +479,10 @@ void Visualiser::deallocateGLObjects() {
 
 void Visualiser::close() {
     continueRender = false;
+    if (this->pause_guard) {
+        delete this->pause_guard;
+        this->pause_guard = nullptr;
+    }
     if (this->background_thread) {
         this->background_thread->join();
         delete this->background_thread;
