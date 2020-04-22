@@ -131,7 +131,7 @@ void Visualiser::join() {
             this->windowedBounds.y,
             this->windowedBounds.w,
             this->windowedBounds.h,
-            SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);  // | SDL_WINDOW_BORDERLESS
+            SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);  // | SDL_WINDOW_BORDERLESS
         SDL_GL_MakeCurrent(this->window, this->context);
     }
 }
@@ -152,14 +152,13 @@ void Visualiser::run() {
             SDL_GL_MakeCurrent(this->window, NULL);
             SDL_DestroyWindow(this->window);
         }
-        this->window = SDL_CreateWindow
-        (
+        this->window = SDL_CreateWindow(
             this->windowTitle,
             this->windowedBounds.x,
             this->windowedBounds.y,
             this->windowedBounds.w,
             this->windowedBounds.h,
-            SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);  // | SDL_WINDOW_BORDERLESS
+            SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);  // | SDL_WINDOW_BORDERLESS
         if (!this->window) {
             printf("Window failed to init.\n");
         } else {
@@ -246,10 +245,10 @@ void Visualiser::render() {
         case SDL_QUIT:
             continueRender = false;
             break;
-            // case SDL_WINDOWEVENT:
-            //     if (e.window.event == SDL_WINDOWEVENT_RESIZED || e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-            //         resizeWindow();
-            //     break;
+        case SDL_WINDOWEVENT:
+            if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                resizeWindow();
+            break;
         case SDL_KEYDOWN: {
             int x = 0;
             int y = 0;
@@ -397,14 +396,13 @@ bool Visualiser::init() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 
-    this->window = SDL_CreateWindow
-    (
+    this->window = SDL_CreateWindow(
         this->windowTitle,
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
         this->windowDims.x,
         this->windowDims.y,
-        SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);  // | SDL_WINDOW_BORDERLESS
+        SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);  // | SDL_WINDOW_BORDERLESS
 
     if (!this->window) {
         printf("Window failed to init.\n");
@@ -567,7 +565,7 @@ void Visualiser::toggleFullScreen() {
         SDL_SetWindowPosition(this->window, displayBounds.x, displayBounds.y);
         SDL_SetWindowSize(this->window, displayBounds.w, displayBounds.h);
     }
-    this->resizeWindow();
+    // this->resizeWindow(); will be triggered by SDL_WINDOWEVENT_SIZE_CHANGED
 }
 void Visualiser::toggleMouseMode() {
     if (SDL_GetRelativeMouseMode()) {
