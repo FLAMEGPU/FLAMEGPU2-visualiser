@@ -468,11 +468,13 @@ void Visualiser::resizeWindow() {
 }
 void Visualiser::deallocateGLObjects() {
     fpsDisplay.reset();
+    stepDisplay.reset();
     this->hud->clear();
     // Don't clear the map, as update buffer methods might still be called
     for (auto &as : agentStates) {
         as.second.entity.reset();
     }
+    this->lines.reset();
 }
 
 void Visualiser::close() {
