@@ -393,21 +393,26 @@ mark_as_advanced(CMAKE_USE_FOLDERS)
 find_file(CPPLINT NAMES cpplint cpplint.exe)
 if (CPPLINT)
     # Add custom target for linting this
+    # Variable for linter arguments.
+    LIST(APPEND CPPLINT_ARGS "")
+
+    # Set the --root argument if included as a sub project.
+    if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+        file(RELATIVE_PATH LINT_ROOT ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+        LIST(APPEND CPPLINT_ARGS "--root=${LINT_ROOT}")
+    endif()
+        
+    # Specify output format for msvc highlighting
     if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        # Output in visual studio format
-        add_custom_target(
-            "lint_${PROJECT_NAME}"
-            COMMAND ${CPPLINT} "--output" "vs7"
-            ${VISUALISER_ALL}
-        )
-    else()
-        # Output in default format
-        add_custom_target(
-            "lint_${PROJECT_NAME}"
-            COMMAND ${CPPLINT}
-            ${VISUALISER_ALL}
-        )
-    endif ()
+        LIST(APPEND CPPLINT_ARGS "--output" "vs7")
+    endif()
+
+    # Add the lint_ target
+    add_custom_target(
+        "lint_${PROJECT_NAME}"
+        COMMAND ${CPPLINT} ${CPPLINT_ARGS}
+        ${VISUALISER_ALL}
+    )
     # Don't trigger this target on ALL_BUILD or Visual Studio 'Rebuild Solution'
     set_target_properties("lint_${PROJECT_NAME}" PROPERTIES EXCLUDE_FROM_ALL TRUE)
     # set_target_properties("lint_${NAME}" PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE #This breaks all_lint in visual studio
