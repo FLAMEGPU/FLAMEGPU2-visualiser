@@ -110,6 +110,7 @@ void Visualiser::start() {
         SDL_GL_MakeCurrent(this->window, NULL);
         SDL_DestroyWindow(this->window);
         // Launch render loop in a new thread
+        this->continueRender = true;
         this->background_thread = new std::thread(&Visualiser::run, this);
     } else {
         printf("Already running! Call quit() to close it first!\n");
@@ -141,7 +142,7 @@ void Visualiser::stop() {
 }
 void Visualiser::run() {
     if (!this->isInitialised) {
-        printf("Visulisation not initialised yet.\n");
+        printf("Visualisation not initialised yet.\n");
     // } else if (!this->scene) {
     //     printf("Scene not yet set.\n");
     } else if (agentStates.size() == 0) {
@@ -170,7 +171,6 @@ void Visualiser::run() {
             this->resizeWindow();
             GL_CHECK();
             SDL_StartTextInput();
-            this->continueRender = true;
             while (this->continueRender) {
                 //  Update the fps in the window title
                 this->updateFPS();
