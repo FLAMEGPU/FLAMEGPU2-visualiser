@@ -322,7 +322,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 
+# Strip trailiing whitespace from SDL2_Libraries for Ubuntu1604 / libsdl2-dev 2.0.4
+string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
 target_link_libraries("${PROJECT_NAME}" "${SDL2_LIBRARIES}")
+
 target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
 target_link_libraries("${PROJECT_NAME}" freetype)
 target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
