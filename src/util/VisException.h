@@ -90,6 +90,11 @@ DERIVED_VisException(FontLoadingError, "Error during font loading!");
  * It reports errors that are due to bad data being passed to Draw class
  */
 DERIVED_VisException(SketchError, "Error during font loading!");
+/**
+ * Defines an error reported when the expect input/output file path does not exist
+ */
+DERIVED_VisException(InvalidFilePath, "File does not exist.");
+
 
 /**
  * Lazy replacement for assert()

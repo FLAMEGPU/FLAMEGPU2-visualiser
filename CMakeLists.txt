@@ -310,6 +310,9 @@ target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE "${CMAKE_CURRENT_SOU
 target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
+# Enable fPIC for linux shared library linking
+set_property(TARGET "${PROJECT_NAME}" PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 # Add the targets we depend on (this does link and include)
 # This propagates to any project that uses this as a dependency
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -362,6 +365,9 @@ SET(RESOURCES_ALL
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/teapot.obj
 )
 cmrc_add_resource_library(resources ${RESOURCES_ALL})
+# Enable fPIC for resources (for wheel packaging)
+set_property(TARGET "resources" PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 message(STATUS "${PROJECT_NAME}")
 target_link_libraries("${PROJECT_NAME}" resources)
 

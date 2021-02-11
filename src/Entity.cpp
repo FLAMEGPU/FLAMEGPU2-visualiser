@@ -325,7 +325,7 @@ void Entity::loadModelFromFile() {
             }
         }
         {  // Attempt resource export (fails if provided path is absolute)
-            std::string exportModulePath = Resources::toModuleDir(exportPath);
+            std::string exportModulePath = Resources::toTempDir(exportPath);
             FILE* file = fopen(exportModulePath.c_str(), "r");
             if (file) {
                 fclose(file);
@@ -1138,7 +1138,7 @@ Models are stored in the following format;
 void Entity::exportModel() const {
     if (positions.count == 0)
         return;
-    std::string exportPath = Resources::toModuleDir(modelPath);
+    std::string exportPath = Resources::toTempDir(modelPath);
     std::string objPath(OBJ_TYPE);
     if (!su::endsWith(modelPath, EXPORT_TYPE, false)) {
         exportPath = exportPath.substr(0, exportPath.length() - objPath.length()).append(EXPORT_TYPE);

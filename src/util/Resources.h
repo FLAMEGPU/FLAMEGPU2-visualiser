@@ -15,7 +15,7 @@ class Resources {
     /**
      * Appends the path to module dir, and creates any missing directories
      */
-    static std::string toModuleDir(const std::string &path);
+    static std::string toTempDir(const std::string &path);
     /**
      * Returns the path to a file
      * If the file is only in resources, it will be extracted to module dir
@@ -26,8 +26,6 @@ class Resources {
      */
     static bool exists(const std::string &path);
 
- private:
-    static std::string getModuleDir();
 };
 
 #endif  // SRC_UTIL_RESOURCES_H_
