@@ -1,6 +1,10 @@
 #ifndef SRC_UTIL_GLCHECK_H_
 #define SRC_UTIL_GLCHECK_H_
 
+// Statically linked glew on Windows
+#if defined(_MSC_VER)
+#define GLEW_STATIC
+#endif
 #include <GL/glew.h>
 
 #include <cstdio>
