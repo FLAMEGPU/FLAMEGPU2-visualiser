@@ -1,5 +1,5 @@
 # Parity with main FGPU2 CMake
-cmake_minimum_required(VERSION VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION VERSION 3.15 FATAL_ERROR)
 
 # Don't create installation scripts (and hide CMAKE_INSTALL_PREFIX from cmake-gui)
 set(CMAKE_SKIP_INSTALL_RULES TRUE)
@@ -165,9 +165,12 @@ else()
     # Force disable zlib/libpng, to avoid linker errors if theyre pseudo found in system
     set(CMAKE_DISABLE_FIND_PACKAGE_ZLIB ON CACHE BOOL "" FORCE)
     set(CMAKE_DISABLE_FIND_PACKAGE_LIBPNG ON CACHE BOOL "" FORCE)
+    set(CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz ON CACHE BOOL "" FORCE)
+    set(FT_WITH_HARFBUZZ OFF CACHE BOOL "" FORCE)
     set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
     mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_ZLIB)
     mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_LIBPNG)
+    mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz)
     mark_as_advanced(FORCE SKIP_INSTALL_ALL)
     mark_as_advanced(FORCE FT_WITH_BZIP2)
     mark_as_advanced(FORCE FT_WITH_HARFBUZZ)
