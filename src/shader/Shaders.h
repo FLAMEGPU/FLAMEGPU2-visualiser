@@ -161,9 +161,14 @@ class Shaders : public ShaderCore {
      * @param vertexShaderFiles Path to the GLSL vertex shader (empty string if not required)
      * @param fragmentShaderFiles Path to the GLSL fragment shader (empty string if not required)
      * @param geometryShaderFiles Path to the GLSL geometry shader (empty string if not required)
+     * @param vertexShaderExtension String to be appended to the end of the vertex shader (empty string if not required)
      * @note You must provide atleast 1 shader path, however it can be of any of the 3 types
      */
-    explicit Shaders(const std::string &vertexShaderPath = "", const std::string &fragmentShaderPath = "", const std::string &geometryShaderPath = "");
+    explicit Shaders(
+        const std::string &vertexShaderPath = "",
+        const std::string &fragmentShaderPath = "",
+        const std::string &geometryShaderPath = "",
+        const std::string &vertexShaderExtension = "");
     /*
      * Constructs a shader program from the provided shader files
      * Use this constructor if you wish to constructor a shader from multiple files (e.g. a common functions file)
@@ -444,7 +449,7 @@ class Shaders : public ShaderCore {
      * @param t_shaderProgram The shader program the shader should be attached to.
      * @note This function simply calls return compileShader()&&compileShader().. with each init list of source files
      */
-    bool _compileShaders(const GLuint t_shaderProgram)override;
+    bool _compileShaders(const GLuint t_shaderProgram) override;
     /**
      * Binds Shaders class specific bindings to the shader program
      * These are primarily vertex attributes and modelview/projection matrices
@@ -545,6 +550,11 @@ class Shaders : public ShaderCore {
     * @note Used on shader reload
     */
     std::vector<std::string> *geometryShaderFiles;
+    /**
+     * Shader code to be appended to the vertexShaderSource
+     * This can be used to provide a function for calculating dynamic colours
+     */
+    std::string vertexShaderExtension;
     /**
      * The GLSL version used within the vertex shader source
      * @note This value is detected from the #version define in the source file

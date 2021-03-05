@@ -24,5 +24,9 @@ AgentStateConfig &AgentStateConfig::operator=(const AgentStateConfig &other) {
     if (other.model_texture)
         setString(&model_texture, other.model_texture);
     memcpy(model_scale, other.model_scale, sizeof(model_scale));
+
+    color_shader_src = other.color_shader_src;
+    color_var = other.color_var;
+    color_var_name = other.color_var_name;
     return *this;
 }

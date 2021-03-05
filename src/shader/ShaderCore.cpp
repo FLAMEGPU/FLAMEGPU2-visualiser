@@ -1,6 +1,7 @@
 #include "shader/ShaderCore.h"
 #include <cstdlib>  // < _splitpath() Windows only, need to rewrite linux ver
 #include <regex>
+#include <sstream>
 #include "util/warnings.h"
 DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>
@@ -542,10 +543,10 @@ std::pair<int, GLenum> ShaderCore::findAttribute(const char *attributeName, cons
     return  std::pair<int, GLenum>(-1, 0);
 }
 // Util
-int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<std::string> *shaderSourceFiles) {
+int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<std::string> *shaderSourceFiles, const std::string &extension) {
     if (shaderSourceFiles->size() == 0) return false;
     //  Load shader files
-    std::vector<char*> shaderSources;
+    std::vector<const char*> shaderSources;
     for (auto i : *shaderSourceFiles) {
         shaderSources.push_back(loadShaderSource(i.c_str()));
     }
@@ -554,20 +555,24 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
         if (!i) {
             // Cleanup
             for (auto j : shaderSources) {
-                free(j);
+                free(const_cast<char*>(j));
             }
             return -1;
         }
     }
+    // Add extension to the sources vector
+    if (!extension.empty()) shaderSources.push_back(extension.c_str());
     GLuint shaderId = createShader(type);
     GL_CALL(glShaderSource(shaderId, static_cast<GLsizei>(shaderSources.size()), &shaderSources[0], nullptr));
     GL_CALL(glCompileShader(shaderId));
     std::string shaderName = su::getFilenameFromPath(*(shaderSourceFiles->end() - 1));
+    // Drop extension so it doesn't get freed
+    if (!extension.empty()) shaderSources.pop_back();
     // Check for compile errors
     if (!this->checkShaderCompileError(shaderId, shaderName.c_str())) {
         // Cleanup
         for (auto j : shaderSources) {
-            free(j);
+            free(const_cast<char*>(j));
         }
         return -1;
     }
@@ -582,7 +587,12 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
     }
     this->shaderTag = new char[shaderName.length() + 1];
     snprintf(this->shaderTag, shaderName.length() + 1, "%s", shaderName.c_str());
-    return static_cast<int>(findShaderVersion(*reinterpret_cast<std::vector<const char*>*>(&shaderSources)));
+    const int rtn = static_cast<int>(findShaderVersion(shaderSources));
+    // Cleanup
+    for (auto j : shaderSources) {
+        free(const_cast<char*>(j));
+    }
+    return rtn;
 }
 // If earlier than VS 2019
 // #if defined(_MSC_VER) && _MSC_VER < 1920

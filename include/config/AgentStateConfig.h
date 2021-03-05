@@ -18,6 +18,18 @@ struct AgentStateConfig {
     const char *model_path = nullptr;
     const char *model_texture = nullptr;
     float model_scale[3];
+    /**
+     * If provided, this code will be appended to the vertex shader to provide color customisation
+     */
+    std::string color_shader_src;
+    /**
+     * Optional, name of the agent variable to map to color uniform
+     */
+    std::string color_var;
+    /**
+     * Optional, name of the texture buffer inside color_shader_src
+     */
+    std::string color_var_name;
 
  private:
     static void setString(const char ** target, const std::string &src) {

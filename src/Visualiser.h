@@ -39,20 +39,35 @@ class Visualiser : public ViewportExt {
                 (std::hash < std::string>()(k.second) << 1);
         }
     };
+    /**
+     * This structs holds the information required for rendering agents for a single agent-state
+     */
     struct RenderInfo {
-        explicit RenderInfo(const AgentStateConfig &vc, bool _has_x, bool _has_y, bool _has_z)
+        explicit RenderInfo(const AgentStateConfig &vc, bool _has_x, bool _has_y, bool _has_z, bool _has_color)
             : config(vc)
             , tex_unit_offset(0)
             , instanceCount(0)
             , x_var(nullptr)
             , y_var(nullptr)
             , z_var(nullptr)
+            , color_var(nullptr)
             , has_x(_has_x)
             , has_y(_has_y)
             , has_z(_has_z)
+            , has_color(_has_color)
             , entity(nullptr)
             , requiredSize(0) {
-            if (vc.model_texture) {
+            if (!vc.color_shader_src.empty()) {
+                // Entity has a color override
+                entity = std::make_shared<Entity>(
+                    vc.model_path,
+                    *reinterpret_cast<const glm::vec3*>(vc.model_scale),
+                    std::make_shared<Shaders>(
+                        "resources/instanced_default_Tcolor.vert",
+                        "resources/material_flat_Tcolor.frag",
+                        "",
+                        vc.color_shader_src));
+            } else if (vc.model_texture) {
                 // Entity has texture
                 entity = std::make_shared<Entity>(
                     vc.model_path,
@@ -80,7 +95,8 @@ class Visualiser : public ViewportExt {
         CUDATextureBuffer<float> *x_var;
         CUDATextureBuffer<float> *y_var;
         CUDATextureBuffer<float> *z_var;
-        bool has_x, has_y, has_z;
+        CUDATextureBuffer<float>* color_var;  // Always treated as float, but the data might actually be integer
+        bool has_x, has_y, has_z, has_color;
         std::shared_ptr<Entity> entity;
         unsigned int requiredSize;  //  Ideally this needs to be threadsafe, but if we make it atomic stuff fails to build
     };
@@ -114,8 +130,9 @@ class Visualiser : public ViewportExt {
      * @param has_x Specify whether we require a tex buffer for location_x
      * @param has_y Specify whether we require a tex buffer for location_y
      * @param has_z Specify whether we require a tex buffer for location_z
+     * @param has_color Specify whether we require a tex buffer for modulating color
      */
-    void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z);
+    void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z, bool has_color);
     /**
      * This notifies the render thread that an agent's texture buffers require resizing
      * @param agent_name Name of the affected agent
@@ -131,10 +148,11 @@ class Visualiser : public ViewportExt {
      * @param d_x Device pointer to x coordinate data array
      * @param d_y Device pointer to y coordinate data array
      * @param d_z Device pointer to z coordinate data array
+     * @param d_color Device pointer to color data array (nullptr if not required)
      * @note This should only be called if visualisation mutex is held
      * @see getRenderBufferMutex()
      */
-    void updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z);
+    void updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z, float* d_color);
 
  private:
      void run();
@@ -230,7 +248,7 @@ class Visualiser : public ViewportExt {
     /**
      * Returns the mutex
      * This must be locked before calling updateAgentStateBuffer()
-     * @see updateAgentStateBuffer(const std::string &, const std::string &, const unsigned int, float *, float *, float *)
+     * @see updateAgentStateBuffer(const std::string &, const std::string &, const unsigned int, float *, float *, float *, float *)
      */
     std::mutex &getRenderBufferMutex() { return render_buffer_mutex; }
     /**

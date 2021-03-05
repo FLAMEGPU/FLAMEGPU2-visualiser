@@ -297,10 +297,10 @@ void Visualiser::render() {
 bool Visualiser::isRunning() const {
     return continueRender;
 }
-void Visualiser::addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z) {
+void Visualiser::addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z, bool has_color) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     GL_CHECK();
-    agentStates.emplace(std::make_pair(namepair, RenderInfo(vc, has_x, has_y, has_z)));
+    agentStates.emplace(std::make_pair(namepair, RenderInfo(vc, has_x, has_y, has_z, has_color)));
     //  Allocate entity
     auto &ent = agentStates.at(namepair).entity;
     ent->setViewMatPtr(camera->getViewMatPtr());
@@ -321,7 +321,7 @@ void Visualiser::renderAgentStates() {
             // If we haven't been allocated texture units yet, get them now
             if (!as.tex_unit_offset) {
                 as.tex_unit_offset = texture_unit_counter;
-                texture_unit_counter += (as.has_x ? 1 : 0) + (as.has_y ? 1 : 0) + (as.has_z ? 1 : 0);
+                texture_unit_counter += (as.has_x ? 1 : 0) + (as.has_y ? 1 : 0) + (as.has_z ? 1 : 0) + (as.has_color ? 1 : 0);
             }
             //  Decide new buff size
             unsigned int newSize = !as.x_var || as.x_var->elementCount == 0 ? 1024 : as.x_var->elementCount;
@@ -336,11 +336,18 @@ void Visualiser::renderAgentStates() {
                 freeGLInteropTextureBuffer(as.y_var);
             if (as.z_var && as.z_var->d_mappedPointer)
                 freeGLInteropTextureBuffer(as.z_var);
+            if (as.color_var && as.color_var->d_mappedPointer)
+                freeGLInteropTextureBuffer(as.color_var);
             GL_CHECK();
             //  Alloc new buffs (this needs to occur in other thread!!!)
-            as.x_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
-            as.y_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
-            as.z_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
+            if (as.has_x)
+                as.x_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
+            if (as.has_y)
+                as.y_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
+            if (as.has_z)
+                as.z_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
+            if (as.has_color)
+                as.color_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
             //  Bind texture name to texture unit
             unsigned int tui = 0;
             if (as.has_x) {
@@ -358,6 +365,11 @@ void Visualiser::renderAgentStates() {
                 GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.z_var->glTexName));
                 GL_CALL(glActiveTexture(GL_TEXTURE0));
             }
+            if (as.has_color) {
+                GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui++));
+                GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.color_var->glTexName));
+                GL_CALL(glActiveTexture(GL_TEXTURE0));
+            }
             auto shader_vec = as.entity->getShaders();
             GL_CHECK();
             tui = 0;
@@ -367,6 +379,8 @@ void Visualiser::renderAgentStates() {
                 shader_vec->addTexture("y_pos", GL_TEXTURE_BUFFER, as.y_var->glTexName, as.tex_unit_offset + tui++);
             if (as.has_z)
                 shader_vec->addTexture("z_pos", GL_TEXTURE_BUFFER, as.z_var->glTexName, as.tex_unit_offset + tui++);
+            if (as.has_color)
+                shader_vec->addTexture(as.config.color_var_name.c_str(), GL_TEXTURE_BUFFER, as.color_var->glTexName, as.tex_unit_offset + tui++);
             GL_CHECK();
         }
     }
@@ -383,7 +397,7 @@ void Visualiser::requestBufferResizes(const std::string &agent_name, const std::
     auto &as = agentStates.at(namepair);
     as.requiredSize = buffLen;
 }
-void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned buffLen, float *d_x, float *d_y, float *d_z) {
+void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned buffLen, float *d_x, float *d_y, float *d_z, float *d_color) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     auto &as = agentStates.at(namepair);
     //  Copy Data
@@ -398,6 +412,9 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
         }
         if (d_z) {
             visassert(_cudaMemcpyDeviceToDevice(as.z_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
+        }
+        if (d_color) {
+            visassert(_cudaMemcpyDeviceToDevice(as.color_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
         }
     }
 }
