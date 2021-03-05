@@ -21,14 +21,14 @@ FLAMEGPU_Visualisation::~FLAMEGPU_Visualisation() {
     if (lock)
         delete lock;
 }
-void FLAMEGPU_Visualisation::addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z) {
-    vis->addAgentState(agent_name, state_name, vc, has_x, has_y, has_z);
+void FLAMEGPU_Visualisation::addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z, bool has_color) {
+    vis->addAgentState(agent_name, state_name, vc, has_x, has_y, has_z, has_color);
 }
 void FLAMEGPU_Visualisation::requestBufferResizes(const char *agent_name, const char *state_name, const unsigned int buffLen) {
     vis->requestBufferResizes(agent_name, state_name, buffLen);
 }
-void FLAMEGPU_Visualisation::updateAgentStateBuffer(const char *agent_name, const char *state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z) {
-    vis->updateAgentStateBuffer(agent_name, state_name, buffLen, d_x, d_y, d_z);
+void FLAMEGPU_Visualisation::updateAgentStateBuffer(const char *agent_name, const char *state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z, float* d_color) {
+    vis->updateAgentStateBuffer(agent_name, state_name, buffLen, d_x, d_y, d_z, d_color);
 }
 void FLAMEGPU_Visualisation::setStepCount(const unsigned int stepCount) {
   vis->setStepCount(stepCount);

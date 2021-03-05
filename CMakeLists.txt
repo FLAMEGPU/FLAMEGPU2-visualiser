@@ -366,6 +366,8 @@ SET(RESOURCES_ALL
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/sphere.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/cube.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/teapot.obj
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tcolor.vert
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat_Tcolor.frag
 )
 cmrc_add_resource_library(resources ${RESOURCES_ALL})
 # Enable fPIC for resources (for wheel packaging)

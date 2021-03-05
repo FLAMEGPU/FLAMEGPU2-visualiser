@@ -30,7 +30,8 @@ const char *Shaders::TEXCOORD_ATTRIBUTE_NAME = "_texCoords";
 
 Shaders::Shaders(Stock::Shaders::ShaderSet set)
     :Shaders(set.vertex, set.fragment, set.geometry) {}
-Shaders::Shaders(const std::string &vertexShaderPath, const std::string &fragmentShaderPath, const std::string &geometryShaderPath)
+Shaders::Shaders(const std::string &vertexShaderPath, const std::string &fragmentShaderPath, const std::string &geometryShaderPath,
+    const std::string& _vertexShaderExtension)
     : ShaderCore()
     , fbo(0)
     , vao(0)
@@ -49,10 +50,12 @@ Shaders::Shaders(const std::string &vertexShaderPath, const std::string &fragmen
     , colors(GL_FLOAT, 3, sizeof(float))
     , texcoords(GL_FLOAT, 2, sizeof(float))
     , colorUniformLocation(-1)
+    , colorUniformSize(0)
     , colorUniformValue(1, 0, 0, 1)  // Red
-    , vertexShaderFiles(buildFileVector({vertexShaderPath}))
+    , vertexShaderFiles(buildFileVector({vertexShaderPath }))
     , fragmentShaderFiles(buildFileVector({fragmentShaderPath}))
     , geometryShaderFiles(buildFileVector({geometryShaderPath}))
+    , vertexShaderExtension(_vertexShaderExtension)
     , vertexShaderVersion(-1)
     , fragmentShaderVersion(-1)
     , geometryShaderVersion(-1) {
@@ -114,7 +117,8 @@ Shaders::Shaders(const Shaders &other)
     , geometryShaderFiles(nullptr)
     , vertexShaderVersion(-1)
     , fragmentShaderVersion(-1)
-    , geometryShaderVersion(-1) {
+    , geometryShaderVersion(-1)
+    , vertexShaderExtension(other.vertexShaderExtension){
     // positions, normals, colors, texcoords
     positions.location = -1;
     normals.location = -1;
@@ -164,7 +168,7 @@ bool Shaders::hasGeometryShader() const {
 }
 bool Shaders::_compileShaders(const GLuint t_programId) {
     if (vertexShaderFiles->size() > 0) {
-        this->vertexShaderVersion = compileShader(t_programId, GL_VERTEX_SHADER, vertexShaderFiles);
+        this->vertexShaderVersion = compileShader(t_programId, GL_VERTEX_SHADER, vertexShaderFiles, vertexShaderExtension);
         if (this->vertexShaderVersion < 0)
             return false;
     }

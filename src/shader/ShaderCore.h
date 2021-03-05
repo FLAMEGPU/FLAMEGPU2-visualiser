@@ -452,9 +452,10 @@ class ShaderCore : public Reloadable {
      * @param t_shaderProgram The shader program to attach the compiled shader to
      * @param type GL_VERTEX_SHADER/GL_FRAGMENT_SHADER/GL_GEOMETRY_SHADER/GL_COMPUTE_SHADER
      * @param shaderSourceFiles An initialiser list ({a, b, c}) of paths to shader sources
+     * @param extension Raw shader code to be appended to the shader sources
      * @return The shader version detected, -1 on compilation failure
      */
-    int compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<std::string> *shaderSourceFiles);
+    int compileShader(const GLuint t_shaderProgram, GLenum type, std::vector<std::string> *shaderSourceFiles, const std::string& extension = "");
     /**
      * Loads the text from the provided filepath
      * @return A pointer to the loaded shader source
