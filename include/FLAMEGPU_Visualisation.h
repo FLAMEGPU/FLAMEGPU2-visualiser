@@ -16,8 +16,8 @@ class FLAMEGPU_Visualisation {
  public:
     explicit FLAMEGPU_Visualisation(const ModelConfig &modelcfg);
     ~FLAMEGPU_Visualisation();
-    void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc) {
-        addAgentState(agent_name.c_str(), state_name.c_str(), vc);
+    void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z) {
+        addAgentState(agent_name.c_str(), state_name.c_str(), vc, has_x, has_y, has_z);
     }
     void requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen) {
         requestBufferResizes(agent_name.c_str(), state_name.c_str(), buffLen);
@@ -47,7 +47,7 @@ class FLAMEGPU_Visualisation {
     bool isRunning() const;
 
  private:
-    void addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc);
+    void addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc, bool has_x = true, bool has_y = true, bool has_z = true);
     void requestBufferResizes(const char *agent_name, const char *state_name, const unsigned int buffLen);
     void updateAgentStateBuffer(const char *agent_name, const char *state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z);
     Visualiser *vis = nullptr;

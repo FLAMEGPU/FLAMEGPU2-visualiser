@@ -19,8 +19,8 @@ FLAMEGPU_Visualisation::~FLAMEGPU_Visualisation() {
     if (lock)
         delete lock;
 }
-void FLAMEGPU_Visualisation::addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc) {
-    vis->addAgentState(agent_name, state_name, vc);
+void FLAMEGPU_Visualisation::addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z) {
+    vis->addAgentState(agent_name, state_name, vc, has_x, has_y, has_z);
 }
 void FLAMEGPU_Visualisation::requestBufferResizes(const char *agent_name, const char *state_name, const unsigned int buffLen) {
     vis->requestBufferResizes(agent_name, state_name, buffLen);

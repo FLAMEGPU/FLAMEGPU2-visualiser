@@ -291,10 +291,10 @@ void Visualiser::render() {
 bool Visualiser::isRunning() const {
     return continueRender;
 }
-void Visualiser::addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc) {
+void Visualiser::addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     GL_CHECK();
-    agentStates.emplace(std::make_pair(namepair, RenderInfo(vc)));
+    agentStates.emplace(std::make_pair(namepair, RenderInfo(vc, has_x, has_y, has_z)));
     //  Allocate entity
     auto &ent = agentStates.at(namepair).entity;
     ent->setViewMatPtr(camera->getViewMatPtr());
@@ -303,6 +303,7 @@ void Visualiser::addAgentState(const std::string &agent_name, const std::string 
 }
 
 void Visualiser::renderAgentStates() {
+    static unsigned int texture_unit_counter = 1;
     std::lock_guard<std::mutex> *guard = nullptr;
     if (!pause_guard)
         guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
@@ -311,6 +312,11 @@ void Visualiser::renderAgentStates() {
         auto &as = _as.second;
         // resize buffers
         if (!as.x_var || as.x_var->elementCount < as.requiredSize) {
+            // If we haven't been allocated texture units yet, get them now
+            if (!as.tex_unit_offset) {
+                as.tex_unit_offset = texture_unit_counter;
+                texture_unit_counter += (as.has_x ? 1 : 0) + (as.has_y ? 1 : 0) + (as.has_z ? 1 : 0);
+            }
             //  Decide new buff size
             unsigned int newSize = !as.x_var || as.x_var->elementCount == 0 ? 1024 : as.x_var->elementCount;
             while (newSize < as.requiredSize) {
@@ -330,26 +336,37 @@ void Visualiser::renderAgentStates() {
             as.y_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
             as.z_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
             //  Bind texture name to texture unit
-            GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + 0));
-            GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.x_var->glTexName));
-            GL_CALL(glActiveTexture(GL_TEXTURE0));
-            GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + 1));
-            GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.y_var->glTexName));
-            GL_CALL(glActiveTexture(GL_TEXTURE0));
-            GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + 2));
-            GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.z_var->glTexName));
-            GL_CALL(glActiveTexture(GL_TEXTURE0));
+            unsigned int tui = 0;
+            if (as.has_x) {
+                GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui++));
+                GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.x_var->glTexName));
+                GL_CALL(glActiveTexture(GL_TEXTURE0));
+            }
+            if (as.has_y) {
+                GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui++));
+                GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.y_var->glTexName));
+                GL_CALL(glActiveTexture(GL_TEXTURE0));
+            }
+            if (as.has_z) {
+                GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui++));
+                GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.z_var->glTexName));
+                GL_CALL(glActiveTexture(GL_TEXTURE0));
+            }
             auto shader_vec = as.entity->getShaders();
             GL_CHECK();
-            shader_vec->addTexture("x_pos", GL_TEXTURE_BUFFER, as.x_var->glTexName, as.tex_unit_offset + 0);
-            shader_vec->addTexture("y_pos", GL_TEXTURE_BUFFER, as.y_var->glTexName, as.tex_unit_offset + 1);
-            shader_vec->addTexture("z_pos", GL_TEXTURE_BUFFER, as.z_var->glTexName, as.tex_unit_offset + 2);
+            tui = 0;
+            if (as.has_x)
+                shader_vec->addTexture("x_pos", GL_TEXTURE_BUFFER, as.x_var->glTexName, as.tex_unit_offset + tui++);
+            if (as.has_y)
+                shader_vec->addTexture("y_pos", GL_TEXTURE_BUFFER, as.y_var->glTexName, as.tex_unit_offset + tui++);
+            if (as.has_z)
+                shader_vec->addTexture("z_pos", GL_TEXTURE_BUFFER, as.z_var->glTexName, as.tex_unit_offset + tui++);
             GL_CHECK();
         }
     }
     //  Render agents
     for (auto &as : agentStates) {
-        if (as.second.x_var)  // Extra check to make sure buffer has been allocated successfully
+        if (as.second.x_var || as.second.y_var || as.second.z_var)  // Extra check to make sure buffer has been allocated successfully
             as.second.entity->renderInstances(as.second.requiredSize);
     }
     if (guard)
@@ -365,14 +382,20 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
     auto &as = agentStates.at(namepair);
 
     //  Copy Data
-    if (as.x_var && as.x_var->elementCount >= buffLen) {  //  This may fail for a single frame occasionally
-        visassert(_cudaMemcpyDeviceToDevice(as.x_var->d_mappedPointer, d_x, buffLen * sizeof(float)));
-        visassert(_cudaMemcpyDeviceToDevice(as.y_var->d_mappedPointer, d_y, buffLen * sizeof(float)));
-        visassert(_cudaMemcpyDeviceToDevice(as.z_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
+    if ((as.x_var && as.x_var->elementCount >= buffLen) ||
+        (as.y_var && as.y_var->elementCount >= buffLen) ||
+        (as.z_var && as.z_var->elementCount >= buffLen)) {  //  This may fail for a single frame occasionally
+        if (d_x) {
+            visassert(_cudaMemcpyDeviceToDevice(as.x_var->d_mappedPointer, d_x, buffLen * sizeof(float)));
+        }
+        if (d_y) {
+            visassert(_cudaMemcpyDeviceToDevice(as.y_var->d_mappedPointer, d_y, buffLen * sizeof(float)));
+        }
+        if (d_z) {
+            visassert(_cudaMemcpyDeviceToDevice(as.z_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
+        }
     }
 }
-//  Used in method above
-unsigned int Visualiser::RenderInfo::instanceCounter = 0;
 
 //  Items taken from sdl_exp
 bool Visualiser::init() {
