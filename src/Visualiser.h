@@ -40,13 +40,16 @@ class Visualiser : public ViewportExt {
         }
     };
     struct RenderInfo {
-        explicit RenderInfo(const AgentStateConfig &vc)
+        explicit RenderInfo(const AgentStateConfig &vc, bool _has_x, bool _has_y, bool _has_z)
             : config(vc)
-            , tex_unit_offset(3 * instanceCounter++)
+            , tex_unit_offset(0)
             , instanceCount(0)
             , x_var(nullptr)
             , y_var(nullptr)
             , z_var(nullptr)
+            , has_x(_has_x)
+            , has_y(_has_y)
+            , has_z(_has_z)
             , entity(nullptr)
             , requiredSize(0) {
             if (vc.model_texture) {
@@ -77,9 +80,9 @@ class Visualiser : public ViewportExt {
         CUDATextureBuffer<float> *x_var;
         CUDATextureBuffer<float> *y_var;
         CUDATextureBuffer<float> *z_var;
+        bool has_x, has_y, has_z;
         std::shared_ptr<Entity> entity;
         unsigned int requiredSize;  //  Ideally this needs to be threadsafe, but if we make it atomic stuff fails to build
-        static unsigned int instanceCounter;
     };
 
  public:
@@ -108,8 +111,11 @@ class Visualiser : public ViewportExt {
      * @param agent_name Name of the affected agent
      * @param state_name Name of the affected agent state
      * @param vc visualisation config settings for the affected agent state
+     * @param has_x Specify whether we require a tex buffer for location_x
+     * @param has_y Specify whether we require a tex buffer for location_y
+     * @param has_z Specify whether we require a tex buffer for location_z
      */
-    void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc);
+    void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z);
     /**
      * This notifies the render thread that an agent's texture buffers require resizing
      * @param agent_name Name of the affected agent
