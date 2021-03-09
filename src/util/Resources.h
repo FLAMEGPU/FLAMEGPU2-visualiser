@@ -25,7 +25,6 @@ class Resources {
      * Returns true if path is a valid resource path
      */
     static bool exists(const std::string &path);
-
 };
 
 #endif  // SRC_UTIL_RESOURCES_H_

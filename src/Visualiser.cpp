@@ -27,18 +27,22 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , windowDims(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1])
     , fpsDisplay(nullptr)
     , stepDisplay(nullptr)
+    , spsDisplay(nullptr)
     , modelConfig(modelcfg) {
     this->isInitialised = this->init();
     BackBuffer::setClear(true, *reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]));
     if (modelcfg.fpsVisible) {
         fpsDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3 *>(&modelcfg.fpsColor[0]), fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str());
         fpsDisplay->setUseAA(false);
-        hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0), INT_MAX);
+        hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, modelcfg.stepVisible ? 20 : 0), INT_MAX);
     }
     if (modelcfg.stepVisible) {
+        spsDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3*>(&modelcfg.fpsColor[0]), fonts::findFont({ "Arial" }, fonts::GenericFontFamily::SANS).c_str());
+        spsDisplay->setUseAA(false);
+        hud->add(spsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, 10), INT_MAX);
         stepDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3 *>(&modelcfg.fpsColor[0]), fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str());
         stepDisplay->setUseAA(false);
-        hud->add(stepDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, modelcfg.fpsVisible ? 10 : 0), INT_MAX);
+        hud->add(stepDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, 0), INT_MAX);
     }
     lines = std::make_shared<Draw>();
     lines->setViewMatPtr(camera->getViewMatPtr());
@@ -174,8 +178,10 @@ void Visualiser::run() {
             while (this->continueRender) {
                 //  Update the fps in the window title
                 this->updateFPS();
-                if (this->stepDisplay)
+                if (this->stepDisplay) {
+                    this->spsDisplay->setString("%.3f sps", stepsPerSecond);
                     this->stepDisplay->setString("Step %u", stepCount);
+                }
                 this->render();
             }
             SDL_StopTextInput();
@@ -492,6 +498,7 @@ void Visualiser::resizeWindow() {
 void Visualiser::deallocateGLObjects() {
     fpsDisplay.reset();
     stepDisplay.reset();
+    spsDisplay.reset();
     this->hud->clear();
     // Don't clear the map, as update buffer methods might still be called
     for (auto &as : agentStates) {
@@ -543,8 +550,31 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         this->setMSAA(!this->msaaState);
         break;
     case SDLK_F8:
-        if (this->fpsDisplay)
-            this->fpsDisplay->setVisible(!this->fpsDisplay->getVisible());
+        // Update fpsStatus
+        fpsStatus = fpsStatus == 0 ? 2u : fpsStatus - 1;
+        // If steps is not visible, skip state 1
+        if (!this->stepDisplay && fpsStatus == 1)
+            fpsStatus = 0;
+        // Set the appropriate display state
+        switch (fpsStatus) {
+            case 0:  // Hide all
+                if (this->stepDisplay)
+                    this->stepDisplay->setVisible(false);
+            case 1:  // Hide fps/sps
+                if (this->fpsDisplay)
+                    this->fpsDisplay->setVisible(false);
+                if (this->spsDisplay)
+                    this->spsDisplay->setVisible(false);
+                break;
+            default:  // Show all
+                if (this->stepDisplay)
+                    this->stepDisplay->setVisible(true);
+                if (this->fpsDisplay)
+                    this->fpsDisplay->setVisible(true);
+                if (this->spsDisplay)
+                    this->spsDisplay->setVisible(true);
+                break;
+        }
         break;
     case SDLK_F5:
         // if (this->scene)
@@ -617,7 +647,20 @@ void Visualiser::updateFPS() {
     }
 }
 void Visualiser::setStepCount(const unsigned int &_stepCount) {
+    // This boring value is used to display the number of steps
     stepCount = _stepCount;
+    // The rest is to calcualted steps/second, basically the same as FPS
+    //  Update the current time
+    this->currentStepTime = SDL_GetTicks();
+    //  If it's been more than a second, do something.
+    if (this->currentStepTime > this->previousStepTime + ONE_SECOND_MS) {
+        //  Calculate average fps.
+        this->stepsPerSecond = (_stepCount - this->lastStepCount) / static_cast<double>(this->currentStepTime - this->previousStepTime) * ONE_SECOND_MS;
+        // Don't update string here, wrong thread to do OpenGL
+        //  reset values;
+        this->previousStepTime = this->currentStepTime;
+        this->lastStepCount = _stepCount;
+    }
 }
 //  Overrides
 unsigned Visualiser::getWindowWidth() const {

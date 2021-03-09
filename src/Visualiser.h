@@ -286,13 +286,26 @@ class Visualiser : public ViewportExt {
      */
     std::shared_ptr<Text> fpsDisplay;
     /**
-     * The object which renders step counter text to the visualisation
+     * The objects which renders step counter and steps per second text to the visualisation
      */
-    std::shared_ptr<Text> stepDisplay;
+    std::shared_ptr<Text> stepDisplay, spsDisplay;
     /**
      * When user updates stepCount it is stored here, as we cannot update the OpenGL texture from a thread which doesn't hold the context
      */
-    unsigned int stepCount = 0;
+    unsigned int previousStepTime = 0, currentStepTime, stepCount = 0, lastStepCount = 0;
+    /**
+     * Steps equivalent of FPS.
+     * Calculated in the wrong thread, so we update it whenever FPS updates
+     */
+    double stepsPerSecond;
+    /**
+     * Pressing F8 changes whether FPS is displayed in the bottom corner, according to this schema
+     * The list is iterated in reverse (2, 1, 0)
+     * 0 = Display none
+     * 1 = Display step count only
+     * 2 = Display step count, sps, fps
+     */
+    unsigned int fpsStatus = 2;
     /**
      * User defined model configuration options
      */
