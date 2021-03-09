@@ -52,6 +52,12 @@ class FLAMEGPU_Visualisation {
     void updateAgentStateBuffer(const char *agent_name, const char *state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z);
     Visualiser *vis = nullptr;
     LockHolder *lock = nullptr;
+    /**
+     * If non-0, limits the number of simulation steps per second, by blocking the return of releaseMutex
+     * Blocking whilst the mutex was held, would block visualisation updates as that also uses the mutex
+     * The actual value is the number of ms per step
+     */
+    unsigned int step_ms;
 };
 
 #endif  // INCLUDE_FLAMEGPU_VISUALISATION_H_
