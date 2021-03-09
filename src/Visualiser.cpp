@@ -386,7 +386,6 @@ void Visualiser::requestBufferResizes(const std::string &agent_name, const std::
 void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned buffLen, float *d_x, float *d_y, float *d_z) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     auto &as = agentStates.at(namepair);
-
     //  Copy Data
     if ((as.x_var && as.x_var->elementCount >= buffLen) ||
         (as.y_var && as.y_var->elementCount >= buffLen) ||
@@ -587,6 +586,7 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
             pause_guard = nullptr;
         } else {
             pause_guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
+            stepsPerSecond = 0.0f;
         }
         break;
     case SDLK_l:

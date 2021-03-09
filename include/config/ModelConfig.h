@@ -102,6 +102,11 @@ struct ModelConfig {
      */
     bool stepVisible;
     /**
+     * The number of simulation steps to execute per second
+     * A value of 0 is treated as unlimited
+     */
+    unsigned int stepsPerSecond = 0;
+    /**
      * Store of static models to be rendered in visualisation
      */
     std::list<std::shared_ptr<StaticModel>> staticModels;
