@@ -19,10 +19,14 @@ out vec2 texCoords;
 out vec4 colorOverride;
 flat out int shaderColor;
 
+mat3 getDirection();
 vec4 calculateColor();
 void main() {
   // Apply model matrix to raw vertex
   vec4 vert = _modelMat * vec4(_vertex,1.0f);
+  // Apply a user defined rotation
+  mat3 directionMat = getDirection();
+  vert.xyz = directionMat * vert.xyz;
   //Grab model offset from texture array
   vec3 loc_data = vec3(texelFetch(x_pos, gl_InstanceID).x, texelFetch(y_pos, gl_InstanceID).x, texelFetch(z_pos, gl_InstanceID).x);
   // Apply loc_data translation to vert
@@ -34,8 +38,7 @@ void main() {
   
   
   // Calc eye normal
-  // From testing with deer model i'm not 100% happy that phong (full bright) works properly, bottom of each foot had different normal (before _normalMat transform)
-  eyeNormal = normalize(_normalMat * normalize(_normal));
+  eyeNormal = normalize(_normalMat * transpose(inverse(directionMat)) * normalize(_normal));
   // Calc tex coords
   texCoords = _texCoords;
   // Get color
@@ -44,3 +47,4 @@ void main() {
   // Likely more performant to include this directly in the frag shader so branches can be optimised out
   shaderColor = 1;
 }
+

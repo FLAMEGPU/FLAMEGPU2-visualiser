@@ -1,7 +1,10 @@
 #ifndef INCLUDE_FLAMEGPU_VISUALISATION_H_
 #define INCLUDE_FLAMEGPU_VISUALISATION_H_
 
+#include <map>
 #include <string>
+
+#include "config/TexBufferConfig.h"
 
 struct AgentStateConfig;
 struct ModelConfig;
@@ -16,16 +19,18 @@ class FLAMEGPU_Visualisation {
  public:
     explicit FLAMEGPU_Visualisation(const ModelConfig &modelcfg);
     ~FLAMEGPU_Visualisation();
-    void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc, bool has_x = true, bool has_y = true, bool has_z = true, bool has_color = false) {
-        addAgentState(agent_name.c_str(), state_name.c_str(), vc, has_x, has_y, has_z, has_color);
+    void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc,
+         const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
+        addAgentState(agent_name.c_str(), state_name.c_str(), vc, core_tex_buffers, tex_buffers);
     }
     void requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen) {
         requestBufferResizes(agent_name.c_str(), state_name.c_str(), buffLen);
     }
     void lockMutex();
     void releaseMutex();
-    void updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z, float *d_color) {
-        updateAgentStateBuffer(agent_name.c_str(), state_name.c_str(), buffLen, d_x, d_y, d_z, d_color);
+    void updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen,
+        const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
+        updateAgentStateBuffer(agent_name.c_str(), state_name.c_str(), buffLen, core_tex_buffers, tex_buffers);
     }
     void setStepCount(const unsigned int stepCount);
     /*
@@ -47,9 +52,11 @@ class FLAMEGPU_Visualisation {
     bool isRunning() const;
 
  private:
-    void addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z, bool has_color);
+    void addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc,
+        const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffersz);
     void requestBufferResizes(const char *agent_name, const char *state_name, const unsigned int buffLen);
-    void updateAgentStateBuffer(const char *agent_name, const char *state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z, float* d_color);
+    void updateAgentStateBuffer(const char *agent_name, const char *state_name, const unsigned int buffLen,
+        const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers);
     Visualiser *vis = nullptr;
     LockHolder *lock = nullptr;
     /**

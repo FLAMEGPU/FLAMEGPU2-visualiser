@@ -22,11 +22,14 @@
 
 #include "config/ModelConfig.h"
 #include "config/AgentStateConfig.h"
+#include "config/TexBufferConfig.h"
 #include "Draw.h"
 #include "Entity.h"
 
 template<typename T>
 struct CUDATextureBuffer;
+
+class LightsBuffer;
 
 /**
  * This is the main class of the visualisation, hosting the window and render loop
@@ -43,60 +46,15 @@ class Visualiser : public ViewportExt {
      * This structs holds the information required for rendering agents for a single agent-state
      */
     struct RenderInfo {
-        explicit RenderInfo(const AgentStateConfig &vc, bool _has_x, bool _has_y, bool _has_z, bool _has_color)
-            : config(vc)
-            , tex_unit_offset(0)
-            , instanceCount(0)
-            , x_var(nullptr)
-            , y_var(nullptr)
-            , z_var(nullptr)
-            , color_var(nullptr)
-            , has_x(_has_x)
-            , has_y(_has_y)
-            , has_z(_has_z)
-            , has_color(_has_color)
-            , entity(nullptr)
-            , requiredSize(0) {
-            if (!vc.color_shader_src.empty()) {
-                // Entity has a color override
-                entity = std::make_shared<Entity>(
-                    vc.model_path,
-                    *reinterpret_cast<const glm::vec3*>(vc.model_scale),
-                    std::make_shared<Shaders>(
-                        "resources/instanced_default_Tcolor.vert",
-                        "resources/material_flat_Tcolor.frag",
-                        "",
-                        vc.color_shader_src));
-            } else if (vc.model_texture) {
-                // Entity has texture
-                entity = std::make_shared<Entity>(
-                    vc.model_path,
-                    *reinterpret_cast<const glm::vec3*>(vc.model_scale),
-                    std::make_shared<Shaders>(
-                        "resources/instanced_default.vert",
-                        "resources/material_phong.frag"),
-                    Texture2D::load(vc.model_texture));
-            } else {
-                // Entity does not have a texture
-                entity = std::make_shared<Entity>(
-                    vc.model_path,
-                    *reinterpret_cast<const glm::vec3*>(vc.model_scale),
-                    std::make_shared<Shaders>(
-                        "resources/instanced_default.vert",
-                        "resources/material_flat.frag"));
-                entity->setMaterial(glm::vec3(0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.7f));
-            }
-        }
-        RenderInfo(const RenderInfo &vc) = default;
-        RenderInfo& operator= (const RenderInfo &vc) = default;
+        explicit RenderInfo(const AgentStateConfig &vc,
+            const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers);
+        RenderInfo(const RenderInfo& vc) = default;
+        RenderInfo& operator= (const RenderInfo & vc) = default;
         AgentStateConfig config;
         unsigned int tex_unit_offset;
         unsigned int instanceCount;
-        CUDATextureBuffer<float> *x_var;
-        CUDATextureBuffer<float> *y_var;
-        CUDATextureBuffer<float> *z_var;
-        CUDATextureBuffer<float>* color_var;  // Always treated as float, but the data might actually be integer
-        bool has_x, has_y, has_z, has_color;
+        std::map<TexBufferConfig::Function, CUDATextureBuffer<float>*> core_texture_buffers;
+        std::multimap<TexBufferConfig::Function, std::pair<CustomTexBufferConfig, CUDATextureBuffer<float>*>> custom_texture_buffers;
         std::shared_ptr<Entity> entity;
         unsigned int requiredSize;  //  Ideally this needs to be threadsafe, but if we make it atomic stuff fails to build
     };
@@ -127,12 +85,11 @@ class Visualiser : public ViewportExt {
      * @param agent_name Name of the affected agent
      * @param state_name Name of the affected agent state
      * @param vc visualisation config settings for the affected agent state
-     * @param has_x Specify whether we require a tex buffer for location_x
-     * @param has_y Specify whether we require a tex buffer for location_y
-     * @param has_z Specify whether we require a tex buffer for location_z
-     * @param has_color Specify whether we require a tex buffer for modulating color
+     * @param core_tex_buffers Meta data to notify required core texture buffers (e.g. location/rotation)
+     * @param tex_buffers Meta data to notify required state specific texture buffers (e.g. color)
      */
-    void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z, bool has_color);
+    void addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc,
+        const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers);
     /**
      * This notifies the render thread that an agent's texture buffers require resizing
      * @param agent_name Name of the affected agent
@@ -145,14 +102,13 @@ class Visualiser : public ViewportExt {
      * @param agent_name Name of the affected agent
      * @param state_name Name of the affected agent state
      * @param buffLen Number of items to copy
-     * @param d_x Device pointer to x coordinate data array
-     * @param d_y Device pointer to y coordinate data array
-     * @param d_z Device pointer to z coordinate data array
-     * @param d_color Device pointer to color data array (nullptr if not required)
+     * @param _core_tex_buffers Device pointers to core texture buffer data
+     * @param _tex_buffers Device pointer to custom texture buffer data
      * @note This should only be called if visualisation mutex is held
      * @see getRenderBufferMutex()
      */
-    void updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen, float *d_x, float *d_y, float *d_z, float* d_color);
+    void updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen,
+        const std::map<TexBufferConfig::Function, TexBufferConfig>& _core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& _tex_buffers);
 
  private:
      void run();
@@ -353,6 +309,10 @@ class Visualiser : public ViewportExt {
      * User defined lines to be rendered
      */
     std::shared_ptr<Draw> lines;
+    /**
+     * Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
+     */
+    std::shared_ptr<LightsBuffer> lighting;
     /**
      * Counter of how many sepreate line drawings to render,
      * each is named with the std::to_string(i), where i >=0 && i < totalLines

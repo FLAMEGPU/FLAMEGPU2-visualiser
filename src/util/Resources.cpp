@@ -1,4 +1,4 @@
-#include "Resources.h"
+#include "util/Resources.h"
 #include "VisException.h"
 // If earlier than VS 2019
 #if defined(_MSC_VER) && _MSC_VER < 1920

@@ -927,7 +927,7 @@ Loads a single material from a .mtl file
 void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilename, const char * /*materialName*/) {
     //  Figure out the actual filepath, obj path dir but with matrial filename on the end.
     std::string modelFolder = su::getFolderFromPath(objPath);
-    std::string materialPath = modelFolder.append("/").append(materialFilename);
+    std::string materialPath = modelFolder.empty() ? materialFilename : (modelFolder.append("/").append(materialFilename));
 
     // Open file
     FILE* file = Resources::fopen(materialPath.c_str(), "r");

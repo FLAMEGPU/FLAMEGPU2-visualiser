@@ -196,6 +196,7 @@ SET(VISUALISER_INCLUDE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/config/ModelConfig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/config/LineConfig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/config/Stock.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/config/TexBufferConfig.h
     # Items from sdl_exp
 )
 # Prepare list of source files
@@ -240,6 +241,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/ShaderHeader.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/Shaders.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/ShadersVec.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/DirectionFunction.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture2D.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture2D_Multisample.h
@@ -268,6 +270,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/lights/LightsBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/ShaderCore.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/Shaders.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/DirectionFunction.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture2D.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture2D_Multisample.cpp
@@ -355,7 +358,6 @@ endif ()
 # NOTE: The build step for resources embeds them as base64, this should not be used for large files.
 include(cmake/CMakeRC/CMakeRC.cmake)
 SET(RESOURCES_ALL
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default.vert
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat.frag
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_phong.frag
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/default.vert
@@ -366,7 +368,11 @@ SET(RESOURCES_ALL
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/sphere.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/cube.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/teapot.obj
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tcolor.vert
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/stuntplane.obj
+# Tdir: These shaders are setup to receive an appended rotation function
+# Tcolor: These shaders are setup to receive an appended color function
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tdir.vert
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tcolor_Tdir.vert
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat_Tcolor.frag
 )
 cmrc_add_resource_library(resources ${RESOURCES_ALL})

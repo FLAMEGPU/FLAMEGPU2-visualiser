@@ -3,6 +3,10 @@
 
 #include <string>
 #include <cstring>
+#include <map>
+
+
+#include "TexBufferConfig.h"
 
 /**
 * This class holds the common components for a visualisation
@@ -22,14 +26,8 @@ struct AgentStateConfig {
      * If provided, this code will be appended to the vertex shader to provide color customisation
      */
     std::string color_shader_src;
-    /**
-     * Optional, name of the agent variable to map to color uniform
-     */
-    std::string color_var;
-    /**
-     * Optional, name of the texture buffer inside color_shader_src
-     */
-    std::string color_var_name;
+
+    std::multimap<TexBufferConfig::Function, CustomTexBufferConfig> tex_buffers;
 
  private:
     static void setString(const char ** target, const std::string &src) {
