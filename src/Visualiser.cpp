@@ -414,7 +414,7 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
             visassert(_cudaMemcpyDeviceToDevice(as.z_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
         }
         if (d_color) {
-            visassert(_cudaMemcpyDeviceToDevice(as.color_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
+            visassert(_cudaMemcpyDeviceToDevice(as.color_var->d_mappedPointer, d_color, buffLen * sizeof(float)));
         }
     }
 }
