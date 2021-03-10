@@ -131,11 +131,12 @@ void Text::recomputeTex() {
         previous = glyphs[i].index;
         i++;
     }
+
     // i Glyphs were loaded
     const unsigned int num_glyphs = i;
     // Now we wrap the glyphs
     // Set origin to the bb min of 0th glyph
-    FT_BBox  glyph_bbox;
+    FT_BBox  glyph_bbox, glyph_bbox_prev;
     FT_Glyph_Get_CBox(glyphs[0].image, ft_glyph_bbox_pixels, &glyph_bbox);
     glm::ivec2 origin = glm::ivec2(glyph_bbox.xMin, glyph_bbox.yMin);
     for (i = 0; i < num_glyphs; i++) {
@@ -175,8 +176,22 @@ void Text::recomputeTex() {
         newLineOffset.y = 0;
         /*else
             newLineOffset.y = font->height;*/
-        FT_Glyph_Get_CBox(glyphs[i+1].image, ft_glyph_bbox_pixels, &glyph_bbox);
-        newLineOffset.x = -(glyph_bbox.xMin - origin.x) * 64;
+        glyph_bbox_prev = glyph_bbox;
+        // If glyph[i+1] is a space, it's Cbox is empty
+        // So find the next char with a Cbox and use that instead
+        FT_Glyph_Get_CBox(glyphs[i + 1].image, ft_glyph_bbox_pixels, &glyph_bbox);
+        if (glyph_bbox.xMin) {
+            newLineOffset.x = -(glyph_bbox.xMin - origin.x) * 64;
+        } else {
+            const unsigned int old_i = i;
+            while (glyphs[i + 1].c == ' ') {
+                ++i;
+            }
+            //Advance is minimum char width
+            //This special case wraps spaces properly
+            const int advance = this->font->glyph->advance.x >> 6;
+            newLineOffset.x = -(glyph_bbox_prev.xMax - origin.x) * 64;
+        }
         for (unsigned int j = (i + 1); j < num_glyphs; j++) {
             if (newline)
                 glyphs[j].line++;
@@ -331,22 +346,23 @@ glm::vec4 Text::getColor() const {
 glm::vec4 Text::getBackgroundColor() const {
     return backgroundColor;
 }
-void Text::setString(const char*fmt, ...) {
+void Text::setString(const char* format, ...) {
     if (this->string)
         delete this->string;
-    int bufSize = 0;
-    int ct = 0;
+    // Create a copy of the va_list, as vsnprintf can invalidate elements of argp and find the required buffer length
     va_list argp;
-    va_start(argp, fmt);
-    char *buffer = nullptr;
-    do {  // Repeat until buffer is large enough
-        if (buffer)
-            free(buffer);
-        bufSize += 128;
-        buffer = reinterpret_cast<char*>(malloc(bufSize * sizeof(char)));
-        ct = vsnprintf(buffer, bufSize, fmt, argp);
-    } while (ct == -1);
-    va_end(argp);
+    va_start(argp, format);
+    va_list argpCopy;
+    va_copy(argpCopy, argp);
+    const int buffLen = vsnprintf(nullptr, 0, format, argpCopy) + 1;
+    va_end(argpCopy);
+    char* buffer = reinterpret_cast<char*>(malloc(buffLen * sizeof(char)));
+    // Populate the buffer with the original va_list
+    int ct = vsnprintf(buffer, buffLen, format, argp);
+    if (ct >= 0) {
+        // Success!
+        buffer[buffLen - 1] = '\0';
+    }
     this->string = buffer;
     recomputeTex();
 }

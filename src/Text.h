@@ -10,16 +10,6 @@
 
 #include "Overlay.h"
 
-namespace Stock {
-namespace Font {
-extern const char* ARIAL;
-extern const char* LUCIDIA_CONSOLE;
-extern const char* SEGOE_UI;
-extern const char* JOKERMAN;
-extern const char* TIMES_NEW_ROMAN;
-extern const char* VIVALDI;
-}  // namespace Font
-}  // namespace Stock
 /**
  * Class for rendering strings to screen.
  * Windows stores font name-file name mappings in HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts
@@ -181,7 +171,7 @@ class Text : public Overlay {
      * @note This function simply wraps snprintf() for convenience
      * @note This function will always refresh the texture
      */
-    void setString(const char*fmt, ...);
+    void setString(const char* format, ...);
 
  private:
     bool printMono;
