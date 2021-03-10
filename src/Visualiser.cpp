@@ -1,6 +1,8 @@
 #include "Visualiser.h"
 #include "util/cuda.h"
 #include "util/fonts.h"
+#include "shader/DirectionFunction.h"
+#include "shader/lights/LightsBuffer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -28,10 +30,60 @@
 #define AXIS_DELTA_PHI 0.015f
 #define AXIS_TURN_THRESHOLD 0.03f
 
+Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
+    const std::map<TexBufferConfig::Function, TexBufferConfig>& _core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>&_custom_tex_buffers)
+    : config(vc)
+    , tex_unit_offset(0)
+    , instanceCount(0)
+    , entity(nullptr)
+    , requiredSize(0) {
+        // Copy texture buffers to dedicated structures
+        for (auto &c : _core_tex_buffers) {
+            core_texture_buffers.emplace(c.first, nullptr);
+        }
+        for (auto& c : _custom_tex_buffers) {
+            custom_texture_buffers.emplace(c.first, std::make_pair(c.second, nullptr));
+        }
+        // Select the corresponding shader
+        DirectionFunction df(_core_tex_buffers);
+        if (!vc.color_shader_src.empty()) {
+            // Entity has a color and direction override
+            entity = std::make_shared<Entity>(
+                vc.model_path,
+                *reinterpret_cast<const glm::vec3*>(vc.model_scale),
+                std::make_shared<Shaders>(
+                    "resources/instanced_default_Tcolor_Tdir.vert",
+                    "resources/material_flat_Tcolor.frag",
+                    "",
+                    df.getSrc() + vc.color_shader_src));
+        } else if (vc.model_texture) {
+            // Entity has texture
+            entity = std::make_shared<Entity>(
+                vc.model_path,
+                *reinterpret_cast<const glm::vec3*>(vc.model_scale),
+                std::make_shared<Shaders>(
+                    "resources/instanced_default_Tdir.vert",
+                    "resources/material_phong.frag",
+                    "",
+                    df.getSrc()),
+                Texture2D::load(vc.model_texture));
+        } else {
+            // Entity does not have a texture
+            entity = std::make_shared<Entity>(
+                vc.model_path,
+                *reinterpret_cast<const glm::vec3*>(vc.model_scale),
+                std::make_shared<Shaders>(
+                    "resources/instanced_default_Tdir.vert",
+                    "resources/material_flat.frag",
+                    "",
+                    df.getSrc()));
+            entity->setMaterial(glm::vec3(0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.7f));
+        }
+}
+
 Visualiser::Visualiser(const ModelConfig& modelcfg)
     : hud(std::make_shared<HUD>(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1]))
     , camera(std::make_shared<NoClipCamera>(*reinterpret_cast<const glm::vec3*>(&modelcfg.cameraLocation[0]), *reinterpret_cast<const glm::vec3*>(&modelcfg.cameraTarget[0])))
-    // , scene(nullptr)
     , isInitialised(false)
     , continueRender(false)
     , msaaState(true)
@@ -41,11 +93,13 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , stepDisplay(nullptr)
     , spsDisplay(nullptr)
     , modelConfig(modelcfg)
+    , lighting(nullptr)
     , gamepad(nullptr)
     , joystick(nullptr)
     , joystickInstance(0)
     , gamepadConnected(false) {
     this->isInitialised = this->init();
+    lighting = std::make_shared<LightsBuffer>(camera->getViewMatPtr());
     BackBuffer::setClear(true, *reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]));
     if (modelcfg.fpsVisible) {
         fpsDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3 *>(&modelcfg.fpsColor[0]), fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str());
@@ -90,7 +144,7 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
             entity->setRotation(*reinterpret_cast<const glm::vec4*>(sm->rotation));
             entity->setViewMatPtr(camera->getViewMatPtr());
             entity->setProjectionMatPtr(&this->projMat);
-            // entity->setLightsBuffer(this->lighting);  //  No lighting yet
+            entity->setLightsBuffer(this->lighting);
 
             staticModels.push_back(entity);
         }
@@ -114,6 +168,15 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
             lines->vertex(*reinterpret_cast<const glm::vec3*>(&line->vertices[i * 3]));
         }
         lines->save();
+    }
+    // Default lighting, single point light attached to camera
+    // Maybe in future let user specify lights instead of this
+    {
+        PointLight _p = lighting->addPointLight();
+        _p.Ambient(glm::vec3(0.0f));
+        _p.Diffuse(glm::vec3(0.5f));
+        _p.Specular(glm::vec3(0.02f));
+        _p.ConstantAttenuation(0.5f);
     }
 }
 Visualiser::~Visualiser() {
@@ -260,7 +323,8 @@ void Visualiser::render() {
     if (state[SDL_SCANCODE_C]) {  // Ctrl now moves slower
         this->camera->ascend(-distance);
     }
-
+    // After movement update default light position
+    this->lighting->getPointLight(0).Position(this->camera->getEye());
     //  handle each event on the queue
     while (SDL_PollEvent(&e) != 0) {
         switch (e.type) {
@@ -306,7 +370,8 @@ void Visualiser::render() {
     }
     // Doesn't use the event class for some historical reason I (pth) don't remember.
     this->queryControllerAxis(frameTime);
-
+    //Update lighting
+    lighting->update();
     //  render
     BackBuffer::useStatic();
     for (auto &sm : staticModels)
@@ -332,10 +397,11 @@ void Visualiser::render() {
 bool Visualiser::isRunning() const {
     return continueRender;
 }
-void Visualiser::addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc, bool has_x, bool has_y, bool has_z, bool has_color) {
+void Visualiser::addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc,
+    const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     GL_CHECK();
-    agentStates.emplace(std::make_pair(namepair, RenderInfo(vc, has_x, has_y, has_z, has_color)));
+    agentStates.emplace(std::make_pair(namepair, RenderInfo(vc, core_tex_buffers, tex_buffers)));
     //  Allocate entity
     auto &ent = agentStates.at(namepair).entity;
     ent->setViewMatPtr(camera->getViewMatPtr());
@@ -353,77 +419,61 @@ void Visualiser::renderAgentStates() {
     // Resize if necessary
     for (auto &_as : agentStates) {
         auto &as = _as.second;
+        if (as.core_texture_buffers.empty())
+            return;
         // resize buffers
-        if (!as.x_var || as.x_var->elementCount < as.requiredSize) {
+        const auto &first_buff = as.core_texture_buffers.begin()->second;
+        const unsigned int old_size = first_buff ? first_buff->elementCount : 0;
+        if (old_size < as.requiredSize) {
             // If we haven't been allocated texture units yet, get them now
             if (!as.tex_unit_offset) {
                 as.tex_unit_offset = texture_unit_counter;
-                texture_unit_counter += (as.has_x ? 1 : 0) + (as.has_y ? 1 : 0) + (as.has_z ? 1 : 0) + (as.has_color ? 1 : 0);
+                texture_unit_counter += static_cast<unsigned int>(as.core_texture_buffers.size() + as.custom_texture_buffers.size());
             }
             //  Decide new buff size
-            unsigned int newSize = !as.x_var || as.x_var->elementCount == 0 ? 1024 : as.x_var->elementCount;
+            unsigned int newSize = old_size < 1024 ? 1024 : old_size;
             while (newSize < as.requiredSize) {
                 newSize = static_cast<unsigned int>(newSize * 1.5f);
             }
             GL_CHECK();
-            //  Free old buffs
-            if (as.x_var && as.x_var->d_mappedPointer)
-                freeGLInteropTextureBuffer(as.x_var);
-            if (as.y_var && as.y_var->d_mappedPointer)
-                freeGLInteropTextureBuffer(as.y_var);
-            if (as.z_var && as.z_var->d_mappedPointer)
-                freeGLInteropTextureBuffer(as.z_var);
-            if (as.color_var && as.color_var->d_mappedPointer)
-                freeGLInteropTextureBuffer(as.color_var);
-            GL_CHECK();
-            //  Alloc new buffs (this needs to occur in other thread!!!)
-            if (as.has_x)
-                as.x_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
-            if (as.has_y)
-                as.y_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
-            if (as.has_z)
-                as.z_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
-            if (as.has_color)
-                as.color_var = mallocGLInteropTextureBuffer<float>(newSize, 1);
-            //  Bind texture name to texture unit
-            unsigned int tui = 0;
-            if (as.has_x) {
-                GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui++));
-                GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.x_var->glTexName));
-                GL_CALL(glActiveTexture(GL_TEXTURE0));
-            }
-            if (as.has_y) {
-                GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui++));
-                GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.y_var->glTexName));
-                GL_CALL(glActiveTexture(GL_TEXTURE0));
-            }
-            if (as.has_z) {
-                GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui++));
-                GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.z_var->glTexName));
-                GL_CALL(glActiveTexture(GL_TEXTURE0));
-            }
-            if (as.has_color) {
-                GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui++));
-                GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, as.color_var->glTexName));
-                GL_CALL(glActiveTexture(GL_TEXTURE0));
-            }
             auto shader_vec = as.entity->getShaders();
-            GL_CHECK();
-            tui = 0;
-            if (as.has_x)
-                shader_vec->addTexture("x_pos", GL_TEXTURE_BUFFER, as.x_var->glTexName, as.tex_unit_offset + tui++);
-            if (as.has_y)
-                shader_vec->addTexture("y_pos", GL_TEXTURE_BUFFER, as.y_var->glTexName, as.tex_unit_offset + tui++);
-            if (as.has_z)
-                shader_vec->addTexture("z_pos", GL_TEXTURE_BUFFER, as.z_var->glTexName, as.tex_unit_offset + tui++);
-            if (as.has_color)
-                shader_vec->addTexture(as.config.color_var_name.c_str(), GL_TEXTURE_BUFFER, as.color_var->glTexName, as.tex_unit_offset + tui++);
-            GL_CHECK();
+            unsigned int tui = 0;
+            for (auto &_tb : as.core_texture_buffers) {
+                auto &tb = _tb.second;
+                // Free old buffs
+                if (tb && tb->d_mappedPointer)
+                    freeGLInteropTextureBuffer(tb);
+                // Alloc new buffs (this needs to occur in other thread!!!)
+                tb = mallocGLInteropTextureBuffer<float>(newSize, 1);
+                // Bind texture name to texture unit
+                GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui));
+                GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, tb->glTexName));
+                GL_CALL(glActiveTexture(GL_TEXTURE0));
+                std::string samplerName = TexBufferConfig::SamplerName(_tb.first);
+                shader_vec->addTexture(samplerName.c_str(), GL_TEXTURE_BUFFER, tb->glTexName, as.tex_unit_offset + tui);
+                ++tui;
+                GL_CHECK();
+            }
+            for (auto& _tb : as.custom_texture_buffers) {
+                auto& tb = _tb.second.second;
+                // Free old buffs
+                if (tb && tb->d_mappedPointer)
+                    freeGLInteropTextureBuffer(tb);
+                // Alloc new buffs (this needs to occur in other thread!!!)
+                tb = mallocGLInteropTextureBuffer<float>(newSize, 1);
+                // Bind texture name to texture unit
+                GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui));
+                GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, tb->glTexName));
+                GL_CALL(glActiveTexture(GL_TEXTURE0));
+                shader_vec->addTexture(_tb.second.first.nameInShader.c_str(), GL_TEXTURE_BUFFER, tb->glTexName, as.tex_unit_offset + tui);
+                ++tui;
+                GL_CHECK();
+            }
         }
     }
     //  Render agents
     for (auto &as : agentStates) {
-        if (as.second.x_var || as.second.y_var || as.second.z_var)  // Extra check to make sure buffer has been allocated successfully
+        if (!as.second.core_texture_buffers.empty())  // Extra check to make sure buffer has been allocated successfully
             as.second.entity->renderInstances(as.second.requiredSize);
     }
     if (guard)
@@ -434,24 +484,28 @@ void Visualiser::requestBufferResizes(const std::string &agent_name, const std::
     auto &as = agentStates.at(namepair);
     as.requiredSize = buffLen;
 }
-void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned buffLen, float *d_x, float *d_y, float *d_z, float *d_color) {
+void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned buffLen,
+    const std::map<TexBufferConfig::Function, TexBufferConfig>& ext_core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& ext_tex_buffers) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     auto &as = agentStates.at(namepair);
+    if (as.core_texture_buffers.empty())
+        return;
     //  Copy Data
-    if ((as.x_var && as.x_var->elementCount >= buffLen) ||
-        (as.y_var && as.y_var->elementCount >= buffLen) ||
-        (as.z_var && as.z_var->elementCount >= buffLen)) {  //  This may fail for a single frame occasionally
-        if (d_x) {
-            visassert(_cudaMemcpyDeviceToDevice(as.x_var->d_mappedPointer, d_x, buffLen * sizeof(float)));
+    const auto& first_buff = as.core_texture_buffers.begin()->second;
+    const unsigned int buff_size = first_buff ? first_buff->elementCount : 0;
+    if (buff_size >= buffLen) { // This may fail for a single frame occasionally
+        for (const auto &_ext_tb : ext_core_tex_buffers) {
+            auto &ext_tb = _ext_tb.second;
+            auto &int_tb = as.core_texture_buffers.at(_ext_tb.first);
+            visassert(_cudaMemcpyDeviceToDevice(int_tb->d_mappedPointer, ext_tb.t_d_ptr, buffLen * sizeof(float)));
         }
-        if (d_y) {
-            visassert(_cudaMemcpyDeviceToDevice(as.y_var->d_mappedPointer, d_y, buffLen * sizeof(float)));
-        }
-        if (d_z) {
-            visassert(_cudaMemcpyDeviceToDevice(as.z_var->d_mappedPointer, d_z, buffLen * sizeof(float)));
-        }
-        if (d_color) {
-            visassert(_cudaMemcpyDeviceToDevice(as.color_var->d_mappedPointer, d_color, buffLen * sizeof(float)));
+        for (const auto& _ext_tb : ext_tex_buffers) {
+            auto& ext_tb = _ext_tb.second;
+            for (auto int_tb = as.custom_texture_buffers.find(_ext_tb.first); int_tb != as.custom_texture_buffers.end(); ++int_tb) {
+                if (ext_tb.nameInShader == int_tb->second.first.nameInShader) {
+                    visassert(_cudaMemcpyDeviceToDevice(int_tb->second.second->d_mappedPointer, ext_tb.t_d_ptr, buffLen * sizeof(float)));
+                }
+            }
         }
     }
 }
@@ -550,6 +604,7 @@ void Visualiser::resizeWindow() {
     resizeBackBuffer(this->windowDims);
 }
 void Visualiser::deallocateGLObjects() {
+    lighting.reset();
     fpsDisplay.reset();
     stepDisplay.reset();
     spsDisplay.reset();
@@ -638,8 +693,11 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         this->toggleMouseMode();
         break;
     case SDLK_F5:
-        // if (this->scene)
-        //     this->scene->_reload();
+        // Reload all shaders
+        if (this->lines)
+            this->lines->reload();
+        for (auto& as : this->agentStates)
+            as.second.entity->reload();
         this->hud->reload();
         break;
     case SDLK_p:
@@ -891,13 +949,13 @@ void Visualiser::queryControllerAxis(const unsigned int frameTime){
 		if (buttonB){
             this->camera->ascend(-distance);
         }
-        if(leftShoulder) {
+        if (leftShoulder) {
             this->camera->roll(-DELTA_ROLL);
         }
-        if(rightShoulder) {
+        if (rightShoulder) {
             this->camera->roll(DELTA_ROLL);
         }
-	}
+    }
 }
 
 // http://stackoverflow.com/questions/20233469/how-do-i-take-and-save-a-bmp-screenshot-in-sdl-2
@@ -906,8 +964,7 @@ void Visualiser::queryControllerAxis(const unsigned int frameTime){
 void Visualiser::screenshot() {
     this->screenshot(false);
 }
-void Visualiser::screenshot(const bool verbose)
-{
+void Visualiser::screenshot(const bool verbose) {
     int w = 1;
     int h = 1;
     const char *filename = "screenshot.bmp";
@@ -921,7 +978,7 @@ void Visualiser::screenshot(const bool verbose)
 
     SDL_GetWindowSize(this->window, &w, &h);
 
-    unsigned char *pixels = new unsigned char[w * h * 4]; // 4 bytes for RGBA
+    unsigned char *pixels = new unsigned char[w * h * 4];  // 4 bytes for RGBA
     glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
     SDL_Surface *surf = SDL_CreateRGBSurfaceFrom(pixels, w, h, 8 * 4, w * 4, rmask, gmask, bmask, amask);

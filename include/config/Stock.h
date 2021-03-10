@@ -26,6 +26,11 @@ const Model CUBE{ "resources/cube.obj", "" };
  * Traditional (sealed) Utah Teapot
  */
 const Model TEAPOT{ "resources/teapot.obj", "" };
+/**
+ * Basic aeroplane model
+ * Created following this tutorial: https://www.youtube.com/watch?v=qiK6A4HJhmA
+ */
+const Model STUNTPLANE{ "resources/stuntplane.obj", "" };
 }  // namespace Models
 }  // namespace Stock
 
