@@ -1,4 +1,10 @@
 #include "Visualiser.h"
+
+#include <iomanip>
+#include <sstream>
+
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "util/cuda.h"
 #include "util/fonts.h"
 #include "shader/DirectionFunction.h"
@@ -7,7 +13,6 @@
 #include "ui/Text.h"
 #include "ui/SplashScreen.h"
 
-#include <glm/gtc/matrix_transform.hpp>
 
 #define FOVY 60.0f
 #define DELTA_THETA_PHI 0.01f
@@ -99,6 +104,7 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , fpsDisplay(nullptr)
     , stepDisplay(nullptr)
     , spsDisplay(nullptr)
+    , debugMenu(nullptr)
     , modelConfig(modelcfg)
     , lighting(nullptr)
     , gamepad(nullptr)
@@ -124,6 +130,12 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
         stepDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3 *>(&modelcfg.fpsColor[0]), fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str());
         stepDisplay->setUseAA(false);
         hud->add(stepDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, 0), INT_MAX - 1);
+    }
+    {  // Debug menu
+        debugMenu = std::make_shared<Text>("", 16, glm::vec3(1.0f), fonts::findFont({ "Consolas", "Arial" }, fonts::GenericFontFamily::SANS).c_str());
+        debugMenu->setBackgroundColor(glm::vec4(*reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]), 0.65f));
+        debugMenu->setVisible(false);
+        hud->add(debugMenu, HUD::AnchorV::North, HUD::AnchorH::West, glm::ivec2(0, 0), INT_MAX);
     }
     lines = std::make_shared<Draw>();
     lines->setViewMatPtr(camera->getViewMatPtr());
@@ -385,6 +397,7 @@ void Visualiser::render() {
     this->queryControllerAxis(frameTime);
     // Update lighting
     lighting->update();
+    updateDebugMenu();
     //  render
     BackBuffer::useStatic();
     for (auto &sm : staticModels)
@@ -429,6 +442,13 @@ void Visualiser::addAgentState(const std::string &agent_name, const std::string 
     ent->setViewMatPtr(camera->getViewMatPtr());
     ent->setProjectionMatPtr(&this->projMat);
     ent->setLightsBuffer(this->lighting);
+    // Check if there are multiple agent states
+    for (auto &as : agentStates) {
+        if (as.first.second != state_name) {
+            debugMenu_showStateNames = true;
+            return;
+        }
+    }
 }
 
 void Visualiser::renderAgentStates() {
@@ -673,6 +693,7 @@ void Visualiser::deallocateGLObjects() {
     fpsDisplay.reset();
     stepDisplay.reset();
     spsDisplay.reset();
+    debugMenu.reset();
     this->hud->clear();
     // Don't clear the map, as update buffer methods might still be called
     for (auto &as : agentStates) {
@@ -765,6 +786,10 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         for (auto& sm : this->staticModels)
             sm->reload();
         this->hud->reload();
+        break;
+    case SDLK_F1:
+        if (this->debugMenu)
+            this->debugMenu->setVisible(!this->debugMenu->getVisible());
         break;
     case SDLK_p:
         if (this->pause_guard) {
@@ -1048,4 +1073,42 @@ void Visualiser::setWindowIcon() {
     auto surface = Texture::loadImage(modelConfig.isPython ? "resources/pyflamegpu_icon.png" : "resources/flamegpu_icon.png");
     if (surface)
         SDL_SetWindowIcon(window, surface.get());
+}
+void Visualiser::updateDebugMenu() {
+    if (debugMenu && debugMenu->getVisible()) {
+        std::stringstream ss;
+        ss << std::setprecision(3);
+        ss << std::fixed;  // To stop camera floats from changing box width
+        ss << "===Debug Menu===" << "\n";
+        const glm::vec3 eye = camera->getEye();
+        const glm::vec3 look = camera->getLook();
+        const glm::vec3 up = camera->getUp();
+        ss << "Camera Location: (" << eye.x  << ", " << eye.y << ", " << eye.z << ")" "\n";
+        ss << "Camera Direction: (" << look.x << ", " << look.y << ", " << look.z << ")" "\n";
+        ss << "Camera Up: (" << up.x << ", " << up.y << ", " << up.z << ")" "\n";
+        ss << "MSAA: " << (this->msaaState ? "On" : "Off") << "\n";
+        switch (this->fpsStatus) {
+            case 2:
+                ss << "Display FPS: Show All" << "\n";
+            break;
+            case 1:
+                ss << "Display FPS: Show Step Count" << "\n";
+                break;
+            default:
+                ss << "Display FPS: Off" << "\n";
+        }
+        ss << "Display Lines: " << (this->renderLines ? "On" : "Off") << "\n";
+        ss << "Agent Populations:" << "\n";
+        for (const auto &as : agentStates) {
+            if (debugMenu_showStateNames) {
+                ss << "  " << as.first.first << "(" << as.first.second << "): " << as.second.requiredSize << "\n";
+            } else {
+                ss << "  " << as.first.first << ": " << as.second.requiredSize << "\n";
+            }
+        }
+
+        // Last item (don't end \n)
+        ss << "Pause Simulation: " << (this->pause_guard ? "On" : "Off");
+        debugMenu->setString(ss.str().c_str());
+    }
 }
