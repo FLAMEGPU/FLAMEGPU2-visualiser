@@ -233,6 +233,7 @@ class Visualiser : public ViewportExt {
     void setStepCount(const unsigned int &stepCount);
 
  private:
+    void updateDebugMenu();
     SDL_Window *window;
     SDL_Rect windowedBounds;
     SDL_GLContext context;
@@ -294,6 +295,14 @@ class Visualiser : public ViewportExt {
      * When user updates stepCount it is stored here, as we cannot update the OpenGL texture from a thread which doesn't hold the context
      */
     unsigned int previousStepTime = 0, currentStepTime, stepCount = 0, lastStepCount = 0;
+    /**
+     * Displays internal status info to screen
+     */
+    std::shared_ptr<Text> debugMenu;
+    /**
+     * If set true, we don't display agent states in debug menu because agents only have one state.
+     */
+    bool debugMenu_showStateNames = false;
     /**
      * Steps equivalent of FPS.
      * Calculated in the wrong thread, so we update it whenever FPS updates
