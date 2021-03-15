@@ -315,7 +315,7 @@ class Visualiser : public ViewportExt {
      * Steps equivalent of FPS.
      * Calculated in the wrong thread, so we update it whenever FPS updates
      */
-    double stepsPerSecond;
+    double stepsPerSecond = 0.0;
     /**
      * Pressing F8 changes whether FPS is displayed in the bottom corner, according to this schema
      * The list is iterated in reverse (2, 1, 0)
