@@ -11,30 +11,30 @@ if (NOT GIT_FOUND)
 endif ()
 
 # Pull in and build SDL2
-MACRO (download_sdl2)
-    configure_file(cmake/sdl2/CMakeLists.txt.in sdl2-download/CMakeLists.txt)
-    # Run CMake generate
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sdl2-download
-        )
-    if (result)
-        message(WARNING
-                "CMake step for sdl2 failed: ${result}\n")
-    endif ()
-    # Run CMake build (this only downloads, it is built at build time)
-    execute_process(
-    COMMAND ${CMAKE_COMMAND} --build .
-    RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sdl2-download
-    )
-    if (result)
-        message(WARNING
-                "Download step for sdl2 failed: ${result}\n"
-                "Attempting to continue\n")
-    endif ()
-ENDMACRO()
+# MACRO (download_sdl2)
+    # configure_file(cmake/sdl2/CMakeLists.txt.in sdl2-download/CMakeLists.txt)
+    # # Run CMake generate
+    # execute_process(
+        # COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+        # RESULT_VARIABLE result
+        # WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sdl2-download
+        # )
+    # if (result)
+        # message(WARNING
+                # "CMake step for sdl2 failed: ${result}\n")
+    # endif ()
+    # # Run CMake build (this only downloads, it is built at build time)
+    # execute_process(
+    # COMMAND ${CMAKE_COMMAND} --build .
+    # RESULT_VARIABLE result
+    # WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/sdl2-download
+    # )
+    # if (result)
+        # message(WARNING
+                # "Download step for sdl2 failed: ${result}\n"
+                # "Attempting to continue\n")
+    # endif ()
+# ENDMACRO()
 # Pull in and build glew
 MACRO (download_glew)
     configure_file(cmake/glew/CMakeLists.txt.in glew-download/CMakeLists.txt)
@@ -151,10 +151,17 @@ else()
       message(FATAL_ERROR "GLU is required for building")
     endif ()
     #sdl
-    download_sdl2()
-    set(SDL2_DIR ${CMAKE_CURRENT_BINARY_DIR}/sdl2)
-    configure_file(cmake/sdl2/sdl2-config.cmake sdl2/sdl2-config.cmake)
-    find_package(SDL2 REQUIRED)
+    #download_sdl2()
+    #set(SDL2_DIR ${CMAKE_CURRENT_BINARY_DIR}/sdl2)
+    #configure_file(cmake/sdl2/sdl2-config.cmake sdl2/sdl2-config.cmake)
+    #find_package(SDL2 REQUIRED)
+    add_subdirectory("C:/Users/Robadob/libsdl"
+                     ${CMAKE_CURRENT_BINARY_DIR}/sdl2-build
+                     EXCLUDE_FROM_ALL
+                     )
+    set(SDL2_DIR ${CMAKE_CURRENT_BINARY_DIR}/sdl2-build)
+    set(SDL2_RUNTIME_LIBRARIES "${CMAKE_CURRENT_BINARY_DIR}/sdl2-build/Debug/SDL2.dll" CACHE INTERNAL "SDL2 runtime lib files")
+    
     #glew
     download_glew()
     set(GLEW_DIR ${CMAKE_CURRENT_BINARY_DIR}/glew)
@@ -329,8 +336,9 @@ endif()
 
 
 # Strip trailiing whitespace from SDL2_Libraries for Ubuntu1604 / libsdl2-dev 2.0.4
-string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
-target_link_libraries("${PROJECT_NAME}" "${SDL2_LIBRARIES}")
+#string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
+#target_link_libraries("${PROJECT_NAME}" "${SDL2_LIBRARIES}")
+target_link_libraries("${PROJECT_NAME}" SDL2)
 
 target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
 target_link_libraries("${PROJECT_NAME}" freetype)
@@ -344,6 +352,10 @@ if(WIN32)
 target_link_libraries("${PROJECT_NAME}" "dwrite.lib")
 endif()
 
+add_custom_command(TARGET "${PROJECT_NAME}" POST_BUILD        # Adds a post-build event to MyTest
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different             # which executes "cmake - E copy_if_different..."
+        "${CMAKE_CURRENT_BINARY_DIR}/sdl2-build/Debug/SDL2d.dll"                           # <--this is in-file
+        "C:/Users/Robadob/fgpu2/build/bin/windows-x64/Debug" )
 
 # Enable parallel compilation
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

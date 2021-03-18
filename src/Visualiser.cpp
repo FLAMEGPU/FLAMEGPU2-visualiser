@@ -264,9 +264,14 @@ void Visualiser::render() {
         break;
         // case SDL_MOUSEWHEEL:
         // break;
-        case SDL_MOUSEMOTION:
+        case SDL_MOUSEMOTION: {
+            int x = 0;
+            int y = 0;
+            SDL_GetMouseState(&x, &y);
+            printf("Mouse move(%d, %d) new pos (%d, %d) vs (%d, %d)\n", e.motion.xrel, e.motion.yrel, e.motion.x, e.motion.y, x, y);
             this->handleMouseMove(e.motion.xrel, e.motion.yrel);
             break;
+        }
         case SDL_MOUSEBUTTONDOWN:
             this->toggleMouseMode();
             break;
@@ -641,8 +646,10 @@ void Visualiser::toggleFullScreen() {
 }
 void Visualiser::toggleMouseMode() {
     if (SDL_GetRelativeMouseMode()) {
+        printf("End Relative MouseMode()\n");
         SDL_SetRelativeMouseMode(SDL_FALSE);
     } else {
+        printf("Begin Relative MouseMode()\n");
         SDL_SetRelativeMouseMode(SDL_TRUE);
     }
 }
