@@ -115,10 +115,10 @@ Shaders::Shaders(const Shaders &other)
     , vertexShaderFiles(nullptr)
     , fragmentShaderFiles(nullptr)
     , geometryShaderFiles(nullptr)
+    , vertexShaderExtension(other.vertexShaderExtension)
     , vertexShaderVersion(-1)
     , fragmentShaderVersion(-1)
-    , geometryShaderVersion(-1)
-    , vertexShaderExtension(other.vertexShaderExtension){
+    , geometryShaderVersion(-1) {
     // positions, normals, colors, texcoords
     positions.location = -1;
     normals.location = -1;

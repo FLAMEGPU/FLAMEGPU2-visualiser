@@ -183,13 +183,12 @@ void Text::recomputeTex() {
         if (glyph_bbox.xMin) {
             newLineOffset.x = -(glyph_bbox.xMin - origin.x) * 64;
         } else {
-            const unsigned int old_i = i;
             while (glyphs[i + 1].c == ' ') {
                 ++i;
             }
-            //Advance is minimum char width
-            //This special case wraps spaces properly
-            const int advance = this->font->glyph->advance.x >> 6;
+            // Advance is minimum char width
+            // This special case wraps spaces properly
+            // const int advance = this->font->glyph->advance.x >> 6;
             newLineOffset.x = -(glyph_bbox_prev.xMax - origin.x) * 64;
         }
         for (unsigned int j = (i + 1); j < num_glyphs; j++) {
