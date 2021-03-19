@@ -178,6 +178,10 @@ class Visualiser : public ViewportExt {
      */
      void toggleMouseMode();
      /**
+     * Toggles the status of FPS logged to the HUD
+     */
+     void toggleFPSStatus();
+     /**
      * Toggles whether Multi-Sample Anti-Aliasing should be used or not
      * @param state The desired MSAA state
      * @note Unless blocked by the active Scene the F10 key toggles MSAA at runtime
@@ -223,12 +227,21 @@ class Visualiser : public ViewportExt {
      */
      void resizeWindow();
 
- public:
-    /**
+
+    void addController(const SDL_ControllerDeviceEvent sdlEvent);
+	void removeController(const SDL_ControllerDeviceEvent sdlEvent);
+	void handleControllerButton(const SDL_ControllerButtonEvent sdlEvent);
+	void handleControllerAxis(const SDL_ControllerAxisEvent sdlEvent);
+    void queryControllerAxis(const unsigned int frameTime);
+    void screenshot();
+    void screenshot(const bool verbose);
+
+ public :
+        /**
      * Returns the window's current width
      * @note This does not account for fullscreen window size
      */
-    unsigned int getWindowWidth() const override;
+        unsigned int getWindowWidth() const override;
     /**
      * Returns the window's current height
      * @note This does not account for fullscreen window size
@@ -362,6 +375,12 @@ class Visualiser : public ViewportExt {
      * When this is not set to nullptr, it blocks the simulation from continuing
      */
     std::lock_guard<std::mutex> *pause_guard = nullptr;
+
+    // Controller stuff
+	SDL_GameController *gamepad;
+	SDL_Joystick *joystick;
+	SDL_JoystickID joystickInstance;
+	bool gamepadConnected;
 };
 
 #endif  // SRC_VISUALISER_H_

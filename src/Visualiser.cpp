@@ -16,6 +16,18 @@
 #define DEFAULT_WINDOW_WIDTH 1280
 #define DEFAULT_WINDOW_HEIGHT 720
 
+#define MOVEMENT_MULTIPLIER 1.f
+#define AXIS_LEFT_DEAD_ZONE 0.2f
+#define AXIS_RIGHT_DEAD_ZONE 0.15f
+#define AXIS_TRIGGER_DEAD_ZONE 0.25f
+#define AXIS_DELTA_MOVE (-0.075f * MOVEMENT_MULTIPLIER)
+#define AXIS_DELTA_STRAFE (0.05f * MOVEMENT_MULTIPLIER)
+#define AXIS_DELTA_ASCEND (0.05f * MOVEMENT_MULTIPLIER)
+#define AXIS_DELTA_ROLL 0.05f
+#define AXIS_DELTA_THETA 0.015f
+#define AXIS_DELTA_PHI 0.015f
+#define AXIS_TURN_THRESHOLD 0.03f
+
 Visualiser::Visualiser(const ModelConfig& modelcfg)
     : hud(std::make_shared<HUD>(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1]))
     , camera(std::make_shared<NoClipCamera>(*reinterpret_cast<const glm::vec3*>(&modelcfg.cameraLocation[0]), *reinterpret_cast<const glm::vec3*>(&modelcfg.cameraTarget[0])))
@@ -28,7 +40,11 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , fpsDisplay(nullptr)
     , stepDisplay(nullptr)
     , spsDisplay(nullptr)
-    , modelConfig(modelcfg) {
+    , modelConfig(modelcfg)
+    , gamepad(nullptr)
+    , joystick(nullptr)
+    , joystickInstance(0)
+    , gamepadConnected(false) {
     this->isInitialised = this->init();
     BackBuffer::setClear(true, *reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]));
     if (modelcfg.fpsVisible) {
@@ -238,12 +254,16 @@ void Visualiser::render() {
     if (state[SDL_SCANCODE_E]) {
         this->camera->roll(DELTA_ROLL);
     }
-    // if (state[SDL_SCANCODE_SPACE]) {
-    //     this->camera->ascend(distance);
-    // }
-    // if (state[SDL_SCANCODE_LCTRL]) {  // Ctrl now moves slower
-    //     this->camera->ascend(-distance);
-    // }
+    if (state[SDL_SCANCODE_SPACE]) {
+        this->camera->ascend(distance);
+    }
+    if (state[SDL_SCANCODE_C]) {  // Ctrl now moves slower
+        this->camera->ascend(-distance);
+    }
+    if (state[SDL_SCANCODE_P])
+    {
+        this->screenshot(true);
+    }
 
     //  handle each event on the queue
     while (SDL_PollEvent(&e) != 0) {
@@ -255,23 +275,42 @@ void Visualiser::render() {
             if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 resizeWindow();
             break;
-        case SDL_KEYDOWN: {
-            int x = 0;
-            int y = 0;
-            SDL_GetMouseState(&x, &y);
-            this->handleKeypress(e.key.keysym.sym, x, y);
-        }
-        break;
+        case SDL_KEYDOWN: 
+            {
+                int x = 0;
+                int y = 0;
+                SDL_GetMouseState(&x, &y);
+                this->handleKeypress(e.key.keysym.sym, x, y);
+            }
+            break;
         // case SDL_MOUSEWHEEL:
-        // break;
+            // break;
         case SDL_MOUSEMOTION:
             this->handleMouseMove(e.motion.xrel, e.motion.yrel);
             break;
         case SDL_MOUSEBUTTONDOWN:
             this->toggleMouseMode();
             break;
+        case SDL_CONTROLLERDEVICEADDED:
+			this->addController(e.cdevice);
+			break;
+		case SDL_CONTROLLERDEVICEREMOVED:
+			this->removeController(e.cdevice);
+			break;
+		case SDL_CONTROLLERBUTTONDOWN:
+			this->handleControllerButton(e.cbutton);
+			break;
+		case SDL_CONTROLLERBUTTONUP:
+			this->handleControllerButton(e.cbutton);
+			break;
+		// case SDL_CONTROLLERAXISMOTION:
+            // Couldn't get this event to behave nicely in the past for some reason.
+            // break;
         }
     }
+    // Doesn't use the event class for some historical reason I (pth) don't remember.
+    this->queryControllerAxis(frameTime);
+
     //  render
     BackBuffer::useStatic();
     for (auto &sm : staticModels)
@@ -421,7 +460,8 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
 
 //  Items taken from sdl_exp
 bool Visualiser::init() {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0)
+    {
         fprintf(stderr, "Unable to initialize SDL: %s", SDL_GetError());
         return false;
     }
@@ -551,6 +591,34 @@ void Visualiser::handleMouseMove(int x, int y) {
         this->camera->turn(x * MOUSE_SPEED, y * MOUSE_SPEED);
     }
 }
+void Visualiser::toggleFPSStatus() {
+    // Update fpsStatus
+    fpsStatus = fpsStatus == 0 ? 2u : fpsStatus - 1;
+    // If steps is not visible, skip state 1
+    if (!this->stepDisplay && fpsStatus == 1)
+        fpsStatus = 0;
+    // Set the appropriate display state
+    switch (fpsStatus)
+    {
+    case 0: // Hide all
+        if (this->stepDisplay)
+            this->stepDisplay->setVisible(false);
+    case 1: // Hide fps/sps
+        if (this->fpsDisplay)
+            this->fpsDisplay->setVisible(false);
+        if (this->spsDisplay)
+            this->spsDisplay->setVisible(false);
+        break;
+    default: // Show all
+        if (this->stepDisplay)
+            this->stepDisplay->setVisible(true);
+        if (this->fpsDisplay)
+            this->fpsDisplay->setVisible(true);
+        if (this->spsDisplay)
+            this->spsDisplay->setVisible(true);
+        break;
+    }
+}
 void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
     // Pass key events to the scene and skip handling if false is returned
     // if (scene && !scene->_keypress(keycode, x, y))
@@ -566,31 +634,7 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         this->setMSAA(!this->msaaState);
         break;
     case SDLK_F8:
-        // Update fpsStatus
-        fpsStatus = fpsStatus == 0 ? 2u : fpsStatus - 1;
-        // If steps is not visible, skip state 1
-        if (!this->stepDisplay && fpsStatus == 1)
-            fpsStatus = 0;
-        // Set the appropriate display state
-        switch (fpsStatus) {
-            case 0:  // Hide all
-                if (this->stepDisplay)
-                    this->stepDisplay->setVisible(false);
-            case 1:  // Hide fps/sps
-                if (this->fpsDisplay)
-                    this->fpsDisplay->setVisible(false);
-                if (this->spsDisplay)
-                    this->spsDisplay->setVisible(false);
-                break;
-            default:  // Show all
-                if (this->stepDisplay)
-                    this->stepDisplay->setVisible(true);
-                if (this->fpsDisplay)
-                    this->fpsDisplay->setVisible(true);
-                if (this->spsDisplay)
-                    this->spsDisplay->setVisible(true);
-                break;
-        }
+        this->toggleMouseMode();
         break;
     case SDLK_F5:
         // if (this->scene)
@@ -707,4 +751,184 @@ const char *Visualiser::getWindowTitle() const {
 void Visualiser::setWindowTitle(const char *_windowTitle) {
     SDL_SetWindowTitle(window, _windowTitle);
     windowTitle = _windowTitle;
+}
+
+// Game controller methods
+void Visualiser::addController(const SDL_ControllerDeviceEvent sdlEvent){
+	int device = sdlEvent.which;
+	// If it is the 0th gamepad, proceed.
+	if (device == 0){
+		this->gamepad = SDL_GameControllerOpen(device);
+		this->joystick = SDL_GameControllerGetJoystick(gamepad);
+		this->joystickInstance = SDL_JoystickInstanceID(this->joystick);
+		this->gamepadConnected = true;
+	}
+}
+void Visualiser::removeController(const SDL_ControllerDeviceEvent sdlEvent){
+	if (this->gamepadConnected) {
+		this->gamepadConnected = false;
+		SDL_GameControllerClose(this->gamepad);
+		this->gamepad = 0;
+	}
+}
+// @todo - handle continuous button states
+void Visualiser::handleControllerButton(const SDL_ControllerButtonEvent sdlEvent){
+	// If it is the correct controller
+	if (sdlEvent.which == this->joystickInstance){
+		// If it is being pressed down
+		if (sdlEvent.type == SDL_CONTROLLERBUTTONDOWN){
+			// Print the button being pressed.
+			switch (sdlEvent.button){
+			case SDL_CONTROLLER_BUTTON_A:
+                break;
+			case SDL_CONTROLLER_BUTTON_B:
+                break;
+			case SDL_CONTROLLER_BUTTON_X:
+				// this->camera->resetLocation();
+				break;
+			case SDL_CONTROLLER_BUTTON_Y:
+				// this->camera->storeLocation();
+				break;
+            case SDL_CONTROLLER_BUTTON_BACK:
+                printf("SDL_CONTROLLER_BUTTON_BACK\n");
+                this->toggleFPSStatus();
+				break;
+            case SDL_CONTROLLER_BUTTON_GUIDE:
+                printf("SDL_CONTROLLER_BUTTON_GUIDE\n");
+				break;
+            case SDL_CONTROLLER_BUTTON_START:
+                if (this->pause_guard)
+                {
+                    delete pause_guard;
+                    pause_guard = nullptr;
+                }
+                else
+                {
+                    pause_guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
+                    stepsPerSecond = 0.0f;
+                }
+                break;
+            case SDL_CONTROLLER_BUTTON_LEFTSTICK:
+				break;
+            case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
+				break;
+			case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+				break;
+			case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+				break;
+			case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                this->toggleFullScreen();
+                break;
+			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+				this->screenshot(true);
+				break;
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                renderLines = !renderLines;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                this->hud->reload();
+                break;
+            case SDL_CONTROLLER_BUTTON_MAX:
+				break;
+            default:
+				break;
+			}
+		}
+		// else if (sdlEvent.type == SDL_CONTROLLERBUTTONUP){
+		// }
+	}
+}
+// If there is a controllwer attached update all relevant values
+void Visualiser::queryControllerAxis(const unsigned int frameTime){
+	if (this->gamepadConnected){
+		// Load in all values
+		float leftX = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_LEFTX) / (float)SHRT_MAX;
+		float leftY = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_LEFTY) / (float)SHRT_MAX;
+		float rightX = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_RIGHTX) / (float)SHRT_MAX;
+		float rightY = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_RIGHTY) / (float)SHRT_MAX;
+		float triggerL = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / (float)SHRT_MAX;
+		float triggerR = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / (float)SHRT_MAX;
+		float buttonA = SDL_GameControllerGetButton(this->gamepad, SDL_CONTROLLER_BUTTON_A);
+		float buttonB = SDL_GameControllerGetButton(this->gamepad, SDL_CONTROLLER_BUTTON_B);
+        float leftShoulder = SDL_GameControllerGetButton(this->gamepad, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+        float rightShoulder = SDL_GameControllerGetButton(this->gamepad, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
+
+        float speed = modelConfig.cameraSpeed[0];
+		if (triggerL > AXIS_TRIGGER_DEAD_ZONE) {
+            speed /= modelConfig.cameraSpeed[1];
+        }
+        if (triggerR > AXIS_TRIGGER_DEAD_ZONE) {
+            speed *= modelConfig.cameraSpeed[1];
+        }
+        const float distance = speed * static_cast<float>(frameTime);
+
+		// Strafe on left X axis
+		if (abs(leftX) > AXIS_LEFT_DEAD_ZONE){
+            this->camera->strafe(leftX * distance);
+        }
+		// Move on left Y axis
+		if (abs(leftY) > AXIS_LEFT_DEAD_ZONE){
+            this->camera->move(-leftY * distance);
+        }
+
+		float thetaInc = 0.0;
+		float phiInc = 0.0;
+		// Look using right stick
+		if (abs(rightX) > AXIS_RIGHT_DEAD_ZONE){
+			thetaInc = rightX * AXIS_DELTA_THETA;
+		}
+		if (abs(rightY) > AXIS_RIGHT_DEAD_ZONE){
+			phiInc = rightY * AXIS_DELTA_PHI;
+		}
+		// Avoid Drift
+		if (abs(rightX) > AXIS_TURN_THRESHOLD && abs(rightY) > AXIS_TURN_THRESHOLD){
+			this->camera->turn(thetaInc, phiInc);
+		}
+		if (buttonA){
+            this->camera->ascend(distance);
+        }
+		if (buttonB){
+            this->camera->ascend(-distance);
+        }
+        if(leftShoulder) {
+            this->camera->roll(-DELTA_ROLL);
+        }
+        if(rightShoulder) {
+            this->camera->roll(DELTA_ROLL);
+        }
+	}
+}
+
+// http://stackoverflow.com/questions/20233469/how-do-i-take-and-save-a-bmp-screenshot-in-sdl-2
+// @todo - better formats etc, this is more proof of concept.
+// @todo - currently upside down.
+void Visualiser::screenshot() {
+    this->screenshot(false);
+}
+void Visualiser::screenshot(const bool verbose)
+{
+    int w = 1;
+    int h = 1;
+    const char *filename = "screenshot.bmp";
+
+    Uint32 rmask, gmask, bmask, amask;
+
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+
+    SDL_GetWindowSize(this->window, &w, &h);
+
+    unsigned char *pixels = new unsigned char[w * h * 4]; // 4 bytes for RGBA
+    glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+    SDL_Surface *surf = SDL_CreateRGBSurfaceFrom(pixels, w, h, 8 * 4, w * 4, rmask, gmask, bmask, amask);
+    SDL_SaveBMP(surf, filename);
+    if (verbose) {
+        printf("Screenshot saved to %s\n", filename);
+    }
+
+    SDL_FreeSurface(surf);
+    delete[] pixels;
 }
