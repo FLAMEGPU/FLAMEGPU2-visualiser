@@ -104,8 +104,14 @@ struct ModelConfig {
     /**
      * The number of simulation steps to execute per second
      * A value of 0 is treated as unlimited
+     * @note Defaults to 0 (unlimited)
      */
     unsigned int stepsPerSecond = 0;
+    /**
+     * If true, the simulation will be paused initially, requiring the user to press 'p' to unpause and begin the simulation
+     * @note Defaults to false
+     */
+    bool beginPaused;
     /**
      * Store of static models to be rendered in visualisation
      */
