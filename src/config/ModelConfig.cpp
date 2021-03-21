@@ -17,7 +17,8 @@ ModelConfig::ModelConfig(const char* _windowTitle)
     , cameraTarget{0, 0, 0}
     , cameraSpeed{0.05f, 5}
     , nearFarClip{0.05f, 5000}
-    , stepVisible(true) {
+    , stepVisible(true)
+    , beginPaused(false) {
     setString(&windowTitle, _windowTitle);
 }
 ModelConfig::~ModelConfig() {
@@ -40,5 +41,8 @@ ModelConfig &ModelConfig::operator=(const ModelConfig &other) {
     memcpy(cameraSpeed, other.cameraSpeed, sizeof(cameraSpeed));
     memcpy(nearFarClip, other.nearFarClip, sizeof(nearFarClip));
     stepVisible = other.stepVisible;
+    beginPaused = other.beginPaused;
+    //staticModels
+    //lines
     return *this;
 }

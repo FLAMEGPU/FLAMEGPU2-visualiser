@@ -345,6 +345,8 @@ void Visualiser::addAgentState(const std::string &agent_name, const std::string 
 
 void Visualiser::renderAgentStates() {
     static unsigned int texture_unit_counter = 1;
+    if (texture_unit_counter == 1 && modelConfig.beginPaused)
+        this->pause_guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
     std::lock_guard<std::mutex> *guard = nullptr;
     if (!pause_guard)
         guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
