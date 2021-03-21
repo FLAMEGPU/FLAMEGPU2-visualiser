@@ -260,10 +260,6 @@ void Visualiser::render() {
     if (state[SDL_SCANCODE_C]) {  // Ctrl now moves slower
         this->camera->ascend(-distance);
     }
-    if (state[SDL_SCANCODE_P])
-    {
-        this->screenshot(true);
-    }
 
     //  handle each event on the queue
     while (SDL_PollEvent(&e) != 0) {
@@ -626,6 +622,9 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
     switch (keycode) {
     case SDLK_ESCAPE:
         continueRender = false;
+        break;
+    case SDLK_F12:
+        this->screenshot(true);
         break;
     case SDLK_F11:
         this->toggleFullScreen();
