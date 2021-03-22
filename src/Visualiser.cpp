@@ -196,7 +196,7 @@ void Visualiser::run() {
                 this->updateFPS();
                 if (this->stepDisplay) {
                     this->spsDisplay->setString("%.3f sps", stepsPerSecond);
-                    this->stepDisplay->setString("Step %u", stepCount);
+                    this->stepDisplay->setString("%sStep %u", (pause_guard? "(Paused) " : ""), stepCount);
                 }
                 this->render();
             }
