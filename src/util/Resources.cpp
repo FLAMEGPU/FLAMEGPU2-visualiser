@@ -54,6 +54,14 @@ namespace {
         }
         return result;
     }
+    inline unsigned long long hash_larson64(const char* s,
+        unsigned long long seed = 0) {
+        unsigned long long hash = seed;
+        while (*s) {
+            hash = hash * 101 + *s++;
+        }
+        return hash;
+    }
 }  // namespace
 
 FILE *Resources::fopen(const char * filename, const char *mode) {
@@ -61,13 +69,15 @@ FILE *Resources::fopen(const char * filename, const char *mode) {
 }
 
 std::string Resources::locateFile(const std::string &_path) {
+    // Convert the path into '<hash(_path)>_filename.file_ext'
+    const path t_filename = path(std::to_string(hash_larson64(_path.c_str())).append("_").append(path(_path).filename().generic_string()));
     // File exists in working directory, use that
     {
         if (::exists(path(_path)))
             return _path;
     }
     path temp_dir_path = path(getTMP());
-    temp_dir_path += _path;
+    temp_dir_path /= t_filename;
     // See if file exists in temp dir, use that
     {
         if (::exists(temp_dir_path)) {
@@ -103,11 +113,10 @@ bool Resources::exists(const std::string &path) {
 }
 
 std::string Resources::toTempDir(const std::string &_path) {
-    // Can't add an absolute path to temp dir
-    if (path(_path).is_absolute())
-        return _path;
+    // Convert the path into '<hash(_path)>_filename.file_ext'
+    const path t_filename = path(std::to_string(hash_larson64(_path.c_str())).append("_").append(path(_path).filename().generic_string()));
     path output_dir = getTMP();
-    output_dir /= _path;
+    output_dir /= t_filename;
     const path output_path = output_dir;
     output_dir.remove_filename();
     recursive_create_dir(output_dir);
