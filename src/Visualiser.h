@@ -1,32 +1,34 @@
 #ifndef SRC_VISUALISER_H_
 #define SRC_VISUALISER_H_
 
+#include <SDL.h>
+
 #include <atomic>
-#include <string>
-#include <unordered_map>
+#include <list>
 #include <memory>
 #include <mutex>
-#include <utility>
+#include <string>
 #include <thread>
-#include <list>
-
-#include <SDL.h>
+#include <unordered_map>
+#include <utility>
+#include <map>
 #undef main  // SDL breaks the regular main entry point, this fixes
 #define GLM_FORCE_NO_CTOR_INIT
 #include <glm/glm.hpp>
 
-#include "interface/Viewport.h"
-#include "camera/NoClipCamera.h"
+#include "Draw.h"
+#include "Entity.h"
 #include "HUD.h"
 #include "Text.h"
-
-#include "config/ModelConfig.h"
+#include "camera/NoClipCamera.h"
 #include "config/AgentStateConfig.h"
 #include "config/TexBufferConfig.h"
+#include "config/ModelConfig.h"
+#include "interface/Viewport.h"
 #include "Draw.h"
 #include "Entity.h"
 
-template<typename T>
+template <typename T>
 struct CUDATextureBuffer;
 
 class LightsBuffer;
@@ -37,10 +39,7 @@ class LightsBuffer;
 class Visualiser : public ViewportExt {
     typedef std::pair<std::string, std::string> NamePair;
     struct NamePairHash {
-        size_t operator()(const NamePair& k) const {
-            return std::hash < std::string>()(k.first) ^
-                (std::hash < std::string>()(k.second) << 1);
-        }
+        size_t operator()(const NamePair &k) const { return std::hash<std::string>()(k.first) ^ (std::hash<std::string>()(k.second) << 1); }
     };
     /**
      * This structs holds the information required for rendering agents for a single agent-state
@@ -60,7 +59,7 @@ class Visualiser : public ViewportExt {
     };
 
  public:
-    explicit Visualiser(const ModelConfig& modelcfg);
+    explicit Visualiser(const ModelConfig &modelcfg);
     ~Visualiser();
     /**
      * Starts the render loop running
@@ -111,93 +110,92 @@ class Visualiser : public ViewportExt {
         const std::map<TexBufferConfig::Function, TexBufferConfig>& _core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& _tex_buffers);
 
  private:
-     void run();
-     /**
+    void run();
+    /**
      * A single pass of the render loop
      * Also handles keyboard/mouse IO
      */
-     void render();
-     /**
+    void render();
+    /**
      * Renders contents of agentStates map
      */
-     void renderAgentStates();
-     /**
+    void renderAgentStates();
+    /**
      * Toggles the window between borderless fullscreen and windowed states
      */
-     void toggleFullScreen();
-     /**
+    void toggleFullScreen();
+    /**
      * @return True if the window is currently full screen
      */
-     bool isFullscreen() const;
-     /**
+    bool isFullscreen() const;
+    /**
      * Toggles whether the mouse is hidden and returned relative to the window
      */
-     void toggleMouseMode();
-     /**
+    void toggleMouseMode();
+    /**
      * Toggles the status of FPS logged to the HUD
      */
-     void toggleFPSStatus();
-     /**
+    void toggleFPSStatus();
+    /**
      * Toggles whether Multi-Sample Anti-Aliasing should be used or not
      * @param state The desired MSAA state
      * @note Unless blocked by the active Scene the F10 key toggles MSAA at runtime
      */
-     void setMSAA(bool state);
-     /**
+    void setMSAA(bool state);
+    /**
      * Provides key handling for none KEY_DOWN events of utility keys (ESC, F11, F10, F5, etc)
      * @param keycode The keypress detected
      * @param x The horizontal mouse position at the time of the KEY_DOWN event
      * @param y The vertical mouse position at the time of the KEY_DOWN event
      * @note Unsure whether the mouse position is relative to the window
      */
-     void handleKeypress(SDL_Keycode keycode, int x, int y);
-     /**
+    void handleKeypress(SDL_Keycode keycode, int x, int y);
+    /**
      * Moves the camera according to the motion of the mouse (whilst the mouse is attatched to the window via toggleMouseMode())
      * @param x The horizontal distance moved
      * @param y The vertical distance moved
      * @note This is called within the render loop
      */
-     void handleMouseMove(int x, int y);
-     /**
+    void handleMouseMove(int x, int y);
+    /**
      * Initialises SDL and creates the window
      * @return Returns true on success
      * @note This method doesn't begin the render loop, use run() for that
      */
-     bool init();
-     /**
-      * Util method which handles deallocating all objects which contains GLbuffers, shaders etc
-      */
-     void deallocateGLObjects();
-     /**
+    bool init();
+    /**
+     * Util method which handles deallocating all objects which contains GLbuffers, shaders etc
+     */
+    void deallocateGLObjects();
+    /**
      * Provides destruction of the object, deletes child objects, removes the GL context, closes the window and calls SDL_quit()
      */
-     void close();
-     /**
+    void close();
+    /**
      * Simple implementation of an FPS counter
      * @note This is called within the render loop
      */
-     void updateFPS();
-     /**
+    void updateFPS();
+    /**
      * Updates the viewport and projection matrix
      * This should be called after window resize events, or simply if the viewport needs generating
      */
-     void resizeWindow();
-
+    void resizeWindow();
 
     void addController(const SDL_ControllerDeviceEvent sdlEvent);
-	void removeController(const SDL_ControllerDeviceEvent sdlEvent);
-	void handleControllerButton(const SDL_ControllerButtonEvent sdlEvent);
-	void handleControllerAxis(const SDL_ControllerAxisEvent sdlEvent);
+    void removeController(const SDL_ControllerDeviceEvent sdlEvent);
+    void handleControllerButton(const SDL_ControllerButtonEvent sdlEvent);
+    void handleControllerAxis(const SDL_ControllerAxisEvent sdlEvent);
     void queryControllerAxis(const unsigned int frameTime);
     void screenshot();
     void screenshot(const bool verbose);
 
- public :
-        /**
+ public:
+    /**
      * Returns the window's current width
      * @note This does not account for fullscreen window size
      */
-        unsigned int getWindowWidth() const override;
+    unsigned int getWindowWidth() const override;
     /**
      * Returns the window's current height
      * @note This does not account for fullscreen window size
@@ -208,11 +206,11 @@ class Visualiser : public ViewportExt {
      * @note This does not account for fullscreen window size
      */
     glm::uvec2 getWindowDims() const override;
-    const glm::mat4 * getProjectionMatPtr() const override;
+    const glm::mat4 *getProjectionMatPtr() const override;
     glm::mat4 getProjectionMat() const override;
     std::shared_ptr<const Camera> getCamera() const override;
     std::weak_ptr<HUD> getHUD() override;
-    const char * getWindowTitle() const override;
+    const char *getWindowTitle() const override;
     void setWindowTitle(const char *windowTitle) override;
     /**
      * Returns the mutex
@@ -227,7 +225,7 @@ class Visualiser : public ViewportExt {
     void setStepCount(const unsigned int &stepCount);
 
  private:
-    SDL_Window* window;
+    SDL_Window *window;
     SDL_Rect windowedBounds;
     SDL_GLContext context;
     /**
@@ -258,7 +256,7 @@ class Visualiser : public ViewportExt {
     /**
      * Current title of the visualisation window
      */
-    const char* windowTitle;
+    const char *windowTitle;
     /**
      * Current dimensions of the window (does not account for fullscreen size)
      */
@@ -337,10 +335,10 @@ class Visualiser : public ViewportExt {
     std::lock_guard<std::mutex> *pause_guard = nullptr;
 
     // Controller stuff
-	SDL_GameController *gamepad;
-	SDL_Joystick *joystick;
-	SDL_JoystickID joystickInstance;
-	bool gamepadConnected;
+    SDL_GameController *gamepad;
+    SDL_Joystick *joystick;
+    SDL_JoystickID joystickInstance;
+    bool gamepadConnected;
 };
 
 #endif  // SRC_VISUALISER_H_

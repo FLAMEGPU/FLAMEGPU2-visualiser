@@ -8,8 +8,7 @@
  * Holds data identifying a requested texture buffer
  */
 struct TexBufferConfig {
-    enum Function
-    {
+    enum Function {
         /**
          * Agent location x/y/z
          */
@@ -53,7 +52,7 @@ struct TexBufferConfig {
         default: return "";
         }
     }
-    TexBufferConfig(const std::string& _agentVariableName = "")
+    explicit TexBufferConfig(const std::string& _agentVariableName = "")
         : agentVariableName(_agentVariableName) { }
     /**
      * Agent variable which maps to this buffer

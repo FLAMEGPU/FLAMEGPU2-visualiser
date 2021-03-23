@@ -112,83 +112,96 @@ MACRO (download_freetype)
     endif()
 ENDMACRO()
 
-project(flamegpu2_visualiser CUDA CXX)
+# Set the project name, but do not specify languages immediately so we can have lint only builds.
+project(flamegpu2_visualiser)
 
-include(FindOpenGL)
-if (NOT TARGET OpenGL::GL)
-    message(FATAL_ERROR "OpenGL is required for building")
-endif ()
-download_glm()
-if (UNIX)
-    # Linux users need to install it via their package manager
-    # e.g. sudo apt install cmake libsdl2-dev g++
-    find_package(SDL2)
-    if (NOT SDL2_FOUND)
-      message(FATAL_ERROR "sdl2 is required for building, install it via your package manager.\n"
-                          "e.g. sudo apt install libsdl2-dev")
-    endif ()    
-    find_package(GLEW)
-    if (NOT GLEW_FOUND)
-      message(FATAL_ERROR "glew is required for building, install it via your package manager.\n"
-                          "e.g. sudo apt install libglew-dev")
-    endif ()
-    find_package(Freetype)
-    if (NOT FREETYPE_FOUND)
-      message(FATAL_ERROR "freetype is required for building, install it via your package manager.\n"
-                          "e.g. sudo apt install libfreetype-dev")
-    endif ()
-    if (NOT TARGET OpenGL::GLU)
-      message(FATAL_ERROR "GLU is required for building, install it via your package manager.\n"
-                          "e.g. sudo apt install libglu1-mesa-dev")
-    endif ()
-    find_package(Fontconfig)
-    if (NOT Fontconfig_FOUND)
-        message(FATAL_ERROR "Fontconfig is required for visualisation, install it via your package manager.\n"
-                          "e.g. sudo apt install libfontconfig1-dev")
+# Option to group CMake generated projects into folders in supported IDEs
+option(CMAKE_USE_FOLDERS "Enable folder grouping of projects in IDEs." ON)
+mark_as_advanced(CMAKE_USE_FOLDERS)
+
+
+# Add a new cmake option, to allow lint_only configurations.
+option(ALLOW_LINT_ONLY "Allow the project to be configured for lint-only builds" OFF)
+mark_as_advanced(ALLOW_LINT_ONLY)
+
+find_file(CPPLINT NAMES cpplint cpplint.exe)
+if(CPPLINT)
+
+    if(NOT TARGET all_lint)
+        add_custom_target(all_lint)
+        set_target_properties(all_lint PROPERTIES EXCLUDE_FROM_ALL TRUE)
     endif()
+    # Define a function to add a lint target.
+    function(new_linter_target NAME SRC)
+        # Don't lint external files
+        list(FILTER SRC EXCLUDE REGEX "^${FLAMEGPU_ROOT}/externals/.*")
+
+        LIST(APPEND CPPLINT_ARGS "")
+            
+        # Specify output format for msvc highlighting
+        if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+            LIST(APPEND CPPLINT_ARGS "--output" "vs7")
+        endif()
+        # Set the --root argument if included as a sub project.
+        if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+            file(RELATIVE_PATH LINT_ROOT ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+            LIST(APPEND CPPLINT_ARGS "--root=${LINT_ROOT}")
+        endif()
+
+
+        # Add the lint_ target
+        add_custom_target(
+            "lint_${PROJECT_NAME}"
+            COMMAND ${CPPLINT} ${CPPLINT_ARGS}
+            ${SRC}
+        )
+
+        # Don't trigger this target on ALL_BUILD or Visual Studio 'Rebuild Solution'
+        set_target_properties("lint_${NAME}" PROPERTIES EXCLUDE_FROM_ALL TRUE)
+        # set_target_properties("lint_${NAME}" PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE #This breaks all_lint in visual studio
+        # Add the custom target as a dependency of the global lint target
+        if(TARGET all_lint)
+            add_dependencies(all_lint lint_${NAME})
+        endif()
+        # Put within Lint filter
+        # Put within Lint filter
+        if (CMAKE_USE_FOLDERS)
+            set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+            # set_property(TARGET "${PROJECT_NAME}" PROPERTY FOLDER "FLAMEGPU")
+            set_property(TARGET "lint_${PROJECT_NAME}" PROPERTY FOLDER "Lint")
+        endif ()
+    endfunction()
 else()
-    if (NOT TARGET OpenGL::GLU)
-      message(FATAL_ERROR "GLU is required for building")
-    endif ()
-    #sdl
-    download_sdl2()
-    set(SDL2_DIR ${CMAKE_CURRENT_BINARY_DIR}/sdl2)
-    configure_file(cmake/sdl2/sdl2-config.cmake sdl2/sdl2-config.cmake)
-    find_package(SDL2 REQUIRED)
-    #glew
-    download_glew()
-    set(GLEW_DIR ${CMAKE_CURRENT_BINARY_DIR}/glew)
-    configure_file(cmake/glew/glew-config.cmake glew/glew-config.cmake)
-    find_package(GLEW REQUIRED)
-    #freetype    
-    download_freetype()
-    # Force disable zlib/libpng, to avoid linker errors if theyre pseudo found in system
-    set(CMAKE_DISABLE_FIND_PACKAGE_ZLIB ON CACHE BOOL "" FORCE)
-    set(CMAKE_DISABLE_FIND_PACKAGE_LIBPNG ON CACHE BOOL "" FORCE)
-    set(CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz ON CACHE BOOL "" FORCE)
-    set(FT_WITH_HARFBUZZ OFF CACHE BOOL "" FORCE)
-    set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
-    mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_ZLIB)
-    mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_LIBPNG)
-    mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz)
-    mark_as_advanced(FORCE SKIP_INSTALL_ALL)
-    mark_as_advanced(FORCE FT_WITH_BZIP2)
-    mark_as_advanced(FORCE FT_WITH_HARFBUZZ)
-    mark_as_advanced(FORCE FT_WITH_PNG)
-    mark_as_advanced(FORCE FT_WITH_ZLIB)
-    add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/freetype-src
-                     ${CMAKE_CURRENT_BINARY_DIR}/freetype-build
-                     EXCLUDE_FROM_ALL
-                     )
-endif ()
+    # Don't create this message multiple times
+    message( 
+        " cpplint: NOT FOUND!\n"
+        " Lint projects will not be generated.\n"
+        " Please install cpplint as described on https://pypi.python.org/pypi/cpplint.\n"
+        " In most cases command 'pip install --user cpplint' should be sufficient.")
+    function(new_linter_target NAME SRC)
+    endfunction()
+endif()
 
 
-# GCC requires -lpthreads for std::thread
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
+# Check to see if CUDA is available.
+include(CheckLanguage)
+check_language(CUDA)
+if(CMAKE_CUDA_COMPILER)
+    enable_language(C)
+    enable_language(CXX)
+    enable_language(CUDA)
+endif()
 
+# Check to see if OpenGL is available.
+include(FindOpenGL)
 
+# If CUDA was not found, or opengl was not found we cannot build, but can lint, otherwise tehre should be a fatal error
+set(LINT_ONLY_BUILD "OFF")
+if(ALLOW_LINT_ONLY AND CPPLINT AND (NOT OPENGL_FOUND OR NOT CMAKE_CUDA_COMPILER))
+    set(LINT_ONLY_BUILD "ON")
+endif()
+
+# Define the list of source files early, for lint-only configurations
 # Prepare list of include files
 SET(VISUALISER_INCLUDE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/FLAMEGPU_Visualisation.h
@@ -290,165 +303,223 @@ SET(VISUALISER_ALL
     ${VISUALISER_SRC}
 )
 
-
-# Use C++14 standard - std::make_unique is 14 not 11
-# Specify using C++14 standard
-if (NOT DEFINED CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 14)
-    set(CMAKE_CXX_STANDARD_REQUIRED true)
-endif ()
-if (NOT UNIX)
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-endif ()
-# Define output
-add_library("${PROJECT_NAME}" STATIC ${VISUALISER_ALL})
-# Set up include dirs
-target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/glm-src)
-target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
-target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${GLEW_INCLUDE_DIRS})
-if (FREETYPE_FOUND) # Only use this if we aren't building it ourselves
-    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS})
-endif ()
-if(Fontconfig_FOUND)
-    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${Fontconfig_INCLUDE_DIRS})
-endif()
-target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/external")
-target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-
-# Enable fPIC for linux shared library linking
-set_property(TARGET "${PROJECT_NAME}" PROPERTY POSITION_INDEPENDENT_CODE ON)
-
-# Add the targets we depend on (this does link and include)
-# This propagates to any project that uses this as a dependency
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_link_libraries("${PROJECT_NAME}" "legacy_stdio_definitions") # This won't be required if we rebuild freetype with newer than vs2013
+# Add the lint target.
+if(CPPLINT)
+    new_linter_target("${PROJECT_NAME}" "${VISUALISER_ALL}")
 endif()
 
-# If gcc, need to add flag for std::experimental::filesystem
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries("${PROJECT_NAME}" "-lstdc++fs")
-endif()
+if(LINT_ONLY_BUILD)
+    # All should include all_lint if lint only build.
+    set_target_properties(all_lint PROPERTIES EXCLUDE_FROM_ALL FALSE)
+    if (NOT CPPLINT)
+        message(FATAL_ERROR "Cpplint is required for lint-only builds.")
+    endif()
+    message(STATUS "Lint-only build configuraiton due to missing dependencies")
+    if (NOT OPENGL_FOUND)
+        message(STATUS "OpenGL is required for building")
+    endif ()
+    if (NOT CMAKE_CUDA_COMPILER)
+        message(STATUS "CUDA is required for building")
+    endif ()
+else()
+    if (NOT OPENGL_FOUND)
+        message(FATAL_ERROR "OpenGL is required for building")
+    endif ()
+    if (NOT CMAKE_CUDA_COMPILER)
+        message(FATAL_ERROR "CUDA is required for building")
+    endif ()
+    download_glm()
+    if (UNIX)
+        # Linux users need to install it via their package manager
+        # e.g. sudo apt install cmake libsdl2-dev g++
+        find_package(SDL2)
+        if (NOT SDL2_FOUND)
+        message(FATAL_ERROR "sdl2 is required for building, install it via your package manager.\n"
+                            "e.g. sudo apt install libsdl2-dev")
+        endif ()    
+        find_package(GLEW)
+        if (NOT GLEW_FOUND)
+        message(FATAL_ERROR "glew is required for building, install it via your package manager.\n"
+                            "e.g. sudo apt install libglew-dev")
+        endif ()
+        find_package(Freetype)
+        if (NOT FREETYPE_FOUND)
+        message(FATAL_ERROR "freetype is required for building, install it via your package manager.\n"
+                            "e.g. sudo apt install libfreetype-dev")
+        endif ()
+        if (NOT TARGET OpenGL::GLU)
+        message(FATAL_ERROR "GLU is required for building, install it via your package manager.\n"
+                            "e.g. sudo apt install libglu1-mesa-dev")
+        endif ()
+        find_package(Fontconfig)
+        if (NOT Fontconfig_FOUND)
+            message(FATAL_ERROR "Fontconfig is required for visualisation, install it via your package manager.\n"
+                            "e.g. sudo apt install libfontconfig1-dev")
+        endif()
+    else ()
+        if (NOT TARGET OpenGL::GLU)
+        message(FATAL_ERROR "GLU is required for building")
+        endif ()
+        #sdl
+        download_sdl2()
+        set(SDL2_DIR ${CMAKE_CURRENT_BINARY_DIR}/sdl2)
+        configure_file(cmake/sdl2/sdl2-config.cmake sdl2/sdl2-config.cmake)
+        find_package(SDL2 REQUIRED)
+        #glew
+        download_glew()
+        set(GLEW_DIR ${CMAKE_CURRENT_BINARY_DIR}/glew)
+        configure_file(cmake/glew/glew-config.cmake glew/glew-config.cmake)
+        find_package(GLEW REQUIRED)
+        #freetype    
+        download_freetype()
+        # Force disable zlib/libpng, to avoid linker errors if theyre pseudo found in system
+        set(CMAKE_DISABLE_FIND_PACKAGE_ZLIB ON CACHE BOOL "" FORCE)
+        set(CMAKE_DISABLE_FIND_PACKAGE_LIBPNG ON CACHE BOOL "" FORCE)
+        set(CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz ON CACHE BOOL "" FORCE)
+        set(FT_WITH_HARFBUZZ OFF CACHE BOOL "" FORCE)
+        set(SKIP_INSTALL_ALL ON CACHE BOOL "" FORCE)
+        mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_ZLIB)
+        mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_LIBPNG)
+        mark_as_advanced(FORCE CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz)
+        mark_as_advanced(FORCE SKIP_INSTALL_ALL)
+        mark_as_advanced(FORCE FT_WITH_BZIP2)
+        mark_as_advanced(FORCE FT_WITH_HARFBUZZ)
+        mark_as_advanced(FORCE FT_WITH_PNG)
+        mark_as_advanced(FORCE FT_WITH_ZLIB)
+        add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/freetype-src
+                        ${CMAKE_CURRENT_BINARY_DIR}/freetype-build
+                        EXCLUDE_FROM_ALL
+                        )
+    endif ()
 
 
-# Strip trailiing whitespace from SDL2_Libraries for Ubuntu1604 / libsdl2-dev 2.0.4
-string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
-target_link_libraries("${PROJECT_NAME}" "${SDL2_LIBRARIES}")
+    # GCC requires -lpthreads for std::thread
+    set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+    find_package(Threads REQUIRED)
 
-target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
-target_link_libraries("${PROJECT_NAME}" freetype)
-target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
-target_link_libraries("${PROJECT_NAME}" OpenGL::GLU)
-target_link_libraries("${PROJECT_NAME}" Threads::Threads)
-if(Fontconfig_FOUND)
-    target_link_libraries("${PROJECT_NAME}" Fontconfig::Fontconfig)
-endif()
-if(WIN32)
-target_link_libraries("${PROJECT_NAME}" "dwrite.lib")
-endif()
+    # Use C++14 standard - std::make_unique is 14 not 11
+    # Specify using C++14 standard
+    if (NOT DEFINED CMAKE_CXX_STANDARD)
+        set(CMAKE_CXX_STANDARD 14)
+        set(CMAKE_CXX_STANDARD_REQUIRED true)
+    endif ()
+    if (NOT UNIX)
+        add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+    endif ()
+    # Define output
+    add_library("${PROJECT_NAME}" STATIC ${VISUALISER_ALL})
+    # Set up include dirs
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/glm-src)
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${GLEW_INCLUDE_DIRS})
+    if (FREETYPE_FOUND) # Only use this if we aren't building it ourselves
+        target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS})
+    endif ()
+    if(Fontconfig_FOUND)
+        target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${Fontconfig_INCLUDE_DIRS})
+    endif()
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/external")
+    target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+    # Enable fPIC for linux shared library linking
+    set_property(TARGET "${PROJECT_NAME}" PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+    # Add the targets we depend on (this does link and include)
+    # This propagates to any project that uses this as a dependency
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        target_link_libraries("${PROJECT_NAME}" "legacy_stdio_definitions") # This won't be required if we rebuild freetype with newer than vs2013
+    endif()
+
+    # If gcc, need to add flag for std::experimental::filesystem
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_link_libraries("${PROJECT_NAME}" "-lstdc++fs")
+    endif()
 
 
-# Enable parallel compilation
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
-endif ()
+    # Strip trailiing whitespace from SDL2_Libraries for Ubuntu1604 / libsdl2-dev 2.0.4
+    string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
+    target_link_libraries("${PROJECT_NAME}" "${SDL2_LIBRARIES}")
 
-# Resources
-# NOTE: The build step for resources embeds them as base64, this should not be used for large files.
-include(cmake/CMakeRC/CMakeRC.cmake)
-SET(RESOURCES_ALL
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat.frag
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_phong.frag
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/default.vert
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/text.frag
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/color.vert
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/color_noshade.frag
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/icosphere.obj
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/sphere.obj
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/cube.obj
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/teapot.obj
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/stuntplane.obj
+    target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
+    target_link_libraries("${PROJECT_NAME}" freetype)
+    target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
+    target_link_libraries("${PROJECT_NAME}" OpenGL::GLU)
+    target_link_libraries("${PROJECT_NAME}" Threads::Threads)
+    if(Fontconfig_FOUND)
+        target_link_libraries("${PROJECT_NAME}" Fontconfig::Fontconfig)
+    endif()
+    if(WIN32)
+        target_link_libraries("${PROJECT_NAME}" "dwrite.lib")
+    endif()
+
+
+    # Enable parallel compilation
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
+    endif ()
+
+    # Resources
+    # NOTE: The build step for resources embeds them as base64, this should not be used for large files.
+    include(cmake/CMakeRC/CMakeRC.cmake)
+    SET(RESOURCES_ALL
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat.frag
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_phong.frag
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/default.vert
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/text.frag
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/color.vert
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/color_noshade.frag
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/icosphere.obj
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/sphere.obj
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/cube.obj
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/teapot.obj
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/stuntplane.obj
 # Tdir: These shaders are setup to receive an appended rotation function
 # Tcolor: These shaders are setup to receive an appended color function
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tdir.vert
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tcolor_Tdir.vert
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat_Tcolor.frag
-)
-cmrc_add_resource_library(resources ${RESOURCES_ALL})
-# Enable fPIC for resources (for wheel packaging)
-set_property(TARGET "resources" PROPERTY POSITION_INDEPENDENT_CODE ON)
-
-message(STATUS "${PROJECT_NAME}")
-target_link_libraries("${PROJECT_NAME}" resources)
-
-# Setup Visual Studio (and eclipse) filters
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-#src/.h
-set(T_SRC "${VISUALISER_ALL}")
-list(FILTER T_SRC INCLUDE REGEX "^${CMAKE_CURRENT_SOURCE_DIR}/src")
-list(FILTER T_SRC INCLUDE REGEX ".*\.(h|hpp|cuh)$")
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX headers FILES ${T_SRC})
-#src/.cpp
-set(T_SRC "${VISUALISER_ALL}")
-list(FILTER T_SRC INCLUDE REGEX "^${CMAKE_CURRENT_SOURCE_DIR}/src")
-list(FILTER T_SRC EXCLUDE REGEX ".*\.(h|hpp|cuh)$")
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX src FILES ${T_SRC})
-#./.h
-set(T_SRC "${VISUALISER_ALL}")
-list(FILTER T_SRC EXCLUDE REGEX "^${CMAKE_CURRENT_SOURCE_DIR}/src")
-list(FILTER T_SRC INCLUDE REGEX ".*\.(h|hpp|cuh)$")
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include PREFIX headers FILES ${T_SRC})
-#./.cpp
-set(T_SRC "${VISUALISER_ALL}")
-list(FILTER T_SRC EXCLUDE REGEX "^${CMAKE_CURRENT_SOURCE_DIR}/src")
-list(FILTER T_SRC EXCLUDE REGEX ".*\.(h|hpp|cuh)$")
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include PREFIX src FILES ${T_SRC})
-
-# Stuff borrowed from FGPU2/common.cmake
-# Option to group CMake generated projects into folders in supported IDEs
-option(CMAKE_USE_FOLDERS "Enable folder grouping of projects in IDEs." ON)
-mark_as_advanced(CMAKE_USE_FOLDERS)
-# Define a function to add a lint target.
-find_file(CPPLINT NAMES cpplint cpplint.exe)
-if (CPPLINT)
-    # Add custom target for linting this
-    # Variable for linter arguments.
-    LIST(APPEND CPPLINT_ARGS "")
-
-    # Set the --root argument if included as a sub project.
-    if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-        file(RELATIVE_PATH LINT_ROOT ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-        LIST(APPEND CPPLINT_ARGS "--root=${LINT_ROOT}")
-    endif()
-        
-    # Specify output format for msvc highlighting
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        LIST(APPEND CPPLINT_ARGS "--output" "vs7")
-    endif()
-
-    # Add the lint_ target
-    add_custom_target(
-        "lint_${PROJECT_NAME}"
-        COMMAND ${CPPLINT} ${CPPLINT_ARGS}
-        ${VISUALISER_ALL}
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tdir.vert
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tcolor_Tdir.vert
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat_Tcolor.frag
     )
-    # Don't trigger this target on ALL_BUILD or Visual Studio 'Rebuild Solution'
-    set_target_properties("lint_${PROJECT_NAME}" PROPERTIES EXCLUDE_FROM_ALL TRUE)
-    # set_target_properties("lint_${NAME}" PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD TRUE #This breaks all_lint in visual studio
-    # Add the custom target as a dependency of the global lint target
-    if (TARGET all_lint)
-        add_dependencies(all_lint lint_${PROJECT_NAME})
-    endif ()
-    # Put within Lint filter
-    if (CMAKE_USE_FOLDERS)
-      set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-      set_property(TARGET "${PROJECT_NAME}" PROPERTY FOLDER "FLAMEGPU")
-      set_property(TARGET "lint_${PROJECT_NAME}" PROPERTY FOLDER "Lint")
-      if (TARGET freetype)
-        set_property(TARGET "freetype" PROPERTY FOLDER "FLAMEGPU/Dependencies")
-        set_property(TARGET "resources" PROPERTY FOLDER "FLAMEGPU/Dependencies")
-      endif ()
-    endif ()
-endif ()
+    cmrc_add_resource_library(resources ${RESOURCES_ALL})
+    # Enable fPIC for resources (for wheel packaging)
+    set_property(TARGET "resources" PROPERTY POSITION_INDEPENDENT_CODE ON)
 
+    message(STATUS "${PROJECT_NAME}")
+    target_link_libraries("${PROJECT_NAME}" resources)
+
+    # Setup Visual Studio (and eclipse) filters
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+    #src/.h
+    set(T_SRC "${VISUALISER_ALL}")
+    list(FILTER T_SRC INCLUDE REGEX "^${CMAKE_CURRENT_SOURCE_DIR}/src")
+    list(FILTER T_SRC INCLUDE REGEX ".*\.(h|hpp|cuh)$")
+    source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX headers FILES ${T_SRC})
+    #src/.cpp
+    set(T_SRC "${VISUALISER_ALL}")
+    list(FILTER T_SRC INCLUDE REGEX "^${CMAKE_CURRENT_SOURCE_DIR}/src")
+    list(FILTER T_SRC EXCLUDE REGEX ".*\.(h|hpp|cuh)$")
+    source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX src FILES ${T_SRC})
+    #./.h
+    set(T_SRC "${VISUALISER_ALL}")
+    list(FILTER T_SRC EXCLUDE REGEX "^${CMAKE_CURRENT_SOURCE_DIR}/src")
+    list(FILTER T_SRC INCLUDE REGEX ".*\.(h|hpp|cuh)$")
+    source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include PREFIX headers FILES ${T_SRC})
+    #./.cpp
+    set(T_SRC "${VISUALISER_ALL}")
+    list(FILTER T_SRC EXCLUDE REGEX "^${CMAKE_CURRENT_SOURCE_DIR}/src")
+    list(FILTER T_SRC EXCLUDE REGEX ".*\.(h|hpp|cuh)$")
+    source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include PREFIX src FILES ${T_SRC})
+
+    # Stuff borrowed from FGPU2/common.cmake
+
+    # Put freetype in a folder.
+    if (CMAKE_USE_FOLDERS)
+        set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+        if (TARGET freetype)
+            set_property(TARGET "freetype" PROPERTY FOLDER "FLAMEGPU/Dependencies")
+            set_property(TARGET "resources" PROPERTY FOLDER "FLAMEGPU/Dependencies")
+        endif()
+    endif()
+endif()
