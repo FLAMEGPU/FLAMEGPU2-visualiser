@@ -54,9 +54,9 @@ namespace {
         }
         return result;
     }
-    inline unsigned long long hash_larson64(const char* s,
-        unsigned long long seed = 0) {
-        unsigned long long hash = seed;
+    inline uint64_t hash_larson64(const char* s,
+        uint64_t seed = 0) {
+        uint64_t hash = seed;
         while (*s) {
             hash = hash * 101 + *s++;
         }

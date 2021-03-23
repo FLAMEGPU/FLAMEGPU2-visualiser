@@ -1,0 +1,34 @@
+# Lint the project using cpplint
+name: Lint
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  cpplint:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-18.04
+            cuda: "11.2"
+    env:
+      build_dir: "build"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # Also install the linter.
+    - name: Install cpplint
+      run: pip3 install cpplint && echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    # Configure cmake, including tests to make sure they are linted.
+    - name: Configure cmake
+      run: cmake . -B ${{ env.build_dir }} -DALLOW_LINT_ONLY=ON
+
+    # Run the linter.
+    - name: Lint
+      run: cmake --build . --target all_lint --verbose -j `nproc` 
+      working-directory: ${{ env.build_dir }}

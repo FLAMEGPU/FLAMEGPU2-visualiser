@@ -335,7 +335,7 @@ void Visualiser::render() {
             if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 resizeWindow();
             break;
-        case SDL_KEYDOWN: 
+        case SDL_KEYDOWN:
             {
                 int x = 0;
                 int y = 0;
@@ -352,25 +352,25 @@ void Visualiser::render() {
             this->toggleMouseMode();
             break;
         case SDL_CONTROLLERDEVICEADDED:
-			this->addController(e.cdevice);
-			break;
-		case SDL_CONTROLLERDEVICEREMOVED:
-			this->removeController(e.cdevice);
-			break;
-		case SDL_CONTROLLERBUTTONDOWN:
-			this->handleControllerButton(e.cbutton);
-			break;
-		case SDL_CONTROLLERBUTTONUP:
-			this->handleControllerButton(e.cbutton);
-			break;
-		// case SDL_CONTROLLERAXISMOTION:
+            this->addController(e.cdevice);
+            break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+            this->removeController(e.cdevice);
+            break;
+        case SDL_CONTROLLERBUTTONDOWN:
+            this->handleControllerButton(e.cbutton);
+            break;
+        case SDL_CONTROLLERBUTTONUP:
+            this->handleControllerButton(e.cbutton);
+            break;
+        // case SDL_CONTROLLERAXISMOTION:
             // Couldn't get this event to behave nicely in the past for some reason.
             // break;
         }
     }
     // Doesn't use the event class for some historical reason I (pth) don't remember.
     this->queryControllerAxis(frameTime);
-    //Update lighting
+    // Update lighting
     lighting->update();
     //  render
     BackBuffer::useStatic();
@@ -493,7 +493,7 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
     //  Copy Data
     const auto& first_buff = as.core_texture_buffers.begin()->second;
     const unsigned int buff_size = first_buff ? first_buff->elementCount : 0;
-    if (buff_size >= buffLen) { // This may fail for a single frame occasionally
+    if (buff_size >= buffLen) {  // This may fail for a single frame occasionally
         for (const auto &_ext_tb : ext_core_tex_buffers) {
             auto &ext_tb = _ext_tb.second;
             auto &int_tb = as.core_texture_buffers.at(_ext_tb.first);
@@ -512,8 +512,7 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
 
 //  Items taken from sdl_exp
 bool Visualiser::init() {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0)
-    {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) {
         fprintf(stderr, "Unable to initialize SDL: %s", SDL_GetError());
         return false;
     }
@@ -651,18 +650,17 @@ void Visualiser::toggleFPSStatus() {
     if (!this->stepDisplay && fpsStatus == 1)
         fpsStatus = 0;
     // Set the appropriate display state
-    switch (fpsStatus)
-    {
-    case 0: // Hide all
+    switch (fpsStatus) {
+    case 0:  // Hide all
         if (this->stepDisplay)
             this->stepDisplay->setVisible(false);
-    case 1: // Hide fps/sps
+    case 1:  // Hide fps/sps
         if (this->fpsDisplay)
             this->fpsDisplay->setVisible(false);
         if (this->spsDisplay)
             this->spsDisplay->setVisible(false);
         break;
-    default: // Show all
+    default:  // Show all
         if (this->stepDisplay)
             this->stepDisplay->setVisible(true);
         if (this->fpsDisplay)
@@ -813,74 +811,69 @@ void Visualiser::setWindowTitle(const char *_windowTitle) {
 }
 
 // Game controller methods
-void Visualiser::addController(const SDL_ControllerDeviceEvent sdlEvent){
-	int device = sdlEvent.which;
-	// If it is the 0th gamepad, proceed.
-	if (device == 0){
-		this->gamepad = SDL_GameControllerOpen(device);
-		this->joystick = SDL_GameControllerGetJoystick(gamepad);
-		this->joystickInstance = SDL_JoystickInstanceID(this->joystick);
-		this->gamepadConnected = true;
-	}
+void Visualiser::addController(const SDL_ControllerDeviceEvent sdlEvent) {
+    int device = sdlEvent.which;
+    // If it is the 0th gamepad, proceed.
+    if (device == 0) {
+        this->gamepad = SDL_GameControllerOpen(device);
+        this->joystick = SDL_GameControllerGetJoystick(gamepad);
+        this->joystickInstance = SDL_JoystickInstanceID(this->joystick);
+        this->gamepadConnected = true;
+    }
 }
-void Visualiser::removeController(const SDL_ControllerDeviceEvent sdlEvent){
-	if (this->gamepadConnected) {
-		this->gamepadConnected = false;
-		SDL_GameControllerClose(this->gamepad);
-		this->gamepad = 0;
-	}
+void Visualiser::removeController(const SDL_ControllerDeviceEvent sdlEvent) {
+    if (this->gamepadConnected) {
+        this->gamepadConnected = false;
+        SDL_GameControllerClose(this->gamepad);
+        this->gamepad = 0;
+    }
 }
 // @todo - handle continuous button states
-void Visualiser::handleControllerButton(const SDL_ControllerButtonEvent sdlEvent){
-	// If it is the correct controller
-	if (sdlEvent.which == this->joystickInstance){
-		// If it is being pressed down
-		if (sdlEvent.type == SDL_CONTROLLERBUTTONDOWN){
-			// Print the button being pressed.
-			switch (sdlEvent.button){
-			case SDL_CONTROLLER_BUTTON_A:
+void Visualiser::handleControllerButton(const SDL_ControllerButtonEvent sdlEvent) {
+    // If it is the correct controller
+    if (sdlEvent.which == this->joystickInstance) {
+        // If it is being pressed down
+        if (sdlEvent.type == SDL_CONTROLLERBUTTONDOWN) {
+            // Print the button being pressed.
+            switch (sdlEvent.button) {
+            case SDL_CONTROLLER_BUTTON_A:
                 break;
-			case SDL_CONTROLLER_BUTTON_B:
+            case SDL_CONTROLLER_BUTTON_B:
                 break;
-			case SDL_CONTROLLER_BUTTON_X:
-				// this->camera->resetLocation();
-				break;
-			case SDL_CONTROLLER_BUTTON_Y:
-				// this->camera->storeLocation();
-				break;
+            case SDL_CONTROLLER_BUTTON_X:
+                // this->camera->resetLocation();
+                break;
+            case SDL_CONTROLLER_BUTTON_Y:
+                // this->camera->storeLocation();
+                break;
             case SDL_CONTROLLER_BUTTON_BACK:
-                printf("SDL_CONTROLLER_BUTTON_BACK\n");
                 this->toggleFPSStatus();
-				break;
+                break;
             case SDL_CONTROLLER_BUTTON_GUIDE:
-                printf("SDL_CONTROLLER_BUTTON_GUIDE\n");
-				break;
+                break;
             case SDL_CONTROLLER_BUTTON_START:
-                if (this->pause_guard)
-                {
+                if (this->pause_guard) {
                     delete pause_guard;
                     pause_guard = nullptr;
-                }
-                else
-                {
+                } else {
                     pause_guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
                     stepsPerSecond = 0.0f;
                 }
                 break;
             case SDL_CONTROLLER_BUTTON_LEFTSTICK:
-				break;
+                break;
             case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
-				break;
-			case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
-				break;
-			case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
-				break;
-			case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                break;
+            case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                break;
+            case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
                 this->toggleFullScreen();
                 break;
-			case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-				this->screenshot(true);
-				break;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                this->screenshot(true);
+                break;
             case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
                 renderLines = !renderLines;
                 break;
@@ -888,32 +881,32 @@ void Visualiser::handleControllerButton(const SDL_ControllerButtonEvent sdlEvent
                 this->hud->reload();
                 break;
             case SDL_CONTROLLER_BUTTON_MAX:
-				break;
+                break;
             default:
-				break;
-			}
-		}
-		// else if (sdlEvent.type == SDL_CONTROLLERBUTTONUP){
-		// }
-	}
+                break;
+            }
+        }
+        // else if (sdlEvent.type == SDL_CONTROLLERBUTTONUP){
+        // }
+    }
 }
 // If there is a controllwer attached update all relevant values
-void Visualiser::queryControllerAxis(const unsigned int frameTime){
-	if (this->gamepadConnected){
-		// Load in all values
-		float leftX = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_LEFTX) / (float)SHRT_MAX;
-		float leftY = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_LEFTY) / (float)SHRT_MAX;
-		float rightX = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_RIGHTX) / (float)SHRT_MAX;
-		float rightY = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_RIGHTY) / (float)SHRT_MAX;
-		float triggerL = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / (float)SHRT_MAX;
-		float triggerR = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / (float)SHRT_MAX;
-		float buttonA = SDL_GameControllerGetButton(this->gamepad, SDL_CONTROLLER_BUTTON_A);
-		float buttonB = SDL_GameControllerGetButton(this->gamepad, SDL_CONTROLLER_BUTTON_B);
+void Visualiser::queryControllerAxis(const unsigned int frameTime) {
+    if (this->gamepadConnected) {
+        // Load in all values
+        float leftX = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_LEFTX) / static_cast<float>(SHRT_MAX);
+        float leftY = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_LEFTY) / static_cast<float>(SHRT_MAX);
+        float rightX = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_RIGHTX) / static_cast<float>(SHRT_MAX);
+        float rightY = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_RIGHTY) / static_cast<float>(SHRT_MAX);
+        float triggerL = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_TRIGGERLEFT) / static_cast<float>(SHRT_MAX);
+        float triggerR = SDL_GameControllerGetAxis(this->gamepad, SDL_CONTROLLER_AXIS_TRIGGERRIGHT) / static_cast<float>(SHRT_MAX);
+        float buttonA = SDL_GameControllerGetButton(this->gamepad, SDL_CONTROLLER_BUTTON_A);
+        float buttonB = SDL_GameControllerGetButton(this->gamepad, SDL_CONTROLLER_BUTTON_B);
         float leftShoulder = SDL_GameControllerGetButton(this->gamepad, SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
         float rightShoulder = SDL_GameControllerGetButton(this->gamepad, SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
 
         float speed = modelConfig.cameraSpeed[0];
-		if (triggerL > AXIS_TRIGGER_DEAD_ZONE) {
+        if (triggerL > AXIS_TRIGGER_DEAD_ZONE) {
             speed /= modelConfig.cameraSpeed[1];
         }
         if (triggerR > AXIS_TRIGGER_DEAD_ZONE) {
@@ -921,32 +914,32 @@ void Visualiser::queryControllerAxis(const unsigned int frameTime){
         }
         const float distance = speed * static_cast<float>(frameTime);
 
-		// Strafe on left X axis
-		if (abs(leftX) > AXIS_LEFT_DEAD_ZONE){
+        // Strafe on left X axis
+        if (abs(leftX) > AXIS_LEFT_DEAD_ZONE) {
             this->camera->strafe(leftX * distance);
         }
-		// Move on left Y axis
-		if (abs(leftY) > AXIS_LEFT_DEAD_ZONE){
+        // Move on left Y axis
+        if (abs(leftY) > AXIS_LEFT_DEAD_ZONE) {
             this->camera->move(-leftY * distance);
         }
 
-		float thetaInc = 0.0;
-		float phiInc = 0.0;
-		// Look using right stick
-		if (abs(rightX) > AXIS_RIGHT_DEAD_ZONE){
-			thetaInc = rightX * AXIS_DELTA_THETA;
-		}
-		if (abs(rightY) > AXIS_RIGHT_DEAD_ZONE){
-			phiInc = rightY * AXIS_DELTA_PHI;
-		}
-		// Avoid Drift
-		if (abs(rightX) > AXIS_TURN_THRESHOLD && abs(rightY) > AXIS_TURN_THRESHOLD){
-			this->camera->turn(thetaInc, phiInc);
-		}
-		if (buttonA){
+        float thetaInc = 0.0;
+        float phiInc = 0.0;
+        // Look using right stick
+        if (abs(rightX) > AXIS_RIGHT_DEAD_ZONE) {
+            thetaInc = rightX * AXIS_DELTA_THETA;
+        }
+        if (abs(rightY) > AXIS_RIGHT_DEAD_ZONE) {
+            phiInc = rightY * AXIS_DELTA_PHI;
+        }
+        // Avoid Drift
+        if (abs(rightX) > AXIS_TURN_THRESHOLD && abs(rightY) > AXIS_TURN_THRESHOLD) {
+            this->camera->turn(thetaInc, phiInc);
+        }
+        if (buttonA) {
             this->camera->ascend(distance);
         }
-		if (buttonB){
+        if (buttonB) {
             this->camera->ascend(-distance);
         }
         if (leftShoulder) {
