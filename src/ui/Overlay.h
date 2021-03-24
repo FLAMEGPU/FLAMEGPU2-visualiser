@@ -1,6 +1,8 @@
-#ifndef SRC_OVERLAY_H_
-#define SRC_OVERLAY_H_
+#ifndef SRC_UI_OVERLAY_H_
+#define SRC_UI_OVERLAY_H_
+
 #include <memory>
+#include <vector>
 
 #include "texture/Texture2D.h"
 #include "HUD.h"
@@ -87,4 +89,34 @@ class Overlay {
     glm::uvec2 dimensions;
 };
 
-#endif  // SRC_OVERLAY_H_
+/**
+ * Wrapper for a collection of linked Overlay Objects
+ *
+ * Can't pass something with multiple shaders to HUD, so this is the next best thing
+ */
+class OverlayGroup {
+ public:
+    /**
+     * Pairing of an Overlay and it's offset
+     */
+    struct OverlayItem {
+        std::shared_ptr<Overlay> overlay;
+        glm::ivec2 offset = glm::ivec2(0, 0);
+        int zIndex = 0;
+    };
+    /*
+     * Return a collection of Overlays and their offsets
+     */
+    virtual std::vector<OverlayItem> getOverlays() const = 0;
+    /**
+     * Passes setVisible(isVisible) to all owned Overlays
+     */
+    virtual void setVisible(bool isVisible);
+    /**
+     * Returns the collective state of the overlays
+     * By default, if any overlay is visible true is returned
+     */
+    virtual bool getVisible() const;
+};
+
+#endif  // SRC_UI_OVERLAY_H_

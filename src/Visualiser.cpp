@@ -3,6 +3,8 @@
 #include "util/fonts.h"
 #include "shader/DirectionFunction.h"
 #include "shader/lights/LightsBuffer.h"
+#include "ui/Text.h"
+#include "ui/SplashScreen.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -90,6 +92,7 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , msaaState(true)
     , windowTitle(modelcfg.windowTitle)
     , windowDims(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1])
+    , splashScreen(nullptr)
     , fpsDisplay(nullptr)
     , stepDisplay(nullptr)
     , spsDisplay(nullptr)
@@ -100,20 +103,24 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , joystickInstance(0)
     , gamepadConnected(false) {
     this->isInitialised = this->init();
+    // Init splash screen
+    splashScreen = std::make_shared<SplashScreen>(*reinterpret_cast<const glm::vec3*>(&modelcfg.fpsColor[0]), "Loading...", modelcfg.isPython);
+    hud->add(splashScreen, HUD::AnchorV::Center, HUD::AnchorH::Center, glm::ivec2(0, 0), INT_MAX);
     lighting = std::make_shared<LightsBuffer>(camera->getViewMatPtr());
+    // Apply user specified stuff
     BackBuffer::setClear(true, *reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]));
     if (modelcfg.fpsVisible) {
         fpsDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3 *>(&modelcfg.fpsColor[0]), fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str());
         fpsDisplay->setUseAA(false);
-        hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, modelcfg.stepVisible ? 20 : 0), INT_MAX);
+        hud->add(fpsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, modelcfg.stepVisible ? 20 : 0), INT_MAX - 1);
     }
     if (modelcfg.stepVisible) {
         spsDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3*>(&modelcfg.fpsColor[0]), fonts::findFont({ "Arial" }, fonts::GenericFontFamily::SANS).c_str());
         spsDisplay->setUseAA(false);
-        hud->add(spsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, 10), INT_MAX);
+        hud->add(spsDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, 10), INT_MAX - 1);
         stepDisplay = std::make_shared<Text>("", 10, *reinterpret_cast<const glm::vec3 *>(&modelcfg.fpsColor[0]), fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str());
         stepDisplay->setUseAA(false);
-        hud->add(stepDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, 0), INT_MAX);
+        hud->add(stepDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, 0), INT_MAX - 1);
     }
     lines = std::make_shared<Draw>();
     lines->setViewMatPtr(camera->getViewMatPtr());
@@ -217,6 +224,7 @@ void Visualiser::join() {
             this->windowedBounds.w,
             this->windowedBounds.h,
             SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);  // | SDL_WINDOW_BORDERLESS
+        setWindowIcon();
         SDL_GL_MakeCurrent(this->window, this->context);
     }
 }
@@ -247,6 +255,7 @@ void Visualiser::run() {
         if (!this->window) {
             printf("Window failed to init.\n");
         } else {
+            setWindowIcon();
             int err = SDL_GL_MakeCurrent(this->window, this->context);
             if (err != 0) {
                 THROW VisAssert("Visualiser::run(): SDL_GL_MakeCurrent failed!\n", SDL_GetError());
@@ -289,6 +298,12 @@ void Visualiser::render() {
     // If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
     const unsigned int frameTime = t_updateTime < updateTime ? (t_updateTime + (UINT_MAX - updateTime)) : t_updateTime - updateTime;
     updateTime = t_updateTime;
+    // Close splash screen if we are ready
+    if (closeSplashScreen > 1 && splashScreen) {
+        splashScreen->setVisible(false);  // redundant
+        hud->remove(splashScreen);
+        splashScreen.reset();
+    }
     SDL_Event e;
     //  Handle continuous key presses (movement)
     const Uint8 *state = SDL_GetKeyboardState(NULL);
@@ -444,7 +459,9 @@ void Visualiser::renderAgentStates() {
             unsigned int tui = 0;
             for (auto &_tb : as.core_texture_buffers) {
                 auto &tb = _tb.second;
+                const std::string samplerName = TexBufferConfig::SamplerName(_tb.first);
                 // Free old buffs
+                shader_vec->removeTextureUniform(samplerName.c_str());
                 if (tb && tb->d_mappedPointer)
                     freeGLInteropTextureBuffer(tb);
                 // Alloc new buffs (this needs to occur in other thread!!!)
@@ -453,7 +470,6 @@ void Visualiser::renderAgentStates() {
                 GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui));
                 GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, tb->glTexName));
                 GL_CALL(glActiveTexture(GL_TEXTURE0));
-                std::string samplerName = TexBufferConfig::SamplerName(_tb.first);
                 shader_vec->addTexture(samplerName.c_str(), GL_TEXTURE_BUFFER, tb->glTexName, as.tex_unit_offset + tui);
                 ++tui;
                 GL_CHECK();
@@ -461,6 +477,7 @@ void Visualiser::renderAgentStates() {
             for (auto& _tb : as.custom_texture_buffers) {
                 auto& tb = _tb.second.second;
                 // Free old buffs
+                shader_vec->removeTextureUniform(_tb.second.first.nameInShader.c_str());
                 if (tb && tb->d_mappedPointer)
                     freeGLInteropTextureBuffer(tb);
                 // Alloc new buffs (this needs to occur in other thread!!!)
@@ -485,6 +502,7 @@ void Visualiser::renderAgentStates() {
         delete guard;
 }
 void Visualiser::requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned buffLen) {
+    closeSplashScreen = closeSplashScreen == 0 ? 1 : closeSplashScreen;
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     auto &as = agentStates.at(namepair);
     as.requiredSize = buffLen;
@@ -513,6 +531,9 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
             }
         }
     }
+    // Receiving agent data means the model has loaded, close splash screen
+    // We can't close splash screen in this thread, so do it next time render is called
+    closeSplashScreen = closeSplashScreen == 1 ? 2 : closeSplashScreen;
 }
 
 //  Items taken from sdl_exp
@@ -548,6 +569,7 @@ bool Visualiser::init() {
     if (!this->window) {
         printf("Window failed to init.\n");
     } else {
+        setWindowIcon();
         SDL_GetWindowPosition(window, &this->windowedBounds.x, &this->windowedBounds.y);
         SDL_GetWindowSize(window, &this->windowedBounds.w, &this->windowedBounds.h);
 
@@ -608,6 +630,7 @@ void Visualiser::resizeWindow() {
     resizeBackBuffer(this->windowDims);
 }
 void Visualiser::deallocateGLObjects() {
+    splashScreen.reset();
     lighting.reset();
     fpsDisplay.reset();
     stepDisplay.reset();
@@ -987,4 +1010,11 @@ void Visualiser::screenshot(const bool verbose) {
 
     SDL_FreeSurface(surf);
     delete[] pixels;
+}
+void Visualiser::setWindowIcon() {
+    if (!window)
+        return;
+    auto surface = Texture::loadImage(modelConfig.isPython ? "resources/pyflamegpu_icon.png" : "resources/flamegpu_icon.png");
+    if (surface)
+        SDL_SetWindowIcon(window, surface.get());
 }

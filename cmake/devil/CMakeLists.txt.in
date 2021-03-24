@@ -1,0 +1,25 @@
+cmake_minimum_required(VERSION VERSION 3.15 FATAL_ERROR)
+
+include(ExternalProject)
+
+project(devil-download NONE)
+ExternalProject_Add(DevIL
+    URL               "http://downloads.sourceforge.net/openil/DevIL-Windows-SDK-1.8.0.zip"
+    SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/devil"
+    BINARY_DIR        ""
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND     ""
+    INSTALL_COMMAND   ""
+    TEST_COMMAND      ""
+    )
+# Haven't tried building it from scratch, probably not worth it due to the external deps for each image format
+# ExternalProject_Add(DevIL
+    # HG_REPOSITORY     "https://github.com/DentonW/DevIL.git"
+    # HG_TAG            "v1.8.0"
+    # SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/sdl_image-src"
+    # BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/sdl_image-build"
+    # CONFIGURE_COMMAND ""
+    # BUILD_COMMAND     ""
+    # INSTALL_COMMAND   ""
+    # TEST_COMMAND      ""
+    # )

@@ -64,3 +64,18 @@ void Overlay::setVisible(bool isVisible) {
 void Overlay::_reload() {
     shaders->reload(); reload();
 }
+
+void OverlayGroup::setVisible(bool isVisible) {
+    for (auto& ol : getOverlays()) {
+        if (ol.overlay)
+            ol.overlay->setVisible(isVisible);
+    }
+}
+bool OverlayGroup::getVisible() const {
+    for (auto& ol : getOverlays()) {
+        if (ol.overlay)
+            if (ol.overlay->getVisible())
+                return true;
+    }
+    return false;
+}

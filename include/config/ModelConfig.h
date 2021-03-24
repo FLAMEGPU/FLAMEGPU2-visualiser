@@ -120,6 +120,11 @@ struct ModelConfig {
      * Store of user defined line renderings
      */
     std::list<std::shared_ptr<LineConfig>> lines;
+    /**
+     * Notify visualisation that it's running under python
+     * This mostly just allows the logos to be swapped
+     */
+    bool isPython;
 
  private:
      /**

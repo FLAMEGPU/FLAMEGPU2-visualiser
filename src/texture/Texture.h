@@ -1,12 +1,14 @@
 #ifndef SRC_TEXTURE_TEXTURE_H_
 #define SRC_TEXTURE_TEXTURE_H_
 
+#include <map>
 #include <string>
 #include <memory>
-
 #include <glm/vec2.hpp>
 
 #include "../util/GLcheck.h"
+
+struct SDL_Surface;
 
 /**
  * Shell texture class providing various utility methods for subclasses
@@ -15,15 +17,6 @@
  * @note This class cannot be directly instantiated
  */
 class Texture {
- protected:
-    struct ImageData {
-        int width;
-        int height;
-        int channels;
-        unsigned char *data = nullptr;
-        ~ImageData();
-    };
-
  public:
     /**
      * This structure holds the necessary Enums for calling various OpenGL texture funtions
@@ -33,7 +26,7 @@ class Texture {
     struct Format {
         Format(GLenum format, GLenum internalFormat, size_t pixelSize, GLenum type)
             : format(format), internalFormat(internalFormat), type(type), pixelSize(pixelSize) { }
-        bool operator == (const Format& other) const {
+        bool operator==(const Format& other) const {
             return
                 other.format == this->format&&
                 other.internalFormat == this->internalFormat&&
@@ -143,16 +136,17 @@ class Texture {
      */
     void updateMipMap();
     /**
-     * @param fileExtension A given string of a file extension
-     * @return Wether the image loader is capable of handling the given extension
-     * @note Indifferent to case-sensitivity and the inclusion of initial '.'
-     */
-    static bool supportsExtension(const std::string &fileExtension);
-    /**
      * Virtual destructor, deallocate the OpenGL texture
      * @note Does not deallocate external texture's
      */
     virtual ~Texture();
+    /**
+     * Returns the specified image as an SDL_Surface
+     * @param imagePath Path to search for images
+     * @param flipVertical Vertically flips the image. This is useful because most images are indexed from the top, whereas GL indexes from the bottom
+     * @param silenceErrors If true, will not print errors to console (used by findLoadImage() to reduce error spam)
+     */
+    static std::shared_ptr<SDL_Surface> loadImage(const std::string& imagePath, bool flipVertical = true, bool silenceErrors = false);
 
  protected:
     /**
@@ -179,7 +173,7 @@ class Texture {
      * @param target The texture target, if left as default 'type' will be used, only fancy textures like cube map require this parameter
      * @note The allocated texture is immutable, so cannot be resized
      */
-    void allocateTextureImmutable(std::shared_ptr<ImageData> image, GLenum target = 0);
+    void allocateTextureImmutable(std::shared_ptr<SDL_Surface> image, GLenum target = 0);
     /**
      * Allocates an immutable texture, this cannot be later resized. Optionally fills with provided data
      * @param dimensions The dimensions of the image to be allocated
@@ -239,24 +233,23 @@ class Texture {
      * This method attempts all the suffices stored in Texture::IMAGE_EXTS
      * @param imagePath Path to search for images
      */
-    static std::shared_ptr<ImageData> findLoadImage(const std::string &imagePath);
+    static std::shared_ptr<SDL_Surface> findLoadImage(const std::string &imagePath);
     /**
-     * Returns the specified image
-     * @param imagePath Path to search for images
-     * @param flipVertical Vertically flips the image. This is useful because most images are indexed from the top, whereas GL indexes from the bottom
-     * @param silenceErrors If true, will not print errors to console (used by findLoadImage() to reduce error spam)
+     * We use this when loading an image with SDL_Image to invert the image rows.
+     * This is because most image formats label images with the origin in the top left corner
+     * Whereas glTexImage2D expects the origin to be in the bottom left corner.
+     * We could handle this by negating Y when using texcoords, however this better allows us to standardise shaders
+     * @param img The SDL_Surface to be flipped
+     * @return true on success, else failure
+     * @note original source: http://www.gribblegames.com/articles/game_programming/sdlgl/invert_sdl_surfaces.html
      */
-    static std::shared_ptr<ImageData> loadImage(const std::string &imagePath, bool flipVertical = true, bool silenceErrors = false);
+    static bool flipRows(std::shared_ptr<SDL_Surface> img);
     /**
      * Attempts to identify the format of the provided SDL_Surface
      * @param image SDL_Surface to identify format
      * @return A Format struct containing image format data
      */
-    static Format getFormat(std::shared_ptr<ImageData> image);
-    /**
-     * Array of image extensions supported by SDL_SURFACE
-     */
-    static const char *IMAGE_EXTS[5];
+    static Format getFormat(std::shared_ptr<SDL_Surface> image);
 
  private:
     /**
@@ -267,6 +260,18 @@ class Texture {
      * If true this value tells the destructor not to delete the texture at object destruction
      */
     const bool externalTex;
+    /**
+     * Register SDL_Surface:DevIL_image pairs created by Texture::loadImage(const std::string &, bool, bool)
+     */
+    static void registerSurface(const std::shared_ptr<SDL_Surface> &sdl_image, unsigned int devil_image);
+    /**
+     * Free SDL_Surface:DevIL_image pairs created by Texture::loadImage(const std::string &, bool, bool) 
+     */
+    static void freeSurface(SDL_Surface *);
+    /**
+     * Pair all SDL_Surfaces created by Texture::loadImage(const std::string &, bool, bool) to the DevIL image which owns their data
+     */
+    static std::map<SDL_Surface*, unsigned int> registered_surfaces;
 };
 
 #endif  // SRC_TEXTURE_TEXTURE_H_
