@@ -111,6 +111,31 @@ MACRO (download_freetype)
                 "You may want to disable BUILD_TESTS")
     endif()
 ENDMACRO()
+# Pull in and build DevIL
+MACRO (download_devil)
+    configure_file(cmake/devil/CMakeLists.txt.in devil-download/CMakeLists.txt)
+    # Run CMake generate
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/devil-download
+        )
+    if (result)
+        message(WARNING
+                "CMake step for DevIL failed: ${result}\n")
+    endif ()
+    # Run CMake build (this only downloads, it is built at build time)
+    execute_process(
+    COMMAND ${CMAKE_COMMAND} --build .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/devil-download
+    )
+    if (result)
+        message(WARNING
+                "Download step for DevIL failed: ${result}\n"
+                "Attempting to continue\n")
+    endif ()
+ENDMACRO()
 
 # Set the project name, but do not specify languages immediately so we can have lint only builds.
 project(flamegpu2_visualiser)
@@ -260,6 +285,10 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture2D_Multisample.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/TextureBuffer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/TextureCubeMap.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/Overlay.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/SplashScreen.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/Sprite2D.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/Text.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/cuda.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/GLcheck.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/StringUtils.h
@@ -267,9 +296,6 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Draw.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Entity.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HUD.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Overlay.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Sprite2D.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Text.h
     # .cpp from sdl_exp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/camera/NoClipCamera.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/model/Material.cpp
@@ -289,14 +315,15 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture2D_Multisample.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/TextureBuffer.cu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/TextureCubeMap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/Overlay.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/SplashScreen.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/Sprite2D.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ui/Text.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/util/cuda.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Axis.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Draw.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Entity.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HUD.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Overlay.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Sprite2D.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Text.cpp
 )
 SET(VISUALISER_ALL
     ${VISUALISER_INCLUDE}
@@ -347,14 +374,19 @@ else()
         message(FATAL_ERROR "freetype is required for building, install it via your package manager.\n"
                             "e.g. sudo apt install libfreetype-dev")
         endif ()
+        find_package(DevIL)
+        if (NOT DevIL_FOUND)
+        message(FATAL_ERROR "DevIL is required for image loading, install it via your package manager.\n"
+                            "e.g. sudo apt install libdevil-dev")
+        endif()
         if (NOT TARGET OpenGL::GLU)
         message(FATAL_ERROR "GLU is required for building, install it via your package manager.\n"
                             "e.g. sudo apt install libglu1-mesa-dev")
         endif ()
         find_package(Fontconfig)
         if (NOT Fontconfig_FOUND)
-            message(FATAL_ERROR "Fontconfig is required for visualisation, install it via your package manager.\n"
-                            "e.g. sudo apt install libfontconfig1-dev")
+        message(FATAL_ERROR "Fontconfig is required for visualisation, install it via your package manager.\n"
+                        "e.g. sudo apt install libfontconfig1-dev")
         endif()
     else ()
         if (NOT TARGET OpenGL::GLU)
@@ -390,6 +422,11 @@ else()
                         ${CMAKE_CURRENT_BINARY_DIR}/freetype-build
                         EXCLUDE_FROM_ALL
                         )
+        #DevIL
+        download_devil()
+        set(DEVIL_DIR ${CMAKE_CURRENT_BINARY_DIR}/devil)
+        configure_file(cmake/devil/devil-config.cmake devil/devil-config.cmake)
+        find_package(DEVIL REQUIRED NO_MODULE)
     endif ()
 
 
@@ -416,6 +453,7 @@ else()
     if (FREETYPE_FOUND) # Only use this if we aren't building it ourselves
         target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS})
     endif ()
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${IL_INCLUDE_DIR})
     if(Fontconfig_FOUND)
         target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${Fontconfig_INCLUDE_DIRS})
     endif()
@@ -444,6 +482,7 @@ else()
 
     target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
     target_link_libraries("${PROJECT_NAME}" freetype)
+    target_link_libraries("${PROJECT_NAME}" "${IL_LIBRARIES}")
     target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
     target_link_libraries("${PROJECT_NAME}" OpenGL::GLU)
     target_link_libraries("${PROJECT_NAME}" Threads::Threads)
@@ -465,10 +504,15 @@ else()
     # NOTE: The build step for resources embeds them as base64, this should not be used for large files.
     include(cmake/CMakeRC/CMakeRC.cmake)
     SET(RESOURCES_ALL
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/flamegpu_icon.png
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/pyflamegpu_icon.png
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/flamegpu.png
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/pyflamegpu.png
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat.frag
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_phong.frag
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/default.vert
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/text.frag
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/sprite2d.frag
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/color.vert
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/color_noshade.frag
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/icosphere.obj

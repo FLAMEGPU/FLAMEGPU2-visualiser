@@ -9,6 +9,7 @@
 
 #include "util/GLcheck.h"
 
+class OverlayGroup;
 class Overlay;
 
 /*
@@ -92,10 +93,26 @@ class HUD {
      */
     void add(std::shared_ptr<Overlay> overlay, AnchorV anchorV = AnchorV::Center, AnchorH anchorH = AnchorH::Center, const glm::ivec2 &offset = glm::ivec2(0), int zIndex = 0);
     /**
+     * Adds a collection of overlays element to the HUD
+     * @param overlays The group of overlay elements to be rendered as part of the HUD
+     * @param anchorV Vertical Anchoring location (North|Center|South), defaults Center
+     * @param anchorH Horizontal Anchoring location (East|Center|West), defaults Center
+     * @param offset The horizontal and vertical offsets from the anchored position (This will be added to the sub-offsets of the overlays)
+     * @param zIndex The priority for which the overlays should be on-top (This will be added to the sub-offsets of the overlays)
+     * @note If two items share the same z-index, the new item will insert as though it has the lower z-index (and be rendered underneath)
+     * @note Adding the same overlay group to HUD a second time, will remove it's first instance.
+     */
+    void add(std::shared_ptr <OverlayGroup> overlays, AnchorV anchorV = AnchorV::Center, AnchorH anchorH = AnchorH::Center, const glm::ivec2 &offset = glm::ivec2(0), int zIndex = 0);
+    /**
      * Removes the specified overlay from the HUD
      * @return The number of overlays removed
      */
     unsigned int remove(std::shared_ptr<Overlay> overlay);
+    /**
+     * Removes the specified overlay group from the HUD
+     * @return The number of individual overlays removed
+     */
+    unsigned int remove(std::shared_ptr<OverlayGroup> overlays);
     /**
      * all overlays from the HUD
      */

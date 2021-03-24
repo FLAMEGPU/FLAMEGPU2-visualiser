@@ -1,5 +1,5 @@
-#ifndef SRC_TEXT_H_
-#define SRC_TEXT_H_
+#ifndef SRC_UI_TEXT_H_
+#define SRC_UI_TEXT_H_
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -196,4 +196,4 @@ class Text : public Overlay {
     unsigned int wrapDistance;
     std::shared_ptr<TextureString> tex;
 };
-#endif  // SRC_TEXT_H_
+#endif  // SRC_UI_TEXT_H_

@@ -1,5 +1,5 @@
-#ifndef SRC_SPRITE2D_H_
-#define SRC_SPRITE2D_H_
+#ifndef SRC_UI_SPRITE2D_H_
+#define SRC_UI_SPRITE2D_H_
 #include <memory>
 
 #include "texture/Texture2D.h"
@@ -39,4 +39,4 @@ class Sprite2D : public Overlay {
  private:
     std::shared_ptr<const Texture2D> tex;
 };
-#endif  // SRC_SPRITE2D_H_
+#endif  // SRC_UI_SPRITE2D_H_

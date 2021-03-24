@@ -19,7 +19,7 @@
 #include "Draw.h"
 #include "Entity.h"
 #include "HUD.h"
-#include "Text.h"
+#include "ui/Text.h"
 #include "camera/NoClipCamera.h"
 #include "config/AgentStateConfig.h"
 #include "config/TexBufferConfig.h"
@@ -30,6 +30,8 @@
 
 template <typename T>
 struct CUDATextureBuffer;
+class SplashScreen;
+class Text;
 
 class LightsBuffer;
 
@@ -212,6 +214,7 @@ class Visualiser : public ViewportExt {
     std::weak_ptr<HUD> getHUD() override;
     const char *getWindowTitle() const override;
     void setWindowTitle(const char *windowTitle) override;
+    void setWindowIcon();
     /**
      * Returns the mutex
      * This must be locked before calling updateAgentStateBuffer()
@@ -261,7 +264,16 @@ class Visualiser : public ViewportExt {
      * Current dimensions of the window (does not account for fullscreen size)
      */
     glm::uvec2 windowDims;
-
+    /**
+     * Holds a loaded texture for splash screen
+     */
+    std::shared_ptr<SplashScreen> splashScreen;
+    /**
+     * Notifies from update thread to render thread when simulation has loaded and splash screen needs to be closed
+     * requestBufferResizes() sets value to 1
+     * updateAgentStateBuffer() set value to 2
+     */
+    unsigned char closeSplashScreen = 0;
     /**
      * Used for tracking and calculating fps
      */

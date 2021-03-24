@@ -1,19 +1,25 @@
 #include "config/ModelConfig.h"
 
 #include <cstring>
-ModelConfig::StaticModel::StaticModel() : path(""), texture(""), scale{-1, 0, 0}, location{0, 0, 0}, rotation{1, 0, 0, 0} {}
-ModelConfig::ModelConfig(const char *_windowTitle)
-    : windowTitle(nullptr),
-      windowDimensions{1280, 720},
-      clearColor{0, 0, 0},
-      fpsVisible(true),
-      fpsColor{1, 1, 1},
-      cameraLocation{1.5f, 1.5f, 1.5f},
-      cameraTarget{0, 0, 0},
-      cameraSpeed{0.05f, 5},
-      nearFarClip{0.05f, 5000},
-      stepVisible(true),
-      beginPaused(false) {
+ModelConfig::StaticModel::StaticModel()
+    : path("")
+    , texture("")
+    , scale{-1, 0, 0}
+    , location{0, 0, 0}
+    , rotation{1, 0, 0, 0} { }
+ModelConfig::ModelConfig(const char* _windowTitle)
+    : windowTitle(nullptr)
+    , windowDimensions{1280, 720}
+    , clearColor{0, 0, 0}
+    , fpsVisible(true)
+    , fpsColor{1, 1, 1}
+    , cameraLocation{1.5f, 1.5f, 1.5f}
+    , cameraTarget{0, 0, 0}
+    , cameraSpeed{0.05f, 5}
+    , nearFarClip{0.05f, 5000}
+    , stepVisible(true)
+    , beginPaused(false)
+    , isPython(false) {
     setString(&windowTitle, _windowTitle);
 }
 ModelConfig::~ModelConfig() {
@@ -33,6 +39,7 @@ ModelConfig &ModelConfig::operator=(const ModelConfig &other) {
     memcpy(nearFarClip, other.nearFarClip, sizeof(nearFarClip));
     stepVisible = other.stepVisible;
     beginPaused = other.beginPaused;
+    isPython = other.isPython;
     // staticModels
     // lines
     return *this;

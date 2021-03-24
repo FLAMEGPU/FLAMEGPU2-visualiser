@@ -1,7 +1,6 @@
 #include "texture/Texture2D.h"
 #include <cassert>
 
-#include "util/Resources.h"
 // If earlier than VS 2019
 #if defined(_MSC_VER) && _MSC_VER < 1920
 #include <filesystem>
@@ -16,7 +15,9 @@ using std::experimental::filesystem::v1::path;
 #endif
 
 #include <glm/gtx/component_wise.hpp>
+#include <SDL_surface.h>
 
+#include "util/Resources.h"
 #include "util/StringUtils.h"
 
 const char *Texture2D::RAW_TEXTURE_FLAG = "Texture2D";
@@ -25,11 +26,11 @@ std::unordered_map<std::string, std::weak_ptr<const Texture2D>> Texture2D::cache
 /**
 * Constructors
 */
-Texture2D::Texture2D(std::shared_ptr<ImageData> image, const std::string reference, const uint64_t options)
+Texture2D::Texture2D(std::shared_ptr<SDL_Surface> image, const std::string reference, const uint64_t &options)
     : Texture(GL_TEXTURE_2D, genTextureUnit(), getFormat(image), reference, options)
-    , dimensions(image->width, image->height)
+    , dimensions(image->w, image->h)
     , immutable(true) {
-    visassert(image);
+    assert(image);
     allocateTextureImmutable(image);
     applyOptions();
 }
@@ -104,7 +105,7 @@ std::shared_ptr<const Texture2D> Texture2D::load(const std::string &filePath, co
         }
         // Load using loader
         if (!rtn) {
-            auto image = loadImage(filePath);
+            auto image = loadImage(filePath, false);
             if (image) {
                 rtn = std::shared_ptr<const Texture2D>(new Texture2D(image, filePath, options),
                  [&](Texture2D *ptr) {  // Custom deleter, which purges cache of item

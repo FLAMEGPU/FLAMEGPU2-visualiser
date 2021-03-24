@@ -1,24 +1,67 @@
 #include "texture/Texture.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
+
+#include <IL/il.h>
+#include <SDL_surface.h>
+
 #include <algorithm>
 
 #include "util/StringUtils.h"
+#include "util/Resources.h"
 
-Texture::ImageData::~ImageData() {
-    if (data) {
-        stbi_image_free(data);
-        data = nullptr;
+namespace {
+    /**
+     * This saves us needing to link with ILU for error strings
+     * Convert DevIL error enum to error string;
+     */
+    const char *ilErrorString(ILenum code) {
+        switch (code) {
+            case IL_NO_ERROR:
+                return "No detectable error has occured.";
+            case IL_INVALID_ENUM:
+                return "An unacceptable enumerated value was passed to a function.";
+            case IL_OUT_OF_MEMORY:
+                return "Could not allocate enough memory in an operation.";
+            case IL_FORMAT_NOT_SUPPORTED:
+                return "The format a function tried to use was not able to be used by that function.";
+            case IL_INTERNAL_ERROR:
+                return "A serious error has occurred.Please e - mail DooMWiz with the conditions leading up to this error being reported.";
+            case IL_INVALID_VALUE:
+                return "An invalid value was passed to a function or was in a file.";
+            case IL_ILLEGAL_OPERATION:
+                return "The operation attempted is not allowable in the current state.The function returns with no ill side effects.";
+            case IL_ILLEGAL_FILE_VALUE:
+                return "An illegal value was found in a file trying to be loaded.";
+            case IL_INVALID_FILE_HEADER:
+                return "A file's header was incorrect.";
+            case IL_INVALID_PARAM:
+                return "An invalid parameter was passed to a function, such as a NULL pointer.";
+            case IL_COULD_NOT_OPEN_FILE:
+                return "Could not open the file specified.The file may already be open by another app or may not exist.";
+            case IL_INVALID_EXTENSION:
+                return "The extension of the specified filename was not correct for the type of image - loading function.";
+            case IL_FILE_ALREADY_EXISTS:
+                return "The filename specified already belongs to another file.To overwrite files by default, call ilEnable with the IL_FILE_OVERWRITE parameter.";
+            case IL_OUT_FORMAT_SAME:
+                return "Tried to convert an image from its format to the same format.";
+            case IL_STACK_OVERFLOW:
+                return "One of the internal stacks was already filled, and the user tried to add on to the full stack.";
+            case IL_STACK_UNDERFLOW:
+                return "One of the internal stacks was empty, and the user tried to empty the already empty stack.";
+            case IL_INVALID_CONVERSION:
+                return "An invalid conversion attempt was tried.";
+            case IL_LIB_JPEG_ERROR:
+                return "An error occurred in the libjpeg library.";
+            case IL_LIB_PNG_ERROR:
+                return "An error occurred in the libpng library.";
+            case IL_UNKNOWN_ERROR:
+            default:
+                return "No function sets this yet, but it is possible(not probable) it may be used in the future.";
+        }
     }
-}
+}  // namespace
 
-// Ensure these remain lowercase without prepended '.'
-const char* Texture::IMAGE_EXTS[] = {
-    "tga",
-    "png",
-    "bmp",
-    "jpg", "jpeg"
-};
+
+std::map<SDL_Surface*, unsigned int> Texture::registered_surfaces;
 
 // Filter Ext Options
 const uint64_t Texture::DISABLE_ANISTROPIC_FILTERING = 1ull << 0;
@@ -97,23 +140,23 @@ const uint64_t Texture::WRAP_MIRROR_CLAMP_TO_EDGE   = WRAP_MIRROR_CLAMP_TO_EDGE_
 GLenum Texture::wrapOptionU() const {
     GLenum rtn = GL_INVALID_ENUM;
     if ((options & WRAP_REPEAT_U) == WRAP_REPEAT_U) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_REPEAT;
     }
     if ((options & WRAP_CLAMP_TO_EDGE_U) == WRAP_CLAMP_TO_EDGE_U) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_CLAMP_TO_EDGE;
     }
     if ((options & WRAP_CLAMP_TO_BORDER_U) == WRAP_CLAMP_TO_BORDER_U) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_CLAMP_TO_BORDER;
     }
     if ((options & WRAP_MIRRORED_REPEAT_U) == WRAP_MIRRORED_REPEAT_U) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_MIRRORED_REPEAT;
     }
     if ((options & WRAP_MIRROR_CLAMP_TO_EDGE_U) == WRAP_MIRROR_CLAMP_TO_EDGE_U) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_MIRROR_CLAMP_TO_EDGE;
     }
     return rtn == GL_INVALID_ENUM ? GL_REPEAT : rtn;  // If none specified, return GL default
@@ -121,23 +164,23 @@ GLenum Texture::wrapOptionU() const {
 GLenum Texture::wrapOptionV() const {
     GLenum rtn = GL_INVALID_ENUM;
     if ((options & WRAP_REPEAT_V) == WRAP_REPEAT_V) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_REPEAT;
     }
     if ((options & WRAP_CLAMP_TO_EDGE_V) == WRAP_CLAMP_TO_EDGE_V) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_CLAMP_TO_EDGE;
     }
     if ((options & WRAP_CLAMP_TO_BORDER_V) == WRAP_CLAMP_TO_BORDER_V) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_CLAMP_TO_BORDER;
     }
     if ((options & WRAP_MIRRORED_REPEAT_V) == WRAP_MIRRORED_REPEAT_V) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_MIRRORED_REPEAT;
     }
     if ((options & WRAP_MIRROR_CLAMP_TO_EDGE_V) == WRAP_MIRROR_CLAMP_TO_EDGE_V) {
-        assert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
+        visassert(rtn == GL_INVALID_ENUM);  // Invalid bitmask, multiple conflicting options passed
         rtn = GL_MIRROR_CLAMP_TO_EDGE;
     }
     return rtn == GL_INVALID_ENUM ? GL_REPEAT : rtn;  // If none specified, return GL default
@@ -253,42 +296,162 @@ void Texture::applyOptions() {
     }
     GL_CALL(glBindTexture(type, 0));
 }
-std::shared_ptr<Texture::ImageData> Texture::findLoadImage(const std::string &imagePath) {
+std::shared_ptr<SDL_Surface> Texture::findLoadImage(const std::string &imagePath) {
     // Attempt without appending extension
-    std::shared_ptr<ImageData> image = loadImage(imagePath, false, true);
+    std::shared_ptr<SDL_Surface> image = loadImage(imagePath, false, true);
+    const char * IMAGE_EXTS[] = {"png", "jpg", "jpeg", "bmp", "tiff"};
     for (unsigned int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*) && !image; i++) {
         image = loadImage(std::string(imagePath).append(".").append(IMAGE_EXTS[i]), false, true);
     }
     return image;
 }
-std::shared_ptr<Texture::ImageData> Texture::loadImage(const std::string &imagePath, bool flipVertical, bool silenceErrors) {
-    std::shared_ptr<ImageData> image = std::make_shared<ImageData>();
-    stbi_set_flip_vertically_on_load(flipVertical);
-    image->data = stbi_load(imagePath.c_str(), &image->width, &image->height, &image->channels, 0);
-    if (!image) {
-        if (!silenceErrors)
-            fprintf(stderr, "Image file '%s' could not be read.\n", imagePath.c_str());
-        return std::shared_ptr<ImageData>();
+std::shared_ptr<SDL_Surface> Texture::loadImage(const std::string &imagePath, bool flipVertical, bool silenceErrors) {
+    static bool DevIL_INIT = false;
+    if (!DevIL_INIT) {
+        // Not documented whether it is safe to keep calling ilInit()
+        // Is documented that calling ilShutdown() is unnecessary
+        DevIL_INIT = true;
+        ilInit();
     }
+    const std::string filePath = Resources::locateFile(imagePath);
+    // Convert the DevIL image to SDL_Surface
+    ILuint imageName;
+    ilGenImages(1, &imageName);
+    ilBindImage(imageName);
+    if (!ilLoadImage(filePath.c_str())) {
+        if (silenceErrors)
+            return nullptr;
+        THROW ResourceError("Texture::loadImage(): File '%s' could not be loaded!\n DevIL_Image error: %s", filePath.c_str(), ilErrorString(ilGetError()));
+    }
+    // Get image dimensions
+    glm::uvec2 dims = glm::uvec2(ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT));
+    int bytesPerPixel = ilGetInteger(IL_IMAGE_BPP);
+    Uint32 rmask, gmask, bmask, amask = 0;
+    int format = ilGetInteger(IL_IMAGE_FORMAT);
+    if (format == IL_RGB) {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+        rmask = 0xff000000;
+        gmask = 0x00ff0000;
+        bmask = 0x0000ff00;
+#else
+        rmask = 0x000000ff;
+        gmask = 0x0000ff00;
+        bmask = 0x00ff0000;
+#endif
+    } else if (format == IL_RGBA) {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+        rmask = 0xff000000;
+        gmask = 0x00ff0000;
+        bmask = 0x0000ff00;
+        amask = 0x000000ff;
+#else
+        rmask = 0x000000ff;
+        gmask = 0x0000ff00;
+        bmask = 0x00ff0000;
+        amask = 0xff000000;
+#endif
+    } else if (format == IL_BGR) {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+        bmask = 0xff000000;
+        gmask = 0x00ff0000;
+        rmask = 0x0000ff00;
+#else
+        bmask = 0x000000ff;
+        gmask = 0x0000ff00;
+        rmask = 0x00ff0000;
+#endif
+    } else if (format == IL_BGRA) {
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+        bmask = 0xff000000;
+        gmask = 0x00ff0000;
+        rmask = 0x0000ff00;
+        amask = 0x000000ff;
+#else
+        bmask = 0x000000ff;
+        gmask = 0x0000ff00;
+        rmask = 0x00ff0000;
+        amask = 0xff000000;
+#endif
+    } else {
+        THROW ResourceError("Texture::loadImage(): File '%s' is of an unsupported format.", filePath.c_str());
+    }
+    ILubyte* il_data = ilGetData();
+    // Convert to an SDL_surface
+    std::shared_ptr<SDL_Surface> image = std::shared_ptr<SDL_Surface>(
+        SDL_CreateRGBSurfaceFrom(il_data, dims.x, dims.y, bytesPerPixel * 8, dims.x * bytesPerPixel, rmask, gmask, bmask, amask)
+        , Texture::freeSurface);
+    registerSurface(image, imageName);
+    ilBindImage(0);
+    if (flipVertical)
+        flipRows(image);
     return image;
 }
-void Texture::allocateTextureImmutable(std::shared_ptr<ImageData> image, GLenum target) {
-     target = target == 0 ? type : target;
-     GL_CALL(glBindTexture(type, glName));
-     // If the image is stored with a pitch different to width*bytes per pixel, temp change setting
-     // (Disabled, stb_image never outputs files in this format)
-     // if (image->pitch / image->format->BytesPerPixel != image->w)
-     // {
-     //     GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, image->pitch / image->format->BytesPerPixel));
-     // }
-     GL_CALL(glTexStorage2D(target, enableMipMapOption() ? 4 : 1, format.internalFormat, image->width, image->height));  // Must not be called twice on the same gl tex
-     GL_CALL(glTexSubImage2D(target, 0, 0, 0, image->width, image->height, format.format, format.type, image->data));
-     // Disable custom pitch
-     // if (image->pitch / image->format->BytesPerPixel != image->w)
-     // {
-     //     GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
-     // }
-     GL_CALL(glBindTexture(type, 0));
+void Texture::registerSurface(const std::shared_ptr<SDL_Surface>& sdl_image, unsigned int devil_image) {
+    registered_surfaces.emplace(sdl_image.get(), devil_image);
+}
+void Texture::freeSurface(SDL_Surface *sdl_image) {
+    auto it = registered_surfaces.find(sdl_image);
+    if (it != registered_surfaces.end()) {
+        ilDeleteImage(it->second);
+        registered_surfaces.erase(it);
+    }
+    SDL_FreeSurface(sdl_image);
+}
+bool Texture::flipRows(std::shared_ptr<SDL_Surface> img) {
+    if (!img) {
+        SDL_SetError("Surface is NULL");
+        return false;
+    }
+    int pitch = img->pitch;
+    int height = img->h;
+    void* image_pixels = img->pixels;
+    int index;
+    void* temp_row;
+    int height_div_2;
+
+    temp_row = malloc(pitch);
+    if (NULL == temp_row) {
+        SDL_SetError("Not enough memory for image inversion");
+        return false;
+    }
+    // if height is odd, don't need to swap middle row
+    height_div_2 = static_cast<int>(height * .5);
+    for (index = 0; index < height_div_2; index++) {
+        // uses string.h
+        memcpy(static_cast<uint8_t*>(temp_row),
+            static_cast<uint8_t*>(image_pixels)+
+            pitch * index,
+            pitch);
+
+        memcpy(
+            static_cast<uint8_t*>(image_pixels)+
+            pitch * index,
+            static_cast<uint8_t*>(image_pixels)+
+            pitch * (height - index - 1),
+            pitch);
+        memcpy(
+            static_cast<uint8_t*>(image_pixels)+
+            pitch * (height - index - 1),
+            temp_row,
+            pitch);
+    }
+    free(temp_row);
+    return true;
+}
+void Texture::allocateTextureImmutable(std::shared_ptr<SDL_Surface> image, GLenum target) {
+    target = target == 0 ? type : target;
+    GL_CALL(glBindTexture(type, glName));
+    // If the image is stored with a pitch different to width*bytes per pixel, temp change setting
+    if (image->pitch / image->format->BytesPerPixel != image->w) {
+        GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, image->pitch / image->format->BytesPerPixel));
+    }
+    GL_CALL(glTexStorage2D(target, enableMipMapOption() ? 4 : 1, format.internalFormat, image->w, image->h));  // Must not be called twice on the same gl tex
+    GL_CALL(glTexSubImage2D(target, 0, 0, 0, image->w, image->h, format.format, format.type, image->pixels));
+    // Disable custom pitch
+    if (image->pitch / image->format->BytesPerPixel != image->w) {
+        GL_CALL(glPixelStorei(GL_UNPACK_ROW_LENGTH, 0));
+    }
+    GL_CALL(glBindTexture(type, 0));
 }
 void Texture::allocateTextureImmutable(const glm::uvec2 &dimensions, const void *data, GLenum target) {
     target = target == 0 ? type : target;
@@ -326,17 +489,6 @@ void Texture::setTexture(const void *data, const glm::uvec2 &dimensions, glm::iv
     GL_CALL(glBindTexture(type, 0));
 }
 
-bool Texture::supportsExtension(const std::string &fileExtension) {
-    const std::string _fileExtension = su::toLower(fileExtension);
-    // Compare each extension with and without . prepended
-    for (unsigned int i = 0; i < sizeof(IMAGE_EXTS) / sizeof(char*); ++i) {
-        if (_fileExtension == IMAGE_EXTS[i])
-            return true;
-        if (_fileExtension == (std::string(".") + IMAGE_EXTS[i]))
-            return true;
-    }
-    return false;
-}
 void Texture::bind() const {
 #ifdef _DEBUG
     if (isBound())
@@ -348,21 +500,76 @@ void Texture::bind() const {
     GL_CALL(glActiveTexture(GL_TEXTURE0));
 }
 
-Texture::Format Texture::getFormat(std::shared_ptr<ImageData> image) {
+Texture::Format Texture::getFormat(std::shared_ptr<SDL_Surface> image) {
     visassert(image);
-    switch (image->channels) {
-    case 1:
-        return Format(GL_RED, GL_R8, 1, GL_UNSIGNED_BYTE);  // Is this correct?
-    case 2:
-        return Format(GL_RG, GL_RG8, 2, GL_UNSIGNED_BYTE);  // Is this correct?
-    case 3:
+    switch (image->format->format) {
+    case SDL_PIXELFORMAT_RGB332:
+        return Format(GL_RGB, GL_R3_G3_B2, 1, GL_UNSIGNED_BYTE_3_3_2);
+    case SDL_PIXELFORMAT_RGB444:
+        return Format(GL_RGB, GL_RGB4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
+    case SDL_PIXELFORMAT_BGR555:
+        return Format(GL_BGR, GL_RGB5, 2, GL_UNSIGNED_SHORT_5_5_5_1);
+    case SDL_PIXELFORMAT_RGB555:
+        return Format(GL_RGB, GL_RGB5, 2, GL_UNSIGNED_SHORT_5_5_5_1);
+    case SDL_PIXELFORMAT_ABGR4444:
+        return Format(GL_ABGR_EXT, GL_RGBA4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
+    case SDL_PIXELFORMAT_RGBA4444:
+        return Format(GL_RGBA, GL_RGBA4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
+    case SDL_PIXELFORMAT_BGRA4444:
+        return Format(GL_BGRA, GL_RGBA4, 2, GL_UNSIGNED_SHORT_4_4_4_4);
+    case SDL_PIXELFORMAT_BGRA5551:
+        return Format(GL_BGRA, GL_RGB5_A1, 2, GL_UNSIGNED_SHORT_5_5_5_1);
+    case SDL_PIXELFORMAT_RGBA5551:
+        return Format(GL_RGBA, GL_RGB5_A1, 2, GL_UNSIGNED_SHORT_5_5_5_1);
+    case SDL_PIXELFORMAT_RGB565:
+        return Format(GL_RGB, GL_RGB, 2, GL_UNSIGNED_SHORT_5_6_5);
+    case SDL_PIXELFORMAT_BGR565:
+        return Format(GL_BGR, GL_RGB, 2, GL_UNSIGNED_SHORT_5_6_5);
+    case SDL_PIXELFORMAT_RGB24:
         return Format(GL_RGB, GL_RGB8, 3, GL_UNSIGNED_BYTE);  // Is this correct?
-    case 4:
+    case SDL_PIXELFORMAT_BGR24:
+        return Format(GL_BGR, GL_RGB8, 3, GL_UNSIGNED_BYTE);  // Is this correct?
+    case SDL_PIXELFORMAT_RGB888:
+        return Format(GL_RGB, GL_RGB8, 3, GL_UNSIGNED_BYTE);  // Is this correct?
+    case SDL_PIXELFORMAT_BGR888:
+        return Format(GL_BGR, GL_RGB8, 3, GL_UNSIGNED_BYTE);  // Is this correct?
+    case SDL_PIXELFORMAT_RGBA8888:
         return Format(GL_RGBA, GL_RGBA8, 4, GL_UNSIGNED_INT_8_8_8_8);
+    case SDL_PIXELFORMAT_ABGR8888:
+        return Format(GL_ABGR_EXT, GL_RGBA8, 4, GL_UNSIGNED_INT_8_8_8_8);
+    case SDL_PIXELFORMAT_BGRA8888:
+        return Format(GL_BGRA, GL_RGBA8, 4, GL_UNSIGNED_INT_8_8_8_8);
+    // Possible if we bother to write reorder to RGBA functions
+    case SDL_PIXELFORMAT_ARGB4444:
+        // return Format(GL_RGBA, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4);
+    case SDL_PIXELFORMAT_ARGB1555:
+        // return Format(GL_RGBA, GL_RGB5_A1, GL_UNSIGNED_SHORT_5_5_5_1);
+    case SDL_PIXELFORMAT_ABGR1555:
+        // return Format(GL_RGBA, GL_RGB5_A1, GL_UNSIGNED_SHORT_5_5_5_1);
+    case SDL_PIXELFORMAT_ARGB8888:
+        // return Format(GL_RGBA, GL_RGBA8, GL_UNSIGNED_INT_8_8_8_8);
+    // Unknown
+    case SDL_PIXELFORMAT_ARGB2101010:
+    case SDL_PIXELFORMAT_RGBX8888:
+    case SDL_PIXELFORMAT_BGRX8888:
+    case SDL_PIXELFORMAT_NV21:
+    case SDL_PIXELFORMAT_NV12:
+    case SDL_PIXELFORMAT_YVYU:
+    case SDL_PIXELFORMAT_UYVY:
+    case SDL_PIXELFORMAT_YUY2:
+    case SDL_PIXELFORMAT_IYUV:
+    case SDL_PIXELFORMAT_YV12:
+    case SDL_PIXELFORMAT_UNKNOWN:
+    case SDL_PIXELFORMAT_INDEX1LSB:
+    case SDL_PIXELFORMAT_INDEX1MSB:
+    case SDL_PIXELFORMAT_INDEX4LSB:
+    case SDL_PIXELFORMAT_INDEX4MSB:
+    case SDL_PIXELFORMAT_INDEX8:  // 8-bit palette?
     default:
-        fprintf(stderr, "Unable to handle channels: %d\n", image->channels);
-        visassert(false);
+        fprintf(stderr, "Unable to handle SDL_PIXELFORMAT: %d\n", image->format->format);
+        assert(false);
     }
+    return Format(0, 0, 0, 0);
 }
 // Comment out this include if not making use of Shaders/ShaderCore
 #include "shader/ShaderCore.h"

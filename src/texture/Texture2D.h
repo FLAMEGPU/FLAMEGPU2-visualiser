@@ -11,7 +11,7 @@
 
 #include "util/GLcheck.h"
 #include "interface/RenderTarget.h"
-#include "Texture.h"
+#include "texture/Texture.h"
 
 /**
  * Class representing two-dimensional textures
@@ -112,16 +112,16 @@ class Texture2D : public Texture, public RenderTarget {
     GLenum getName() const override { return Texture::getName(); }
 
  protected:
-    /**
-     * Private constructor
-     * @see load(...)
-     */
-    Texture2D(std::shared_ptr<ImageData> image, const std::string reference, const uint64_t options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
-    /**
-     * Private constructor
-     * @see make(...)
-     */
-    Texture2D(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data = nullptr, const uint64_t &options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
+	/**
+	 * Private constructor
+	 * @see load(...)
+	 */
+    Texture2D(std::shared_ptr<SDL_Surface> image, const std::string reference, const uint64_t &options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
+	/**
+	 * Private constructor
+	 * @see make(...)
+	 */
+    Texture2D(const glm::uvec2 &dimensions, const Texture::Format &format, const void *data = nullptr, const uint64_t&options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
 
  private:
     /**

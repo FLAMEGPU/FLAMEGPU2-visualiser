@@ -7,7 +7,7 @@ DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>
 DISABLE_WARNING_POP
 
-#include "Overlay.h"
+#include "ui/Overlay.h"
 #include "shader/Shaders.h"
 
 
@@ -33,6 +33,13 @@ void HUD::add(std::shared_ptr<Overlay> overlay, AnchorV anchorV, AnchorH anchorH
     std::list<std::shared_ptr<Item>>::iterator item = stack.insert(it, std::make_shared<Item>(overlay, offset, this->dims, anchorV, anchorH, zIndex));
     overlay->setHUDItem(*item);
 }
+void HUD::add(std::shared_ptr <OverlayGroup> overlays, AnchorV anchorV, AnchorH anchorH, const glm::ivec2& offset, int zIndex) {
+    auto ols = overlays->getOverlays();
+    for (auto ol : ols) {
+        if (ol.overlay)
+            add(ol.overlay, anchorV, anchorH, offset + ol.offset, zIndex + ol.zIndex);
+    }
+}
 unsigned int HUD::remove(std::shared_ptr<Overlay> overlay) {
     unsigned int removed = 0;
     std::list<std::shared_ptr<Item>>::iterator it = stack.begin();
@@ -45,6 +52,14 @@ unsigned int HUD::remove(std::shared_ptr<Overlay> overlay) {
         }
     }
     return removed;
+}
+unsigned int HUD::remove(std::shared_ptr<OverlayGroup> overlays) {
+    auto ols = overlays->getOverlays();
+    unsigned int ct = 0;
+    for (auto &ol : ols)
+        if (ol.overlay)
+            ct += remove(ol.overlay);
+    return ct;
 }
 void HUD::clear() {
     stack.clear();
