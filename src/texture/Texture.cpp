@@ -62,6 +62,7 @@ namespace {
 
 
 std::map<SDL_Surface*, unsigned int> Texture::registered_surfaces;
+bool Texture::IL_IS_INIT = false;
 
 // Filter Ext Options
 const uint64_t Texture::DISABLE_ANISTROPIC_FILTERING = 1ull << 0;
@@ -306,11 +307,10 @@ std::shared_ptr<SDL_Surface> Texture::findLoadImage(const std::string &imagePath
     return image;
 }
 std::shared_ptr<SDL_Surface> Texture::loadImage(const std::string &imagePath, bool flipVertical, bool silenceErrors) {
-    static bool DevIL_INIT = false;
-    if (!DevIL_INIT) {
+    if (!IL_IS_INIT) {
         // Not documented whether it is safe to keep calling ilInit()
         // Is documented that calling ilShutdown() is unnecessary
-        DevIL_INIT = true;
+        IL_IS_INIT = true;
         ilInit();
     }
     const std::string filePath = Resources::locateFile(imagePath);
@@ -385,6 +385,32 @@ std::shared_ptr<SDL_Surface> Texture::loadImage(const std::string &imagePath, bo
     if (flipVertical)
         flipRows(image);
     return image;
+}
+unsigned int Texture::saveImage(void* data, unsigned int width, unsigned int height, const std::string& filepath) {
+    if (!IL_IS_INIT) {
+        // Not documented whether it is safe to keep calling ilInit()
+        // Is documented that calling ilShutdown() is unnecessary
+        IL_IS_INIT = true;
+        ilInit();
+    }
+    ILuint imageName = 0;
+    ilGenImages(1, &imageName);
+    ilBindImage(imageName);
+    ilTexImage(width, height, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, data);
+    if (ilGetError()) {
+        fprintf(stderr, "Texture::saveImage(): DevIL returned an error: %s\n", ilErrorString(ilGetError()));
+        return ilGetError();
+    }
+    ilEnable(IL_FILE_OVERWRITE);
+    ilSaveImage(filepath.c_str());
+    const unsigned int save_success = ilGetError();
+    ilBindImage(0);
+    ilDeleteImage(imageName);
+    if (ilGetError()) {
+        fprintf(stderr, "Texture::saveImage(): DevIL returned an error: %s\n", ilErrorString(ilGetError()));
+        return ilGetError();
+    }
+    return save_success;
 }
 void Texture::registerSurface(const std::shared_ptr<SDL_Surface>& sdl_image, unsigned int devil_image) {
     registered_surfaces.emplace(sdl_image.get(), devil_image);
