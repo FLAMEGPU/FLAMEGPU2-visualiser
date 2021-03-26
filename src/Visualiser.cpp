@@ -706,7 +706,7 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
     case SDLK_ESCAPE:
         continueRender = false;
         break;
-    case SDLK_F12:
+    case SDLK_F12:  // If using VS Debugger F12 forces break, Ctrl + F12 however works for this without breaking
         this->screenshot(true);
         break;
     case SDLK_F11:
@@ -979,36 +979,27 @@ void Visualiser::queryControllerAxis(const unsigned int frameTime) {
     }
 }
 
-// http://stackoverflow.com/questions/20233469/how-do-i-take-and-save-a-bmp-screenshot-in-sdl-2
-// @todo - better formats etc, this is more proof of concept.
-// @todo - currently upside down.
 void Visualiser::screenshot() {
     this->screenshot(false);
 }
+
 void Visualiser::screenshot(const bool verbose) {
+    const char *SCREENSHOT_FILENAME = "screenshot.png";
     int w = 1;
     int h = 1;
-    const char *filename = "screenshot.bmp";
-
-    Uint32 rmask, gmask, bmask, amask;
-
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = 0xff000000;
 
     SDL_GetWindowSize(this->window, &w, &h);
-
-    unsigned char *pixels = new unsigned char[w * h * 4];  // 4 bytes for RGBA
+    unsigned char *pixels = new unsigned char[w * h * 4];  // 4 bytes for RGBA;
+    // Get data
     glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-    SDL_Surface *surf = SDL_CreateRGBSurfaceFrom(pixels, w, h, 8 * 4, w * 4, rmask, gmask, bmask, amask);
-    SDL_SaveBMP(surf, filename);
+    const bool result = Texture::saveImage(pixels, w, h, SCREENSHOT_FILENAME);
     if (verbose) {
-        printf("Screenshot saved to %s\n", filename);
+        if (result) {
+            printf("Failed to write screenshot to '%s'\n", SCREENSHOT_FILENAME);
+        } else {
+            printf("Screenshot written to '%s'\n", SCREENSHOT_FILENAME);
+        }
     }
-
-    SDL_FreeSurface(surf);
     delete[] pixels;
 }
 void Visualiser::setWindowIcon() {

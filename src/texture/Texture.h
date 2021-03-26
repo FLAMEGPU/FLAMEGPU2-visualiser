@@ -147,6 +147,15 @@ class Texture {
      * @param silenceErrors If true, will not print errors to console (used by findLoadImage() to reduce error spam)
      */
     static std::shared_ptr<SDL_Surface> loadImage(const std::string& imagePath, bool flipVertical = true, bool silenceErrors = false);
+    /**
+     * Save an image to file
+     * @param data Pointer to a buffer of pixels organised in RGBA order, with 4 bytes per pixel
+     * @param width Width of the image
+     * @param height Width of the image
+     * @param filepath Path to the image write location, should end with a suitable filetype (e.g. png)
+     * @return The IL error code, 0 means success
+     */
+    static unsigned int saveImage(void *data, unsigned int width, unsigned int height, const std::string &filepath);
 
  protected:
     /**
@@ -272,6 +281,10 @@ class Texture {
      * Pair all SDL_Surfaces created by Texture::loadImage(const std::string &, bool, bool) to the DevIL image which owns their data
      */
     static std::map<SDL_Surface*, unsigned int> registered_surfaces;
+    /**
+     * Set true after ilInit() has been called
+     */
+    static bool IL_IS_INIT;
 };
 
 #endif  // SRC_TEXTURE_TEXTURE_H_
