@@ -50,6 +50,10 @@ class FLAMEGPU_Visualisation {
      *
      */
     bool isRunning() const;
+    /**
+     * Set true when the vis has resized the first agent's buffers
+     */
+    bool isReady() const;
 
  private:
     void addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc,

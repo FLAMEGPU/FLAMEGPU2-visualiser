@@ -86,6 +86,7 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , camera(std::make_shared<NoClipCamera>(*reinterpret_cast<const glm::vec3*>(&modelcfg.cameraLocation[0]), *reinterpret_cast<const glm::vec3*>(&modelcfg.cameraTarget[0])))
     , isInitialised(false)
     , continueRender(false)
+    , buffersAllocated(false)
     , msaaState(true)
     , windowTitle(modelcfg.windowTitle)
     , windowDims(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1])
@@ -397,6 +398,9 @@ void Visualiser::render() {
 bool Visualiser::isRunning() const {
     return continueRender;
 }
+bool Visualiser::isReady() const {
+    return buffersAllocated;
+}
 void Visualiser::addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc,
     const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
@@ -469,6 +473,7 @@ void Visualiser::renderAgentStates() {
                 ++tui;
                 GL_CHECK();
             }
+            buffersAllocated = true;
         }
     }
     //  Render agents

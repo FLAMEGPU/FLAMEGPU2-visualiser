@@ -79,6 +79,10 @@ class Visualiser : public ViewportExt {
      */
     bool isRunning() const;
     /**
+     * Returns true if the first agent buffer resize has been requested and applied
+     */
+    bool isReady() const;
+    /**
      * Adds the render details for a specific agent state
      * This allows the visualiser to initialise stuff for rendering that agent state
      * @param agent_name Name of the affected agent
@@ -247,6 +251,7 @@ class Visualiser : public ViewportExt {
      * Flag which tells Visualiser to exit the render loop
      */
     std::atomic<bool> continueRender;
+    std::atomic<bool> buffersAllocated;
     /**
      * Flag representing whether MSAA is currently enabled
      * MSAA can be toggled at runtime with F10
