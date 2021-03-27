@@ -187,7 +187,6 @@ class Visualiser : public ViewportExt {
     void addController(const SDL_ControllerDeviceEvent sdlEvent);
     void removeController(const SDL_ControllerDeviceEvent sdlEvent);
     void handleControllerButton(const SDL_ControllerButtonEvent sdlEvent);
-    void handleControllerAxis(const SDL_ControllerAxisEvent sdlEvent);
     void queryControllerAxis(const unsigned int frameTime);
     void screenshot();
     void screenshot(const bool verbose);
