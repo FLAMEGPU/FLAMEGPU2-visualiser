@@ -511,7 +511,7 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
     const std::map<TexBufferConfig::Function, TexBufferConfig>& ext_core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& ext_tex_buffers) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     auto &as = agentStates.at(namepair);
-    if (as.core_texture_buffers.empty())
+    if (as.core_texture_buffers.empty() || buffLen == 0)
         return;
     //  Copy Data
     const auto& first_buff = as.core_texture_buffers.begin()->second;
