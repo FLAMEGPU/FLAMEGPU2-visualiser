@@ -510,7 +510,7 @@ void Visualiser::renderAgentStates() {
 
     // Check that all buffers with a requested size, actually have data before we render
     // This prevents an initial frame where only some agents are rendered.
-    if (!closeSplashScreen) {
+    if (!closeSplashScreen && buffersAllocated) {
         closeSplashScreen = true;
         for (auto& as : agentStates) {
             if (as.second.requiredSize && !as.second.dataSize) {
