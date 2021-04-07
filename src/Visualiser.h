@@ -58,6 +58,7 @@ class Visualiser : public ViewportExt {
         std::multimap<TexBufferConfig::Function, std::pair<CustomTexBufferConfig, CUDATextureBuffer<float>*>> custom_texture_buffers;
         std::shared_ptr<Entity> entity;
         unsigned int requiredSize;  //  Ideally this needs to be threadsafe, but if we make it atomic stuff fails to build
+        unsigned int dataSize;  // Number of elements we have initialised data for
     };
 
  public:
@@ -274,10 +275,8 @@ class Visualiser : public ViewportExt {
     std::shared_ptr<SplashScreen> splashScreen;
     /**
      * Notifies from update thread to render thread when simulation has loaded and splash screen needs to be closed
-     * requestBufferResizes() sets value to 1
-     * updateAgentStateBuffer() set value to 2
      */
-    unsigned char closeSplashScreen = 0;
+    bool closeSplashScreen = false;
     /**
      * Used for tracking and calculating fps
      */

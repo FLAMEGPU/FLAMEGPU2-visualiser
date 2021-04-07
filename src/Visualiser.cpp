@@ -38,7 +38,8 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
     , tex_unit_offset(0)
     , instanceCount(0)
     , entity(nullptr)
-    , requiredSize(0) {
+    , requiredSize(0)
+    , dataSize(0) {
         // Copy texture buffers to dedicated structures
         for (auto &c : _core_tex_buffers) {
             core_texture_buffers.emplace(c.first, nullptr);
@@ -298,12 +299,6 @@ void Visualiser::render() {
     // If the program runs for over ~49 days, the return value of SDL_GetTicks() will wrap
     const unsigned int frameTime = t_updateTime < updateTime ? (t_updateTime + (UINT_MAX - updateTime)) : t_updateTime - updateTime;
     updateTime = t_updateTime;
-    // Close splash screen if we are ready
-    if (closeSplashScreen > 1 && splashScreen) {
-        splashScreen->setVisible(false);  // redundant
-        hud->remove(splashScreen);
-        splashScreen.reset();
-    }
     SDL_Event e;
     //  Handle continuous key presses (movement)
     const Uint8 *state = SDL_GetKeyboardState(NULL);
@@ -393,6 +388,12 @@ void Visualiser::render() {
     for (auto &sm : staticModels)
         sm->render();
     renderAgentStates();
+    // Close splash screen if we are ready (renderAgentStates sets this)
+    if (closeSplashScreen && splashScreen) {
+        splashScreen->setVisible(false);  // redundant
+        hud->remove(splashScreen);
+        splashScreen.reset();
+    }
     // Render lines last, as they may contain alpha
     if (renderLines) {
         GL_CALL(glEnable(GL_BLEND));
@@ -435,6 +436,7 @@ void Visualiser::renderAgentStates() {
     std::lock_guard<std::mutex> *guard = nullptr;
     if (!pause_guard)
         guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
+    bool hasResized = false;
     // Resize if necessary
     for (auto &_as : agentStates) {
         auto &as = _as.second;
@@ -442,15 +444,15 @@ void Visualiser::renderAgentStates() {
             return;
         // resize buffers
         const auto &first_buff = as.core_texture_buffers.begin()->second;
-        const unsigned int old_size = first_buff ? first_buff->elementCount : 0;
-        if (old_size < as.requiredSize) {
+        const unsigned int allocated_size = first_buff ? first_buff->elementCount : 0;
+        if (allocated_size < as.requiredSize) {
             // If we haven't been allocated texture units yet, get them now
             if (!as.tex_unit_offset) {
                 as.tex_unit_offset = texture_unit_counter;
                 texture_unit_counter += static_cast<unsigned int>(as.core_texture_buffers.size() + as.custom_texture_buffers.size());
             }
             //  Decide new buff size
-            unsigned int newSize = old_size < 1024 ? 1024 : old_size;
+            unsigned int newSize = allocated_size < 1024 ? 1024 : allocated_size;
             while (newSize < as.requiredSize) {
                 newSize = static_cast<unsigned int>(newSize * 1.5f);
             }
@@ -460,49 +462,75 @@ void Visualiser::renderAgentStates() {
             for (auto &_tb : as.core_texture_buffers) {
                 auto &tb = _tb.second;
                 const std::string samplerName = TexBufferConfig::SamplerName(_tb.first);
-                // Free old buffs
+                // Remove old buff from shader
                 shader_vec->removeTextureUniform(samplerName.c_str());
-                if (tb && tb->d_mappedPointer)
-                    freeGLInteropTextureBuffer(tb);
+                CUDATextureBuffer<float> *old_tb = tb;
                 // Alloc new buffs (this needs to occur in other thread!!!)
                 tb = mallocGLInteropTextureBuffer<float>(newSize, 1);
+                // Copy any old data to the buffer
+                if (old_tb && tb && old_tb->d_mappedPointer && tb->d_mappedPointer && as.dataSize)
+                    _cudaMemcpyDeviceToDevice(tb->d_mappedPointer, old_tb->d_mappedPointer, as.dataSize * sizeof(float));
                 // Bind texture name to texture unit
                 GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui));
                 GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, tb->glTexName));
                 GL_CALL(glActiveTexture(GL_TEXTURE0));
                 shader_vec->addTexture(samplerName.c_str(), GL_TEXTURE_BUFFER, tb->glTexName, as.tex_unit_offset + tui);
+                // Free old buff
+                if (old_tb && old_tb->d_mappedPointer)
+                    freeGLInteropTextureBuffer(old_tb);
                 ++tui;
                 GL_CHECK();
             }
             for (auto& _tb : as.custom_texture_buffers) {
                 auto& tb = _tb.second.second;
-                // Free old buffs
+                // Remove old buff from shader
                 shader_vec->removeTextureUniform(_tb.second.first.nameInShader.c_str());
-                if (tb && tb->d_mappedPointer)
-                    freeGLInteropTextureBuffer(tb);
+                CUDATextureBuffer<float>* old_tb = tb;
                 // Alloc new buffs (this needs to occur in other thread!!!)
                 tb = mallocGLInteropTextureBuffer<float>(newSize, 1);
+                // Copy any old data to the buffer
+                if (old_tb && tb && old_tb->d_mappedPointer && tb->d_mappedPointer && as.dataSize)
+                    _cudaMemcpyDeviceToDevice(tb->d_mappedPointer, old_tb->d_mappedPointer, as.dataSize * sizeof(float));
                 // Bind texture name to texture unit
                 GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui));
                 GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, tb->glTexName));
                 GL_CALL(glActiveTexture(GL_TEXTURE0));
                 shader_vec->addTexture(_tb.second.first.nameInShader.c_str(), GL_TEXTURE_BUFFER, tb->glTexName, as.tex_unit_offset + tui);
+                // Free old buff
+                if (old_tb && old_tb->d_mappedPointer)
+                    freeGLInteropTextureBuffer(old_tb);
                 ++tui;
                 GL_CHECK();
             }
-            buffersAllocated = true;
+            hasResized = true;
         }
     }
+    if (hasResized)
+        buffersAllocated = true;
+
+    // Check that all buffers with a requested size, actually have data before we render
+    // This prevents an initial frame where only some agents are rendered.
+    if (!closeSplashScreen) {
+        closeSplashScreen = true;
+        for (auto& as : agentStates) {
+            if (as.second.requiredSize && !as.second.dataSize) {
+                closeSplashScreen = false;
+                break;
+            }
+        }
+    }
+
     //  Render agents
-    for (auto &as : agentStates) {
-        if (!as.second.core_texture_buffers.empty())  // Extra check to make sure buffer has been allocated successfully
-            as.second.entity->renderInstances(as.second.requiredSize);
+    if (closeSplashScreen) {
+        for (auto &as : agentStates) {
+            if (!as.second.core_texture_buffers.empty() && as.second.dataSize)  // Extra check to make sure buffer has been allocated successfully
+                as.second.entity->renderInstances(as.second.dataSize);
+        }
     }
     if (guard)
         delete guard;
 }
 void Visualiser::requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned buffLen) {
-    closeSplashScreen = closeSplashScreen == 0 ? 1 : closeSplashScreen;
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     auto &as = agentStates.at(namepair);
     as.requiredSize = buffLen;
@@ -516,24 +544,23 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
     //  Copy Data
     const auto& first_buff = as.core_texture_buffers.begin()->second;
     const unsigned int buff_size = first_buff ? first_buff->elementCount : 0;
-    if (buff_size >= buffLen) {  // This may fail for a single frame occasionally
+    if (buff_size) {
+        // If buffer has to resize, we may not copy data for new agents
+        as.dataSize = buffLen < buff_size ? buffLen : buff_size;
         for (const auto &_ext_tb : ext_core_tex_buffers) {
             auto &ext_tb = _ext_tb.second;
             auto &int_tb = as.core_texture_buffers.at(_ext_tb.first);
-            visassert(_cudaMemcpyDeviceToDevice(int_tb->d_mappedPointer, ext_tb.t_d_ptr, buffLen * sizeof(float)));
+            visassert(_cudaMemcpyDeviceToDevice(int_tb->d_mappedPointer, ext_tb.t_d_ptr, as.dataSize * sizeof(float)));
         }
         for (const auto& _ext_tb : ext_tex_buffers) {
             auto& ext_tb = _ext_tb.second;
             for (auto int_tb = as.custom_texture_buffers.find(_ext_tb.first); int_tb != as.custom_texture_buffers.end(); ++int_tb) {
                 if (ext_tb.nameInShader == int_tb->second.first.nameInShader) {
-                    visassert(_cudaMemcpyDeviceToDevice(int_tb->second.second->d_mappedPointer, ext_tb.t_d_ptr, buffLen * sizeof(float)));
+                    visassert(_cudaMemcpyDeviceToDevice(int_tb->second.second->d_mappedPointer, ext_tb.t_d_ptr, as.dataSize * sizeof(float)));
                 }
             }
         }
     }
-    // Receiving agent data means the model has loaded, close splash screen
-    // We can't close splash screen in this thread, so do it next time render is called
-    closeSplashScreen = closeSplashScreen == 1 ? 2 : closeSplashScreen;
 }
 
 //  Items taken from sdl_exp
