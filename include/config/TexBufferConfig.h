@@ -28,6 +28,15 @@ struct TexBufferConfig {
          */
         Color,
         /**
+         * Agent scale
+         */
+        Scale_x, Scale_y, Scale_z,
+        /**
+         * Uniform agent scale
+         * (Alternate to individual scale components)
+         */
+        UniformScale,
+        /**
          * Some other use, e.g. custom shaders in future
          */
         Unknown,
@@ -46,6 +55,10 @@ struct TexBufferConfig {
         case Heading: return "_heading";
         case Pitch: return "_pitch";
         case Bank: return "_bank";
+        case Scale_x: return "_scale_x";
+        case Scale_y: return "_scale_y";
+        case Scale_z: return "_scale_z";
+        case UniformScale: return "_scale";
         // These always get name from elsewhere so return empty string
         case Color:
         case Unknown:

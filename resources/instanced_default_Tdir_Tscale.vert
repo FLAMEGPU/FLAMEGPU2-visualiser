@@ -17,11 +17,14 @@ out vec3 eyeVertex;
 out vec3 eyeNormal;
 out vec2 texCoords;
 
+vec3 getScale();
 mat3 getDirection();
 void main()
 {
   // Apply model matrix to raw vertex
   vec4 vert = _modelMat * vec4(_vertex,1.0f);
+  // Apply a user defined scale multiplier
+  vert.xyz *= getScale();
   // Apply a user defined rotation
   mat3 directionMat = getDirection();
   vert.xyz = directionMat * vert.xyz;

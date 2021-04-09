@@ -280,6 +280,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/Shaders.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/ShadersVec.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/DirectionFunction.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/ScaleFunction.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture2D.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture2D_Multisample.h
@@ -310,6 +311,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/ShaderCore.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/Shaders.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/DirectionFunction.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/shader/ScaleFunction.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture2D.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/texture/Texture2D_Multisample.cpp
@@ -522,8 +524,8 @@ else()
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/stuntplane.obj
 # Tdir: These shaders are setup to receive an appended rotation function
 # Tcolor: These shaders are setup to receive an appended color function
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tdir.vert
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tcolor_Tdir.vert
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tdir_Tscale.vert
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tcolor_Tdir_Tscale.vert
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat_Tcolor.frag
     )
     cmrc_add_resource_library(resources ${RESOURCES_ALL})
