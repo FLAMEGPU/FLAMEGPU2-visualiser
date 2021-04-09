@@ -45,8 +45,8 @@ DirectionFunction::DirectionFunction(const std::map<TexBufferConfig::Function, T
 std::string DirectionFunction::getSrc() {
     /**
      * Optional texture buffers
-     * x_dir, y_dir, z_dir: Heading direction vector
-     * x_up, y_up, z_up: Heading up vector
+     * _fw_x, _fw_y, _fw_z: Heading direction vector
+     * _up_x, _up_y, _up_z: Heading up vector
      * _heading: Angle to rotate about y axis
      * _pitch: Angle to rotate about x axis
      * _bank: Angle to rotate about z axis
@@ -136,12 +136,12 @@ std::string DirectionFunction::getSrc() {
             ss << "} else {" << "\n";
             // The provided algorithm breaks for target==(0,1,0) or target==(0,-1,0)
             // The above branch, sets W0 0, which causes cross product to fail etc etc
-            // I also believe it erroneously causes angle_H to rotate 90 degrees
             // This fix applies the angle_H technique to UP_2 to extract an appropriate angle
-            ss << "    float angle_B = atan2(target_up.z, target_up.x);" << "\n";
+            ss << "    angle_B = atan2(target_up.z, target_up.x);" << "\n";
             ss << "    angle_B = target.y > 0 ? 3.1415926538 + angle_B : angle_B;" << "\n";
             // This alternate version was used before I fixed atan2(0,0) to return 0
-            // ss << "    float angle_B = atan2(target_up.x, target_up.z);" << "\n";
+            // I also believe which was erroneously causing angle_H to rotate 90 degrees
+            // ss << "    angle_B = atan2(target_up.x, target_up.z);" << "\n";
             // ss << "    angle_B = target.y > 0 ? 3.1415926538 - angle_B - angle_H : angle_H - angle_B;" << "\n";
             ss << "}" << "\n";
         }
