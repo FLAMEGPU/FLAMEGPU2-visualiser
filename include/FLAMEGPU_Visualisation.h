@@ -23,8 +23,8 @@ class FLAMEGPU_Visualisation {
          const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
         addAgentState(agent_name.c_str(), state_name.c_str(), vc, core_tex_buffers, tex_buffers);
     }
-    void requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen) {
-        requestBufferResizes(agent_name.c_str(), state_name.c_str(), buffLen);
+    void requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen, bool force) {
+        requestBufferResizes(agent_name.c_str(), state_name.c_str(), buffLen, force);
     }
     void lockMutex();
     void releaseMutex();
@@ -62,7 +62,7 @@ class FLAMEGPU_Visualisation {
  private:
     void addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc,
         const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffersz);
-    void requestBufferResizes(const char *agent_name, const char *state_name, const unsigned int buffLen);
+    void requestBufferResizes(const char *agent_name, const char *state_name, const unsigned int buffLen, bool force);
     void updateAgentStateBuffer(const char *agent_name, const char *state_name, const unsigned int buffLen,
         const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers);
     Visualiser *vis = nullptr;
