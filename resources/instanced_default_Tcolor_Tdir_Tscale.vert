@@ -19,11 +19,14 @@ out vec2 texCoords;
 out vec4 colorOverride;
 flat out int shaderColor;
 
+vec3 getScale();
 mat3 getDirection();
 vec4 calculateColor();
 void main() {
   // Apply model matrix to raw vertex
   vec4 vert = _modelMat * vec4(_vertex,1.0f);
+  // Apply a user defined scale multiplier
+  vert.xyz *= getScale();
   // Apply a user defined rotation
   mat3 directionMat = getDirection();
   vert.xyz = directionMat * vert.xyz;

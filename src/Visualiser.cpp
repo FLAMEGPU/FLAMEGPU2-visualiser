@@ -2,6 +2,7 @@
 #include "util/cuda.h"
 #include "util/fonts.h"
 #include "shader/DirectionFunction.h"
+#include "shader/ScaleFunction.h"
 #include "shader/lights/LightsBuffer.h"
 #include "ui/Text.h"
 #include "ui/SplashScreen.h"
@@ -49,26 +50,27 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
         }
         // Select the corresponding shader
         DirectionFunction df(_core_tex_buffers);
+        ScaleFunction sf(_core_tex_buffers);
         if (!vc.color_shader_src.empty()) {
             // Entity has a color and direction override
             entity = std::make_shared<Entity>(
                 vc.model_path,
                 *reinterpret_cast<const glm::vec3*>(vc.model_scale),
                 std::make_shared<Shaders>(
-                    "resources/instanced_default_Tcolor_Tdir.vert",
+                    "resources/instanced_default_Tcolor_Tdir_Tscale.vert",
                     "resources/material_flat_Tcolor.frag",
                     "",
-                    df.getSrc() + vc.color_shader_src));
+                    sf.getSrc() + df.getSrc() + vc.color_shader_src));
         } else if (vc.model_texture) {
             // Entity has texture
             entity = std::make_shared<Entity>(
                 vc.model_path,
                 *reinterpret_cast<const glm::vec3*>(vc.model_scale),
                 std::make_shared<Shaders>(
-                    "resources/instanced_default_Tdir.vert",
+                    "resources/instanced_default_Tdir_Tscale.vert",
                     "resources/material_phong.frag",
                     "",
-                    df.getSrc()),
+                    sf.getSrc() + df.getSrc()),
                 Texture2D::load(vc.model_texture));
         } else {
             // Entity does not have a texture
@@ -76,10 +78,10 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
                 vc.model_path,
                 *reinterpret_cast<const glm::vec3*>(vc.model_scale),
                 std::make_shared<Shaders>(
-                    "resources/instanced_default_Tdir.vert",
+                    "resources/instanced_default_Tdir_Tscale.vert",
                     "resources/material_flat.frag",
                     "",
-                    df.getSrc()));
+                    sf.getSrc() + df.getSrc()));
             entity->setMaterial(glm::vec3(0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.7f));
         }
 }
@@ -463,7 +465,7 @@ void Visualiser::renderAgentStates() {
                 // Remove old buff from shader
                 shader_vec->removeTextureUniform(samplerName.c_str());
                 CUDATextureBuffer<float> *old_tb = tb;
-                // Alloc new buffs (this needs to occur in other thread!!!)
+                // Alloc new buffs (this needs to occur in render thread!)
                 tb = mallocGLInteropTextureBuffer<float>(newSize, 1);
                 // Copy any old data to the buffer
                 if (old_tb && tb && old_tb->d_mappedPointer && tb->d_mappedPointer && as.dataSize)
