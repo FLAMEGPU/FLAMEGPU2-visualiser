@@ -535,11 +535,11 @@ void Visualiser::renderAgentStates() {
     if (guard)
         delete guard;
 }
-void Visualiser::requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned buffLen) {
+void Visualiser::requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned buffLen, bool force) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     auto &as = agentStates.at(namepair);
-    // Mark sim as not ready if resizing buffer prior to first step
-    if (as.requiredSize != buffLen && !stepCount)
+    // Mark sim as not ready if forced
+    if (as.requiredSize != buffLen && force)
         buffersAllocated = false;
     // Update required size
     as.requiredSize = buffLen;

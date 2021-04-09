@@ -25,8 +25,8 @@ void FLAMEGPU_Visualisation::addAgentState(const char *agent_name, const char *s
     const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
     vis->addAgentState(agent_name, state_name, vc, core_tex_buffers, tex_buffers);
 }
-void FLAMEGPU_Visualisation::requestBufferResizes(const char *agent_name, const char *state_name, const unsigned int buffLen) {
-    vis->requestBufferResizes(agent_name, state_name, buffLen);
+void FLAMEGPU_Visualisation::requestBufferResizes(const char *agent_name, const char *state_name, const unsigned int buffLen, bool force) {
+    vis->requestBufferResizes(agent_name, state_name, buffLen, force);
 }
 void FLAMEGPU_Visualisation::updateAgentStateBuffer(const char *agent_name, const char *state_name, const unsigned int buffLen,
     const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {

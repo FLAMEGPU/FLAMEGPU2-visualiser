@@ -101,8 +101,9 @@ class Visualiser : public ViewportExt {
      * @param agent_name Name of the affected agent
      * @param state_name Name of the affected agent state
      * @param buffLen New minimum required buffer size
+     * @param force If true, marks sim as not ready to delay splash screen closing
      */
-    void requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen);
+    void requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen, bool force);
     /**
      * This copies data from the provided device pointers to the texture buffers used for rendering
      * @param agent_name Name of the affected agent
