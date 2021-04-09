@@ -33,7 +33,7 @@ void FLAMEGPU_Visualisation::updateAgentStateBuffer(const char *agent_name, cons
     vis->updateAgentStateBuffer(agent_name, state_name, buffLen, core_tex_buffers, tex_buffers);
 }
 void FLAMEGPU_Visualisation::setStepCount(const unsigned int stepCount) {
-  vis->setStepCount(stepCount);
+    vis->setStepCount(stepCount);
 }
 void FLAMEGPU_Visualisation::start() {
     vis->start();

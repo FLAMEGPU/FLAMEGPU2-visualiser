@@ -431,8 +431,6 @@ void Visualiser::addAgentState(const std::string &agent_name, const std::string 
 
 void Visualiser::renderAgentStates() {
     static unsigned int texture_unit_counter = 1;
-    if (texture_unit_counter == 1 && modelConfig.beginPaused)
-        this->pause_guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
     std::lock_guard<std::mutex> *guard = nullptr;
     if (!pause_guard)
         guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
@@ -518,6 +516,13 @@ void Visualiser::renderAgentStates() {
                 break;
             }
         }
+        // If desired, enable pause once splash screen has closed
+        if (closeSplashScreen) {
+            if (!this->pause_guard && modelConfig.beginPaused) {
+                this->pause_guard = guard;
+                guard = nullptr;
+            }
+        }
     }
 
     //  Render agents
@@ -533,6 +538,10 @@ void Visualiser::renderAgentStates() {
 void Visualiser::requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned buffLen) {
     std::pair<std::string, std::string> namepair = { agent_name, state_name };
     auto &as = agentStates.at(namepair);
+    // Mark sim as not ready if resizing buffer prior to first step
+    if (as.requiredSize != buffLen && !stepCount)
+        buffersAllocated = false;
+    // Update required size
     as.requiredSize = buffLen;
 }
 void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned buffLen,

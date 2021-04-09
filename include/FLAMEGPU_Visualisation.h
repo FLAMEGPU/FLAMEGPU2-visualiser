@@ -32,6 +32,10 @@ class FLAMEGPU_Visualisation {
         const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
         updateAgentStateBuffer(agent_name.c_str(), state_name.c_str(), buffLen, core_tex_buffers, tex_buffers);
     }
+    /**
+     * Update the UI step counter
+     * @note When this value is first set non-0, the visualiser assumes sim has begun executing
+     */
     void setStepCount(const unsigned int stepCount);
     /*
      * Start visualiser in background thread
