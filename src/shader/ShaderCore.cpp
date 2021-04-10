@@ -13,7 +13,7 @@ DISABLE_WARNING_POP
 bool ShaderCore::exitOnError = false;  // Tempted to use pre-processor macros to swap this default to true on release mode
 // Constructors/Destructors
 ShaderCore::ShaderCore()
-    : programId(-1), shaderTag(const_cast<char *>("")) { }
+    : programId(-1), shaderTag("") { }
 ShaderCore::ShaderCore(const ShaderCore &other)
     : ShaderCore() {
     // Copy across all member variables: e.g uniforms, textures, buffers etc
@@ -36,14 +36,13 @@ ShaderCore::ShaderCore(const ShaderCore &other)
         this->lostBuffers.push_back(BufferDetail(i));
 }
 ShaderCore::~ShaderCore() {
-    if (this->shaderTag[0] != '\0') delete[] this->shaderTag;
+    // Do nothing
 }
 // Core
 void ShaderCore::reload() {
     GL_CHECK();
     // Clear shadertag
-    if (this->shaderTag[0] != '\0') delete[] this->shaderTag;
-    this->shaderTag = const_cast<char *>("");
+    this->shaderTag.clear();
     while (true) {  // Iterate until shader compilation has been corrected
         // Create temporary shader program
         GLuint t_programId = GL_CALL(glCreateProgram());
@@ -87,18 +86,18 @@ void ShaderCore::setupBindings() {
     }
     dynamicUniforms.clear();
     for (DynamicUniformDetail const &d : t_dynamicUniforms) {
-        GLint location = GL_CALL(glGetUniformLocation(this->programId, d.uniformName));
+        GLint location = GL_CALL(glGetUniformLocation(this->programId, d.uniformName.c_str()));
         if (location != -1) {
             dynamicUniforms.emplace(location, d);
         } else {  // If the buffer isn't found, remind the user
             lostDynamicUniforms.push_front(d);
-            printf("%s: Dynamic uniform '%s' could not be located on shader reload.\n", this->shaderTag, d.uniformName);
+            printf("%s: Dynamic uniform '%s' could not be located on shader reload.\n", this->shaderTag.c_str(), d.uniformName.c_str());
         }
     }
     // Refresh static uniforms
     GL_CALL(glUseProgram(this->programId));
     for (std::list<StaticUniformDetail>::iterator i = staticUniforms.begin(); i != staticUniforms.end(); ++i) {
-        GLint location = GL_CALL(glGetUniformLocation(this->programId, i->uniformName));
+        GLint location = GL_CALL(glGetUniformLocation(this->programId, i->uniformName.c_str()));
         if (location != -1) {
             if (i->type == GL_FLOAT) {
                 static_assert(sizeof(int) == sizeof(float), "Error: int and float sizes differ, static float uniforms may be corrupted.\n");
@@ -135,7 +134,7 @@ void ShaderCore::setupBindings() {
                 GL_CALL(glUniformMatrix4fv(location, 1, false, reinterpret_cast<const GLfloat *>(glm::value_ptr(i->data))));
             }
         } else {  // If the uniform isn't found again, remind the user
-            printf("%s: Static uniform '%s' could not located on shader reload.\n", this->shaderTag, i->uniformName);
+            printf("%s: Static uniform '%s' could not be located on shader reload.\n", this->shaderTag.c_str(), i->uniformName.c_str());
         }
     }
     // Refresh buffers
@@ -149,14 +148,15 @@ void ShaderCore::setupBindings() {
         GLenum blockType = getResourceBlock(d.type);
         if (blockType == GL_INVALID_ENUM)
             continue;
-        GLuint uniformBlockIndex = GL_CALL(glGetProgramResourceIndex(this->programId, blockType, d.nameInShader));
+        GLuint uniformBlockIndex = GL_CALL(glGetProgramResourceIndex(this->programId, blockType, d.nameInShader.c_str()));
         if (uniformBlockIndex != GL_INVALID_INDEX) {
             auto rtn = buffers.emplace(uniformBlockIndex, d);
             if (!rtn.second)fprintf(stderr, "Somehow a buffer was bound twice.");
             GL_CALL(glUniformBlockBinding(this->programId, uniformBlockIndex, d.bindingPoint));
-        } else if (strcmp(d.nameInShader, Shaders::LIGHT_UNIFORM_BLOCK_NAME) && strcmp(d.nameInShader, Shaders::MATERIAL_UNIFORM_BLOCK_NAME)) {  // If the buffer isn't found, remind the user, Don't warn for known system bufferS
+        } else if (d.nameInShader != Shaders::LIGHT_UNIFORM_BLOCK_NAME && d.nameInShader != Shaders::MATERIAL_UNIFORM_BLOCK_NAME) {
+            // If the buffer isn't found, remind the user, Don't warn for known system buffers
             lostBuffers.push_front(d);
-            printf("%s: Buffer '%s' could not be located on shader reload.\n", this->shaderTag, d.nameInShader);
+            printf("%s: Buffer '%s' could not be located on shader reload.\n", this->shaderTag.c_str(), d.nameInShader.c_str());
         }
     }
     // Refresh subclass specific bindings
@@ -289,9 +289,9 @@ bool ShaderCore::addDynamicUniform(const char *uniformName, const glm::mat4 *mat
 bool ShaderCore::addDynamicUniform(DynamicUniformDetail d) {
     if (d.count > 0 && d.count <= 4) {
         // Purge any existing dynamic uniform which matches
-        removeDynamicUniform(d.uniformName);
+        removeDynamicUniform(d.uniformName.c_str());
         if (this->programId > 0) {
-            GLint location = GL_CALL(glGetUniformLocation(this->programId, d.uniformName));
+            GLint location = GL_CALL(glGetUniformLocation(this->programId, d.uniformName.c_str()));
             if (location != -1) {
                 // Replace with new one
                 // Can't use[] assignment constructor due to const elements
@@ -299,7 +299,7 @@ bool ShaderCore::addDynamicUniform(DynamicUniformDetail d) {
                 dynamicUniforms.emplace(location, d);
                 return true;
             }
-            fprintf(stderr, "%s: Dynamic uniform named: %s was not found.\n", shaderTag, d.uniformName);
+            fprintf(stderr, "%s: Dynamic uniform named: %s was not found.\n", shaderTag.c_str(), d.uniformName.c_str());
         }
         lostDynamicUniforms.push_back(d);
     }
@@ -326,7 +326,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLfloat *arry, 
             GL_CALL(glUseProgram(0));
             return true;
         } else {
-            fprintf(stderr, "%s: Static uniform named: %s was not found.\n", shaderTag, uniformName);
+            fprintf(stderr, "%s: Static uniform named: %s was not found.\n", shaderTag.c_str(), uniformName);
         }
     }
     return false;
@@ -351,7 +351,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLint *arry, un
             GL_CALL(glUseProgram(0));
             return true;
         } else {
-            fprintf(stderr, "%s: Static uniform named: %s was not found.\n", shaderTag, uniformName);
+            fprintf(stderr, "%s: Static uniform named: %s was not found.\n", shaderTag.c_str(), uniformName);
         }
     }
     return false;
@@ -376,7 +376,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const GLuint *arry, u
             GL_CALL(glUseProgram(0));
             return true;
         } else {
-            fprintf(stderr, "%s: Static uniform named: %s was not found.\n", shaderTag, uniformName);
+            fprintf(stderr, "%s: Static uniform named: %s was not found.\n", shaderTag.c_str(), uniformName);
         }
     }
     return false;
@@ -393,7 +393,7 @@ bool ShaderCore::addStaticUniform(const char *uniformName, const glm::mat4 *mat)
             GL_CALL(glUseProgram(0));
             return true;
         } else {
-            fprintf(stderr, "%s: Static uniform named: %s was not found.\n", shaderTag, uniformName);
+            fprintf(stderr, "%s: Static uniform named: %s was not found.\n", shaderTag.c_str(), uniformName);
         }
     }
     return false;
@@ -424,11 +424,11 @@ bool ShaderCore::addBuffer(const char *bufferNameInShader, const GLenum bufferTy
             BufferDetail bd = { bufferNameInShader, bufferType, bufferBindingPoint };
             // dynamicUniforms.erase(blockIndex);  // Why?
             auto rtn = buffers.emplace(uniformBlockIndex, bd);
-            if (!rtn.second)fprintf(stderr, "%s: Buffer named: %s is already bound.\n", shaderTag, bufferNameInShader);
+            if (!rtn.second)fprintf(stderr, "%s: Buffer named: %s is already bound.\n", shaderTag.c_str(), bufferNameInShader);
             GL_CALL(glUniformBlockBinding(this->programId, uniformBlockIndex, bufferBindingPoint));
             return true;
         } else if (strcmp(bufferNameInShader, Shaders::LIGHT_UNIFORM_BLOCK_NAME) && strcmp(bufferNameInShader, Shaders::MATERIAL_UNIFORM_BLOCK_NAME)) {  // Don't warn for known system buffers
-            fprintf(stderr, "%s: Buffer named: %s was not found.\n", shaderTag, bufferNameInShader);
+            fprintf(stderr, "%s: Buffer named: %s was not found.\n", shaderTag.c_str(), bufferNameInShader);
         }
     }
     lostBuffers.push_back({ bufferNameInShader, bufferType, bufferBindingPoint });
@@ -579,14 +579,11 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
     // Attach shader to program
     GL_CALL(glAttachShader(t_shaderProgram, shaderId));
     // Append to shaderTag
-    if (shaderTag[0] == '\0') {
-        shaderName = su::removeFileExt(shaderName);
+    if (shaderTag.empty()) {
+        this->shaderTag = su::removeFileExt(shaderName);
     } else {
-        shaderName = std::string(shaderTag) + std::string("-") + su::removeFileExt(shaderName);
-        delete[] this->shaderTag;
+        this->shaderTag += std::string("-") + su::removeFileExt(shaderName);
     }
-    this->shaderTag = new char[shaderName.length() + 1];
-    snprintf(this->shaderTag, shaderName.length() + 1, "%s", shaderName.c_str());
     const int rtn = static_cast<int>(findShaderVersion(shaderSources));
     // Cleanup
     for (auto j : shaderSources) {
@@ -686,7 +683,7 @@ bool ShaderCore::checkProgramLinkError(const GLuint _programId) const {
         char* log = new char[len + 1];
         GL_CALL(glGetProgramInfoLog(_programId, len, nullptr, log));
         //  Print the message
-        fprintf(stderr, "Program compilation error (%s):\n", shaderTag);
+        fprintf(stderr, "Program compilation error (%s):\n", shaderTag.c_str());
         fprintf(stderr, "%s\n", log);
         delete[] log;
         if (exitOnError) {

@@ -43,7 +43,7 @@ class ShaderCore : public Reloadable {
     /**
      * A constant string to identify the particular shader instance
      */
-    char* shaderTag;
+    std::string shaderTag;
 
  protected:
     /**
@@ -66,7 +66,7 @@ class ShaderCore : public Reloadable {
      * Returns the shader tag, this is a rough identifier of the shader
      * This value is produced by concatenating the file name (sans extension) of the final file provided for each shader attatched to the object
      */
-    inline const char* getShaderTag() const { return this->shaderTag; }
+    inline const char* getShaderTag() const { return this->shaderTag.c_str(); }
     /**
      * Reloads the shader source from file, recompiles it and rebinds all bound items
      * @note It is expected that subclass constructors call this method after configuring their sources
@@ -320,7 +320,7 @@ class ShaderCore : public Reloadable {
         /**
          * Identifier of the uniform within the shader source
          */
-        const char *uniformName;
+        const std::string uniformName;
     };
     /**
      * Remembers a pointer to an array of upto 4 integers that will be updated everytime useProgram() is called on this Shaders object
@@ -359,7 +359,7 @@ class ShaderCore : public Reloadable {
         /**
          * Identifier of the uniform within the shader source
          */
-        const char *uniformName;
+        const std::string uniformName;
     };
     /**
      * Holds information necessary for setting the static uniforms to be bound to the shader
@@ -393,7 +393,7 @@ class ShaderCore : public Reloadable {
         /**
          * Name of the buffer within the shader
          */
-        const char* nameInShader;
+        const std::string nameInShader;
         /**
          * The type of buffer (e.g. GL_SHADER_STORAGE_BUFFER, GL_UNIFORM_BUFFER)
          */
