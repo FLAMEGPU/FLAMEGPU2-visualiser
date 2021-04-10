@@ -754,7 +754,7 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         this->setMSAA(!this->msaaState);
         break;
     case SDLK_F8:
-        this->toggleMouseMode();
+        this->toggleFPSStatus();
         break;
     case SDLK_F5:
         // Reload all shaders
@@ -762,6 +762,8 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
             this->lines->reload();
         for (auto& as : this->agentStates)
             as.second.entity->reload();
+        for (auto& sm : this->staticModels)
+            sm->reload();
         this->hud->reload();
         break;
     case SDLK_p:
@@ -770,7 +772,7 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
             pause_guard = nullptr;
         } else {
             pause_guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
-            stepsPerSecond = 0.0f;
+            stepsPerSecond = 0.0;
         }
         break;
     case SDLK_l:
