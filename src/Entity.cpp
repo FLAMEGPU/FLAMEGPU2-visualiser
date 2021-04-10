@@ -109,7 +109,6 @@ Entity::Entity(
     }
     if (needsExport) {
         exportModel();
-        printf("Model '%s' export was updated.\n", modelPath);
     }
 }
 /*
@@ -177,15 +176,14 @@ Entity::Entity(
                 it->setTexCoordsAttributeDetail(texcoords);
                 it->setMaterialBuffer(materialBuffer);
                 it->setFaceVBO(faces.vbo);
-            } else {
-                fprintf(stderr, "Warning, material default shader is null.\n");
+            } else if (this->shaders.empty()) {
+                THROW EntityError("Entity has no shaders!\n");
             }
         }
         m.setCustomShaders(this->shaders);
     }
     if (needsExport) {
         exportModel();
-        printf("Model '%s' export was updated.\n", modelPath);
     }
 }
 
@@ -334,16 +332,13 @@ void Entity::loadModelFromFile() {
             }
         }
     } else {
-        fprintf(stderr, "Model file '%s' is of an unsupported format, aborting load.\n Support types: %s, %s\n", modelPath, OBJ_TYPE, EXPORT_TYPE);
-        return;
+        THROW ResourceError("Model file '%s' is of an unsupported format, aborting load.\n Support types: %s, %s\n", modelPath, OBJ_TYPE, EXPORT_TYPE);
     }
-    printf("\rLoading Model: %s", su::getFilenameFromPath(modelPath).c_str());
 
     // Open file
     FILE *file = Resources::fopen(modelPath, "r");
     if (!file) {
-        printf("\rLoading Model: Could not open model '%s'!\n", modelPath);
-        return;
+        THROW ResourceError("Could not open model '%s'!\n", modelPath);
     }
 
     // Counters
@@ -361,7 +356,6 @@ void Entity::loadModelFromFile() {
     bool face_hasNormals = false;
     bool face_hasTexcoords = false;
 
-    printf("\rLoading Model: %s [Counting Elements]          ", su::getFilenameFromPath(modelPath).c_str());
     // MTL details
     char mtllib_tag[7] = "mtllib";
     char usemtl_tag[7] = "usemtl";
@@ -469,8 +463,7 @@ exit_loop: {}
     lnLenMax = lnLenMax < lnLen ? lnLen : lnLenMax;
 
     if (parameters_read > 0) {
-        fprintf(stderr, "\nModel '%s' contains parameter space vertices, these are unsupported at this time.", modelPath);
-        return;
+        THROW ResourceError("Model '%s' contains parameter space vertices, these are unsupported at this time.", modelPath);
     }
 
     // Set instance var counts
@@ -480,12 +473,11 @@ exit_loop: {}
     texcoords.count = texcoords_read;
     faces.count = faces_read;
     if (positions.count == 0 || faces.count == 0) {
-        fprintf(stderr, "\nVertex or face data missing.\nAre you sure that '%s' is a wavefront (.obj) format model?\n", modelPath);
         fclose(file);
-        return;
+        THROW ResourceError("Vertex or face data missing.\nAre you sure that '%s' is a wavefront (.obj) format model?\n", modelPath);
     }
     if ((colors.count != 0 && positions.count != colors.count)) {
-        fprintf(stderr, "\nVertex color count does not match vertex count, vertex colors will be ignored.\n");
+        fprintf(stderr, "Vertex color count does not match vertex count, vertex colors will be ignored.\n");
         colors.count = 0;
     }
     // Set instance var sizes
@@ -527,7 +519,6 @@ exit_loop: {}
     unsigned int bufferLen = lnLenMax + 2;
     char *buffer = new char[bufferLen];
 
-    printf("\rLoading Model: %s [Loading Elements]           ", modelPath);
     modelMin = glm::vec3(FLT_MAX);
     modelMax = glm::vec3(-FLT_MAX);
     // Read file by line, again.
@@ -798,7 +789,6 @@ exit_loop: {}
 exit_loop2: {}
     // Cleanup buffer
     delete[] buffer;
-    printf("\rLoading Model: %s [Calculating Pairs]         ", su::getFilenameFromPath(modelPath).c_str());
     auto vn_pairs = new google::dense_hash_map<VN_PAIR, unsigned int, std::hash < VN_PAIR>, eqVN_PAIR>();
     vn_pairs->set_empty_key({ UINT_MAX, UINT_MAX, UINT_MAX });
     vn_pairs->resize(faces.count*faces.components);
@@ -853,7 +843,6 @@ exit_loop2: {}
         if (SCALE.y > 0) this->scaleFactor.y = SCALE.y / modelDims.y;
         if (SCALE.z > 0) this->scaleFactor.z = SCALE.z / modelDims.z;
     }
-    printf("\rLoading Model: %s [Assigning Elements]            ", su::getFilenameFromPath(modelPath).c_str());
     unsigned int vn_assigned = 0;
     for (unsigned int i = 0; i < faces.count * faces.components; i++) {
         int i_tex = face_hasTexcoords ? t_tex_pos[i] : 0;
@@ -884,8 +873,7 @@ exit_loop2: {}
         // Update index from face
         reinterpret_cast<unsigned int *>(faces.data)[i] = (*vn_pairs)[{static_cast<unsigned int>(i_vert), static_cast<unsigned int>(i_norm), static_cast<unsigned int>(i_tex)}];
     }
-    // // Free temps
-    printf("\rLwaiting              ");
+    // Free temps
     std::thread([vn_pairs]() {
         delete vn_pairs;
     }).detach();
@@ -896,7 +884,6 @@ exit_loop2: {}
     free(t_norm_pos);
     free(t_tex_pos);
     // Load VBOs
-    printf("\rLoading Model: %s [Generating VBOs!]              ", su::getFilenameFromPath(modelPath).c_str());
     generateVertexBufferObjects();
     // Can the host copies be freed after a bind?
     // No, we want to keep faces around as a minimum for easier vertex order switching
@@ -909,7 +896,6 @@ exit_loop2: {}
     //     free(textures);
     // free(faces);
     fclose(file);
-    printf("\rLoading Model: %s [Complete!]                 \n", su::getFilenameFromPath(modelPath).c_str());
     if (mtllib&&usemtl) {
         loadMaterialFromFile(modelPath, mtllib, usemtl);
     }
@@ -932,8 +918,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
     // Open file
     FILE* file = Resources::fopen(materialPath.c_str(), "r");
     if (file == NULL) {
-        fprintf(stderr, "Could not open material: '%s'!\n", materialPath.c_str());
-        return;
+        THROW ResourceError("Could not open material: '%s'!\n", materialPath.c_str());
     }
     //  Prep vars for storing mtl properties
     char buffer[1024];
@@ -962,37 +947,37 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                     materials[materials.size()-1].setName(temp);
                     visassert(materials.size() < MAX_OBJ_MATERIALS);
                 } else {
-                    printf("Bad material file...");
+                    THROW ResourceError("Material file '%s' name is of unexpected format.\n", materialPath.c_str());
                 }
             } else if (strcmp(buffer, AMBIENT_IDENTIFIER) == 0) {
                 if (materials.size() && fscanf(file, "%f %f %f", &r, &g, &b) == 3) {
                     materials[materials.size() - 1].setAmbient(glm::vec3(r, g, b));
                 } else {
-                    printf("Bad material file...");
+                    THROW ResourceError("Material file '%s' ambient data is of unexpected format.\n", materialPath.c_str());
                 }
             } else if (strcmp(buffer, DIFFUSE_IDENTIFIER) == 0) {
                 if (materials.size() && fscanf(file, "%f %f %f", &r, &g, &b) == 3) {
                     materials[materials.size() - 1].setDiffuse(glm::vec3(r, g, b));
                 } else {
-                    printf("Bad material file...");
+                    THROW ResourceError("Material file '%s' diffuse data is of unexpected format.\n", materialPath.c_str());
                 }
             } else if (materials.size() && strcmp(buffer, SPECULAR_IDENTIFIER) == 0) {
                 if (fscanf(file, "%f %f %f", &r, &g, &b) == 3) {
                     materials[materials.size() - 1].setSpecular(glm::vec3(r, g, b));
                 } else {
-                    printf("Bad material file...");
+                    THROW ResourceError("Material file '%s' specular data is of unexpected format.\n", materialPath.c_str());
                 }
             } else if (materials.size() && strcmp(buffer, SPECULAR_EXPONENT_IDENTIFIER) == 0) {
                 if (fscanf(file, "%f", &r) == 1) {
                     materials[materials.size() - 1].setShininess(r);
                 } else {
-                    printf("Bad material file...");
+                    THROW ResourceError("Material file '%s' specular exponent data is of unexpected format.\n", materialPath.c_str());
                 }
             } else if (materials.size() && strcmp(buffer, DISSOLVE_IDENTIFIER) == 0) {
                 if (fscanf(file, "%f", &r) == 1) {
                     materials[materials.size() - 1].setOpacity(r);
                 } else {
-                    printf("Bad material file...");
+                    THROW ResourceError("Material file '%s' dissolve data is of unexpected format.\n", materialPath.c_str());
                 }
             } else if (materials.size() && strcmp(buffer, TEX_AMBIENT_IDENTIFIER) == 0) {
                 if (fscanf(file, "%s", &temp[0]) == 1) {
@@ -1004,7 +989,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                     //     materials[materials.size() - 1].addTexture(frame, Material::TextureType::Ambient);
                     // }
                 } else {
-                    printf("Bad material file...");
+                    THROW ResourceError("Material file '%s' texture ambient data is of unexpected format.\n", materialPath.c_str());
                 }
             } else if (materials.size() && strcmp(buffer, TEX_DIFFUSE_IDENTIFIER) == 0) {
                 if (fscanf(file, "%s", &temp[0]) == 1) {
@@ -1016,7 +1001,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                     //     materials[materials.size() - 1].addTexture(frame, Material::TextureType::Diffuse);
                     // }
                 } else {
-                    printf("Bad material file...");
+                    THROW ResourceError("Material file '%s' texture diffuse data is of unexpected format.\n", materialPath.c_str());
                 }
             } else if (materials.size() && strcmp(buffer, TEX_SPECULAR_IDENTIFIER) == 0) {
                 if (fscanf(file, "%s", &temp[0]) == 1) {
@@ -1028,7 +1013,7 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
                     //     materials[materials.size() - 1].addTexture(frame, Material::TextureType::Specular);
                     // }
                 } else {
-                    printf("Bad material file...");
+                    THROW ResourceError("Material file '%s' texture specular data is of unexpected format.\n", materialPath.c_str());
                 }
             } else if (materials.size() && strcmp(buffer, ILLUMINATION_MODE_IDENTIFIER) == 0) {
                 if (fscanf(file, "%d", &i) == 1) {
@@ -1036,11 +1021,11 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
 
                     // this->material->illuminationMode = i;
                 } else {
-                    printf("Bad material file...");
+                    THROW ResourceError("Material file '%s' illumination data is of unexpected format.\n", materialPath.c_str());
                 }
             }
             // else
-            //     printf("Unhandled input in material file: %s\n", buffer);
+            //     THROW ResourceError("Unhandled input in material file: %s\n", buffer);
         }
     }
     fclose(file);
@@ -1048,7 +1033,6 @@ void Entity::loadMaterialFromFile(const char *objPath, const char *materialFilen
         fprintf(stderr, "Entity '%s' contains multiple materials, only first from file will be used. Alternatively use Model to load the .obj file.\n", modelPath);
     for (auto &m : materials)
         m.bake();
-    printf("\rLoading Material: %s [Complete!]\n", su::getFilenameFromPath(materialPath).c_str());
 }
 void Entity::setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, const glm::vec3 &specular, const float &shininess, const float &opacity) {
     size_t matSize = materials.size() == 0 ? 1 : materials.size();
@@ -1065,8 +1049,8 @@ void Entity::setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, con
                 it->setTexCoordsAttributeDetail(texcoords);
                 it->setMaterialBuffer(materialBuffer);
                 it->setFaceVBO(faces.vbo);
-            } else {
-                fprintf(stderr, "Warning, material default shader is null.\n");
+            } else if (shaders.empty()) {
+                THROW EntityError("Entity has no shaders!\n");
             }
         }
         materials[i].setCustomShaders(this->shaders);
@@ -1146,7 +1130,6 @@ void Entity::exportModel() const {
     FILE * file = fopen(exportPath.c_str(), "r");
     // Only check if file already exists if we're not upgrading its version
     if (!needsExport && file) {
-        fprintf(stderr, "Cannot export model %s, file already exists.\n", exportPath.c_str());
         fclose(file);
         return;
     }
@@ -1154,7 +1137,8 @@ void Entity::exportModel() const {
         fclose(file);
     file = fopen(exportPath.c_str(), "wb");
     if (!file) {
-        fprintf(stderr, "Could not open file for writing %s\n", exportPath.c_str());
+        // Fail silently
+        return;
     }
     // Generate export mask
     ExportMask mask{
@@ -1196,7 +1180,6 @@ void Entity::exportModel() const {
     const char temp = FILE_TYPE_FLAG;
     fwrite(&temp, sizeof(char), 1, file);
     fclose(file);
-    printf("Exported model %s\n", exportPath.c_str());
 }
 /*
 Exports the current model to a fast loading binary format which represents a direct copy of the buffers required by the model
@@ -1209,50 +1192,41 @@ void Entity::importModel(const char *path) {
     if (su::endsWith(path, OBJ_TYPE, false)) {
         importPath = importPath.substr(0, importPath.length() - objPath.length()).append(EXPORT_TYPE);
     } else if (!su::endsWith(path, EXPORT_TYPE, false)) {
-        fprintf(stderr, "Model File: %s, is not a support filetype (e.g. %s, %s)\n", path, OBJ_TYPE, EXPORT_TYPE);
-        return;
+        THROW ResourceError("Model File: %s, is not a support filetype (e.g. %s, %s)\n", path, OBJ_TYPE, EXPORT_TYPE);
     }
     // Open file
     FILE * file = Resources::fopen(importPath.c_str(), "rb");
     if (!file) {
-        fprintf(stderr, "Could not open file for reading: %s. Aborting import\n", importPath.c_str());
+        THROW ResourceError("Could not open file for reading: %s. Aborting import\n", importPath.c_str());
     }
-    printf("Importing Model: %s\n", importPath.c_str());
     // Read in the export mask
     ExportMask mask;
     size_t elementsRead = 0;
     elementsRead = fread(&mask, sizeof(ExportMask), 1, file);
     if (elementsRead != 1) {
-        fprintf(stderr, "Failed to read FILE TYPE FLAG from file header %s. Aborting import\n", importPath.c_str());
-        fclose(file);
-        return;
+        THROW ResourceError("Failed to read FILE TYPE FLAG from file header %s.\n", importPath.c_str());
     }
     // Check file type flag exists
     if (mask.FILE_TYPE_FLAG != FILE_TYPE_FLAG) {
-        fprintf(stderr, "FILE TYPE FLAG missing from file header: %s. Aborting import\n", importPath.c_str());
         fclose(file);
-        return;
+        THROW ResourceError("FILE TYPE FLAG missing from file header : %s.\n", importPath.c_str());
     }
     // Check version is supported
     if (mask.VERSION_FLAG > FILE_TYPE_VERSION) {
-        fprintf(stderr, "File %s is of newer version %u, this software supports a maximum version of %u. Aborting import\n", importPath.c_str(), static_cast<unsigned int>(mask.VERSION_FLAG), static_cast<unsigned int>(FILE_TYPE_VERSION));
         fclose(file);
-        return;
+        THROW ResourceError("File %s is of newer version %u, this software supports a maximum version of %u.\n", importPath.c_str(), static_cast<unsigned int>(mask.VERSION_FLAG), static_cast<unsigned int>(FILE_TYPE_VERSION));
     } else if (mask.VERSION_FLAG < FILE_TYPE_VERSION) {
-        fprintf(stderr, "File %s is of an older version %u, it will automatically be upgraded to version %u.\n", importPath.c_str(), static_cast<unsigned int>(mask.VERSION_FLAG), static_cast<unsigned int>(FILE_TYPE_VERSION));
-
-        needsExport = true;
+        fclose(file);
+        THROW ResourceError("File %s is of an older version %u, it will automatically be upgraded to version %u.\n", importPath.c_str(), static_cast<unsigned int>(mask.VERSION_FLAG), static_cast<unsigned int>(FILE_TYPE_VERSION));
     }
     // Check float/uint lengths aren't too short
     if (sizeof(float) != mask.SIZE_OF_FLOAT) {
-        fprintf(stderr, "File %s uses floats of %i bytes, this architecture has floats of %zu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
         fclose(file);
-        return;
+        THROW ResourceError("File %s uses floats of %i bytes, this architecture has floats of %zu bytes.\n", importPath.c_str(), mask.SIZE_OF_FLOAT, sizeof(float));
     }
     if (sizeof(unsigned int) != mask.SIZE_OF_UINT) {
-        fprintf(stderr, "File %s uses uints of %i bytes, this architecture has floats of %zu bytes. Aborting import\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
         fclose(file);
-        return;
+        THROW ResourceError("File %s uses uints of %i bytes, this architecture has floats of %zu bytes.\n", importPath.c_str(), mask.SIZE_OF_UINT, sizeof(unsigned));
     }
     vn_count = mask.VN_COUNT;
     // Set components (sizes should be defaults)
@@ -1291,52 +1265,49 @@ void Entity::importModel(const char *path) {
     // Read in buffers
     if (positions.count) {
         if (vn_count*positions.components != fread(positions.data, positions.componentSize, vn_count*positions.components, file)) {
-            fprintf(stderr, "fread err: vertices\n");
+            THROW ResourceError("Error importing vertices %s.\n", importPath.c_str());
         }
     }
     if (normals.count) {
         if (vn_count*normals.components != fread(normals.data, normals.componentSize, vn_count*normals.components, file)) {
-            fprintf(stderr, "fread err: normals\n");
+            THROW ResourceError("Error importing normals %s.\n", importPath.c_str());
         }
     }
     if (colors.count) {
         if (vn_count*colors.components != fread(colors.data, colors.componentSize, vn_count*colors.components, file)) {
-            fprintf(stderr, "fread err: colors\n");
+            THROW ResourceError("Error importing colors %s.\n", importPath.c_str());
         }
     }
     if (texcoords.count) {
         if (vn_count*texcoords.components != fread(texcoords.data, texcoords.componentSize, vn_count*texcoords.components, file)) {
-            fprintf(stderr, "fread err: textures\n");
+            THROW ResourceError("Error importing tex coords %s.\n", importPath.c_str());
         }
     }
     if (mask.FILE_HAS_FACES_3) {
         elementsRead = fread(&faces.count, sizeof(unsigned int), 1, file);
         if (elementsRead != 1) {
-            fprintf(stderr, "Failed to read faces.count oorm file header %s. Aborting import\n", importPath.c_str());
             fclose(file);
-            return;
+            THROW ResourceError("Failed to read faces.count from file header %s.\n", importPath.c_str());
         }
         faces.data = malloc(faces.componentSize*faces.components*faces.count);
         if (faces.count*faces.components != fread(faces.data, sizeof(unsigned int), faces.count*faces.components, file)) {
-            fprintf(stderr, "fread err: faces\n");
+            THROW ResourceError("Failed to read face data from file header %s.\n", importPath.c_str());
         }
     }
     // Check file footer contains flag (to confirm it was closed correctly
     elementsRead = fread(&mask.FILE_TYPE_FLAG, sizeof(char), 1, file);
     if (elementsRead != 1) {
-        fprintf(stderr, "Failed to read FILE_TYPE_FLAG from file footer %s. Aborting import.\n", importPath.c_str());
         fclose(file);
-        return;
+        THROW ResourceError("Failed to read FILE_TYPE_FLAG from file footer %s. Aborting import.\n", importPath.c_str());
     }
     if (mask.FILE_TYPE_FLAG != FILE_TYPE_FLAG) {
-        fprintf(stderr, "FILE TYPE FLAG missing from file footer: %s, model may be corrupt.\n", importPath.c_str());
-        return;
+        THROW ResourceError("FILE TYPE FLAG missing from file footer: %s, model may be corrupt.\n", importPath.c_str());
     }
     fclose(file);
     // Check model scale
     // if (SCALE > 0 && mask.SCALE <= 0)
     // {
-    //     fprintf(stderr, "File %s contains a model of scale: %.3f, this is invalid, model will not be scaled.\n", importPath.c_str(), mask.SCALE);
+    //     THROW ResourceError("File %s contains a model of scale: %.3f, this is invalid, model will not be scaled.\n", importPath.c_str(), mask.SCALE);
     // }
     // // Scale the model
     // else if (SCALE > 0 && mask.SCALE != SCALE)
@@ -1368,7 +1339,6 @@ void Entity::importModel(const char *path) {
     }
     // Allocate VBOs
     generateVertexBufferObjects();
-    printf("Model import was successful: %s\n", importPath.c_str());
 }
 /*
 Creates the necessary vertex buffer objects, and fills them with the relevant instance var data.
