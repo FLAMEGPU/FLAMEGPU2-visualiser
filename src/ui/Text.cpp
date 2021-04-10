@@ -37,15 +37,14 @@ Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char c
     }
     FT_Error error = FT_Init_FreeType(&library);
     if (error) {
-        fprintf(stderr, "An unexpected error occured whilst initialising FreeType: %i\n", error);
-        return;
+        THROW FreeTypeError("An unexpected error occurred whilst initialising FreeType: %i\n", error);
     }
     error = FT_New_Face(library,
         fontFile,
         faceIndex,
         &font);
     if (error == FT_Err_Unknown_File_Format) {
-        fprintf(stderr, "The font file %s is of an unsupport format, defaulting to Arial\n", fontFile);
+        // fprintf(stderr, "The font file %s is of an unsupported format, defaulting to Arial\n", fontFile);
         fontFile = fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str();
         error = FT_New_Face(library,
             fontFile,
@@ -53,7 +52,7 @@ Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char c
             &this->font);
     }
     if (error) {
-        fprintf(stderr, "An unexpected error occured whilst loading font file %s: %i, defaulting to Arial\n", fontFile, error);
+        // fprintf(stderr, "An unexpected error occurred whilst loading font file %s: %i, defaulting to Arial\n", fontFile, error);
         fontFile = fonts::findFont({"Arial"}, fonts::GenericFontFamily::SANS).c_str();
         error = FT_New_Face(library,
             fontFile,
@@ -65,10 +64,8 @@ Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char c
         0,      /* pixel_width           */
         this->fontHeight);/* pixel_height          */
     if (error) {
-        fprintf(stderr, "An unexpected error occured whilst setting font size: %i\n", error);
-        return;
+        THROW FreeTypeError("An unexpected error occurred whilst setting font size : % i\n", error);
     }
-    printf("Font %s was loaded successfully.\n", fontFile);
     setString(_string);
 }
 Text::~Text() {

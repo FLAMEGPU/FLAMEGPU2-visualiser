@@ -94,6 +94,14 @@ DERIVED_VisException(SketchError, "Error during font loading!");
  * Defines an error reported when the expect input/output file path does not exist
  */
 DERIVED_VisException(InvalidFilePath, "File does not exist.");
+/**
+ * Errors that occur whilst using FreeType
+ */
+DERIVED_VisException(FreeTypeError, "Freetype returned an error.");
+/**
+ * Something bad inside an entity
+ */
+DERIVED_VisException(EntityError, "Something went wrong.");
 
 
 /**
