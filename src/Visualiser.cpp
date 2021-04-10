@@ -184,10 +184,10 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     // Maybe in future let user specify lights instead of this
     {
         PointLight _p = lighting->addPointLight();
-        _p.Ambient(glm::vec3(0.0f));
-        _p.Diffuse(glm::vec3(0.5f));
+        _p.Ambient(glm::vec3(0.2f));
+        _p.Diffuse(glm::vec3(1.0f));
         _p.Specular(glm::vec3(0.02f));
-        _p.ConstantAttenuation(0.5f);
+        _p.ConstantAttenuation(1.0f);
     }
 }
 Visualiser::~Visualiser() {
@@ -428,7 +428,7 @@ void Visualiser::addAgentState(const std::string &agent_name, const std::string 
     auto &ent = agentStates.at(namepair).entity;
     ent->setViewMatPtr(camera->getViewMatPtr());
     ent->setProjectionMatPtr(&this->projMat);
-    // ent->setLightsBuffer(this->lighting);  //  No lighting yet
+    ent->setLightsBuffer(this->lighting);
 }
 
 void Visualiser::renderAgentStates() {
