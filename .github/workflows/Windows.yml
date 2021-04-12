@@ -1,0 +1,53 @@
+# Windows builds.
+name: Windows
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-visualiser:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      # explicit include-based build matrix, of known valid options
+      matrix:
+        include:
+          # Windows2019 & VS 2019 supports 10.1+
+          - os: windows-2019
+            cuda: "11.2.0"
+            visual_studio: "Visual Studio 16 2019"
+    env:
+      cuda_arch: "52"
+      build_dir: "build"
+      config: "Release"
+      build_tests: "OFF"
+      Werror: "ON"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install CUDA
+      env: 
+        cuda: ${{ matrix.cuda }}
+        visual_studio: ${{ matrix.visual_studio }}
+      run: |
+        # Install CUDA via a powershell script
+        .\scripts\actions\install_cuda_windows.ps1
+        if ($?) {
+          # Set paths for subsequent steps, using $env:CUDA_PATH
+          echo "Adding CUDA to CUDA_PATH, CUDA_PATH_X_Y and PATH"
+          echo "CUDA_PATH=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "$env:CUDA_PATH_VX_Y=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "$env:CUDA_PATH/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        }
+      shell: powershell
+
+    - name: Configure CMake
+      id: configure
+      run: cmake . -B ${{ env.build_dir }} -G "${{ matrix.visual_studio }}" -A x64 -Wnoerror=dev
+      shell: bash
+
+    - name: Build Visualiser
+      run: cmake --build . --config ${{ env.config }} --target ALL_BUILD --verbose
+      working-directory: ${{ env.build_dir }}
