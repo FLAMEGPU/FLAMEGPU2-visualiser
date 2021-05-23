@@ -4,7 +4,7 @@ include(ExternalProject)
 
 project(glm-download NONE)
 ExternalProject_Add(glm
-    URL              "https://github.com/g-truc/glm/releases/download/0.9.9.8/glm-0.9.9.8.zip"
+    URL              "https://github.com/g-truc/glm/archive/66062497b104ca7c297321bd0e970869b1e6ece5.zip"
     SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/glm-src"
     BINARY_DIR        ""
     CONFIGURE_COMMAND ""
