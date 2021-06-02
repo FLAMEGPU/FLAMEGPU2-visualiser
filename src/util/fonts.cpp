@@ -87,7 +87,6 @@ std::string fontSearch(const std::string commaSeparatedfonts) {
     FcPatternDestroy(pat);
 
     // Return the path to the desired font.
-    printf("%s ? %s\n", commaSeparatedfonts.c_str(), fontpath.c_str());
     return fontpath;
 }
 }  // Anonymous namespace
