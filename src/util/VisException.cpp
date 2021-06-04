@@ -5,6 +5,9 @@
 #include <sstream>
 #include <limits>
 
+namespace flamegpu {
+namespace visualiser {
+
 const char *VisException::file = nullptr;
 unsigned int VisException::line = std::numeric_limits<unsigned int>::max();
 
@@ -47,3 +50,6 @@ std::string VisException::parseArgs(const char * format, va_list argp) {
     free(buffer);
     return rtn;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

@@ -2,6 +2,9 @@
 #define INCLUDE_CONFIG_LINECONFIG_H_
 #include <vector>
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Represents a user defined line drawing
  */
@@ -24,5 +27,8 @@ struct LineConfig {
      */
     std::vector<float> colors;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // INCLUDE_CONFIG_LINECONFIG_H_

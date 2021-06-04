@@ -13,6 +13,10 @@
 #include "interface/RenderTarget.h"
 #include "texture/Texture.h"
 
+namespace flamegpu {
+namespace visualiser {
+
+
 /**
  * Class representing two-dimensional textures
  * @note This class cannot be directly instantiated
@@ -154,5 +158,9 @@ class Texture2D : public Texture, public RenderTarget {
     const bool immutable;
     static const char *RAW_TEXTURE_FLAG;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 
 #endif  // SRC_TEXTURE_TEXTURE2D_H_

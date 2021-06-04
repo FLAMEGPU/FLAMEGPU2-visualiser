@@ -21,6 +21,9 @@ using std::experimental::filesystem::v1::create_directory;
 #include <SDL.h>
 CMRC_DECLARE(resources);
 
+namespace flamegpu {
+namespace visualiser {
+
 namespace {
     void recursive_create_dir(const path &dir) {
         if (::exists(dir)) {
@@ -122,3 +125,6 @@ std::string Resources::toTempDir(const std::string &_path) {
     recursive_create_dir(output_dir);
     return output_path.string();
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

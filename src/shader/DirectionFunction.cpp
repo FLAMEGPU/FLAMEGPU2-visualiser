@@ -3,6 +3,9 @@
 #include <sstream>
 
 
+namespace flamegpu {
+namespace visualiser {
+
 const char *DirectionFunction::ROTATION_MAT_FN = R"###(
 mat3 RotationMat(vec3 axis, float angle) {
   //Generate rotation matrix
@@ -153,3 +156,6 @@ std::string DirectionFunction::getSrc() {
 
     return ss.str();
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

@@ -5,6 +5,9 @@
 #include "multipass/RenderBuffer.h"
 // Constructors
 
+namespace flamegpu {
+namespace visualiser {
+
 typedef FrameBufferAttachment FBA;
 // Scaling FrameBuffers
 FrameBuffer::FrameBuffer(FBA color, FBA depth, FBA stencil, unsigned int samples, float scale, bool doClear, glm::vec3 clearColor)
@@ -340,3 +343,6 @@ void FrameBuffer::disableFiltering(GLuint attachPt) {
         std::dynamic_pointer_cast<Texture>(depth.renderTarget)->setOptions(Texture::FILTER_MIN_NEAREST | Texture::FILTER_MAG_NEAREST);
     }
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

@@ -1,6 +1,9 @@
 #include "multipass/BackBuffer.h"
 #include <glm/gtx/component_wise.hpp>
 
+namespace flamegpu {
+namespace visualiser {
+
 std::weak_ptr<FBuffer> BackBuffer::overrideBuffer;
 glm::uvec2 BackBuffer::dimensions = glm::uvec2(1280, 720);
 bool BackBuffer::_doClear = true;
@@ -48,3 +51,6 @@ void BackBuffer::setClear(const bool& doClear, const glm::vec3& clearColor) {
     if (compMin(clearColor) >= 0 && compMax(clearColor) <= 1.0f)
         BackBuffer::_clearColor = clearColor;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

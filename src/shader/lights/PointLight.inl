@@ -4,6 +4,9 @@
 #include "shader/lights/PointLight.h"
 #include "shader/lights/LightsBuffer.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 PointLight::PointLight(const PointLight &old)
     : properties(old.properties)
     , tProperties(old.tProperties)
@@ -47,5 +50,8 @@ void PointLight::LinearAttenuation(const float &factor) {
 void PointLight::QuadraticAttenuation(const float &factor) {
     properties->quadraticAttenuation = factor;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_SHADER_LIGHTS_POINTLIGHT_INL_

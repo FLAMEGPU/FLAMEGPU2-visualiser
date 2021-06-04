@@ -5,6 +5,9 @@
 #include "multipass/BackBuffer.h"
 #include "HUD.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class Viewport {
  public:
     /*
@@ -45,4 +48,8 @@ class ViewportExt : public Viewport {
     void resetBackBuffer() { BackBuffer::clearOverride(); }
     void resizeBackBuffer(const glm::uvec2 &dims) { BackBuffer::resizeViewport(dims); }
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_INTERFACE_VIEWPORT_H_

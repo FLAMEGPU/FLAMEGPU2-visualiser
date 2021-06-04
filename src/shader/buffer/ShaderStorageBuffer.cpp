@@ -2,6 +2,9 @@
 
 #include "util/GLcheck.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 std::set<GLint> ShaderStorageBuffer::allocatedBindPoints;
 ShaderStorageBuffer::ShaderStorageBuffer(size_t size, void* data)
     : BufferCore(GL_SHADER_STORAGE_BUFFER, allocateBindPoint(), size, data) { }
@@ -28,3 +31,6 @@ GLint ShaderStorageBuffer::MaxSize() {
 GLint ShaderStorageBuffer::MaxBuffers() {
     return BufferCore::maxBuffers(GL_SHADER_STORAGE_BUFFER);
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

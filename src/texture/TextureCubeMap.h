@@ -8,6 +8,9 @@
 
 #include "Texture.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 #define CUBE_MAP_FACE_COUNT 6
 class TextureCubeMap : public Texture {
  public:
@@ -84,4 +87,7 @@ class TextureCubeMap : public Texture {
      */
     const bool immutable;
 };
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_TEXTURE_TEXTURECUBEMAP_H_

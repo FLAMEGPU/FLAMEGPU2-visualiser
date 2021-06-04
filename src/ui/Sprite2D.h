@@ -5,6 +5,9 @@
 #include "texture/Texture2D.h"
 #include "Overlay.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class Shaders;
 class Texture2D;
 /**
@@ -39,4 +42,8 @@ class Sprite2D : public Overlay {
  private:
     std::shared_ptr<const Texture2D> tex;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_UI_SPRITE2D_H_

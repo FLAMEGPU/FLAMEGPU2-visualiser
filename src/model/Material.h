@@ -13,6 +13,9 @@
 #include "shader/ShaderHeader.h"
 #include "shader/buffer/UniformBuffer.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 namespace Stock {
 namespace Materials {
 struct Material {
@@ -160,7 +163,7 @@ class Material : protected Renderable {
     void clear(unsigned int index = UINT_MAX);
     static void clearActive() { Material::active = nullptr; }
     // Setters
-    void setName(const std::string _name) { this->name = name; }
+    void setName(const std::string _name) { this->name = _name; }
 
     void setDiffuse(const glm::vec3 diffuse) { this->properties.diffuse = diffuse; updatePropertiesUniform(); }
     void setSpecular(const glm::vec3 specular) { this->properties.specular = specular; updatePropertiesUniform(); }
@@ -261,4 +264,8 @@ class Material : protected Renderable {
     using Renderable::setLightsBuffer;
     void reload() override;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_MODEL_MATERIAL_H_

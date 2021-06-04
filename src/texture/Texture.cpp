@@ -8,6 +8,9 @@
 #include "util/StringUtils.h"
 #include "util/Resources.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 namespace {
     /**
      * This saves us needing to link with ILU for error strings
@@ -597,10 +600,17 @@ Texture::Format Texture::getFormat(std::shared_ptr<SDL_Surface> image) {
     }
     return Format(0, 0, 0, 0);
 }
+}  // namespace visualiser
+}  // namespace flamegpu
+
 // Comment out this include if not making use of Shaders/ShaderCore
 #include "shader/ShaderCore.h"
 #ifdef SRC_SHADER_SHADERCORE_H_
+namespace flamegpu {
+namespace visualiser {
 bool ShaderCore::addTexture(const char *textureNameInShader, const std::shared_ptr<const Texture> &texture) {  // Treat it similar to texture binding points
     return addTexture(textureNameInShader, texture->getType(), texture->getName(), texture->getTextureUnit());
 }
+}  // namespace visualiser
+}  // namespace flamegpu
 #endif

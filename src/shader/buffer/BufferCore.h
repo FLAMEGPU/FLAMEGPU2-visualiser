@@ -2,6 +2,9 @@
 #define SRC_SHADER_BUFFER_BUFFERCORE_H_
 #include "util/GLcheck.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * This class must be specialised e.g. GL_UNIFORM_BUFFER, GL_SHADER_STORAGE_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER or GL_ATOMIC_COUNTER_BUFFER (not yet implemented the latter two)
  * Representative of Uniform Buffer Objects
@@ -91,5 +94,8 @@ class BufferCore {
     const GLuint bufferBindPoint;
     const GLenum bufferType;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_SHADER_BUFFER_BUFFERCORE_H_

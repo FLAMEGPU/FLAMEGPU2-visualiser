@@ -7,8 +7,10 @@
 #include <string>
 #include <memory>
 
-
 #include "Overlay.h"
+
+namespace flamegpu {
+namespace visualiser {
 
 /**
  * Class for rendering strings to screen.
@@ -196,4 +198,8 @@ class Text : public Overlay {
     unsigned int wrapDistance;
     std::shared_ptr<TextureString> tex;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_UI_TEXT_H_

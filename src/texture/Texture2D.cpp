@@ -20,6 +20,9 @@ using std::experimental::filesystem::v1::path;
 #include "util/Resources.h"
 #include "util/StringUtils.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 const char *Texture2D::RAW_TEXTURE_FLAG = "Texture2D";
 std::unordered_map<std::string, std::weak_ptr<const Texture2D>> Texture2D::cache;
 
@@ -205,3 +208,6 @@ bool Texture2D::isBound() const {
 //     blurR32F(inTex->getName(), outTex->getName(), inTex->getDimensions());
 // }
 // #endif
+
+}  // namespace visualiser
+}  // namespace flamegpu

@@ -3,6 +3,9 @@
 #include "interface/Renderable.h"
 #include "Draw.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class Axis : public Renderable {
  public:
     /**
@@ -35,5 +38,8 @@ class Axis : public Renderable {
  private:
     Draw pen;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_AXIS_H_

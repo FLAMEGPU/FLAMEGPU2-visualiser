@@ -10,6 +10,9 @@
 #include "interface/Renderable.h"
 #include "shader/Shaders.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Class for automatically managing VAO's and VBO's for drawing points, lines and polylines at runtime
  * If draw routines include a string when opened, they be recalled which is more performant than recreating them from scratch if drawing static structures
@@ -216,4 +219,8 @@ class Draw : Renderable {
      */
     static void clearWidth(const Type &t);
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_DRAW_H_

@@ -9,6 +9,9 @@
 #include "interface/Camera.h"
 #include "util/GLcheck.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 
 class LightsBuffer;
 
@@ -50,5 +53,8 @@ class Renderable : public Reloadable {
     virtual void setLightsBuffer(const GLuint &bufferBindingPoint) = 0;
     virtual void setLightsBuffer(std::shared_ptr<const LightsBuffer> buffer);
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_INTERFACE_RENDERABLE_H_

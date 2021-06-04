@@ -2,6 +2,10 @@
 #define SRC_INTERFACE_CAMERA_H_
 
 #include <glm/glm.hpp>
+
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Represents the core components of a camera interface
  * Subclasses must keep viewMat, skyboxViewMat and eye updated
@@ -54,4 +58,8 @@ class Camera {
     // Eyelocation
     glm::vec3 eye;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_INTERFACE_CAMERA_H_

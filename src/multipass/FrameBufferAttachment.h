@@ -7,6 +7,8 @@
 #include "texture/Texture.h"
 #include "multipass/RenderBuffer.h"
 
+namespace flamegpu {
+namespace visualiser {
 
 /**
  * Interface to define the shared FBA members
@@ -23,7 +25,7 @@ class FrameBufferAttachment {
     GLint InternalFormat() const { return internalFormat; }
     GLenum PixelFormat() const { return pixelFormat; }
     GLenum StorageType() const { return storageType; }
-    std::shared_ptr<::RenderTarget> RenderTarget() const { return rt; }
+    std::shared_ptr<flamegpu::visualiser::RenderTarget> RenderTarget() const { return rt; }
     virtual ~FrameBufferAttachment() {}
 
  private:
@@ -33,7 +35,7 @@ class FrameBufferAttachment {
         GLint internalFormat,
         GLenum pixelFormat,
         GLenum storageType,
-        std::shared_ptr<::RenderTarget> tex)
+        std::shared_ptr<flamegpu::visualiser::RenderTarget> tex)
         : cls(cls)
         , type(type)
         , internalFormat(internalFormat)
@@ -72,7 +74,7 @@ class FrameBufferAttachment {
      * @note Only set this value to something other than nullptr if you want to use an unmanaged texture
      * @see This is the value which glGenTextures() creates
      */
-    const std::shared_ptr<::RenderTarget> rt;
+    const std::shared_ptr<flamegpu::visualiser::RenderTarget> rt;
 };
 class FBAFactory {
  public:
@@ -209,7 +211,7 @@ class FBAFactory {
      * Defines an unmanaged color texture FBA
      * The named texture will not be managed by sdl_exp
      */
-    static FrameBufferAttachment UnmanagedColorTexture(std::shared_ptr<::RenderTarget> tex) {
+    static FrameBufferAttachment UnmanagedColorTexture(std::shared_ptr<flamegpu::visualiser::RenderTarget> tex) {
         if (!std::dynamic_pointer_cast<Texture>(tex)) {
             THROW VisAssert("FrameBufferAttachment UnmanagedColorTexture(): tex must not be a RenderBuffer!\n");
         }
@@ -219,7 +221,7 @@ class FBAFactory {
      * Defines an unmanaged depth texture FBA
      * The named texture will not be managed by sdl_exp
      */
-    static FrameBufferAttachment UnmanagedDepthTexture(std::shared_ptr<::RenderTarget> tex) {
+    static FrameBufferAttachment UnmanagedDepthTexture(std::shared_ptr<flamegpu::visualiser::RenderTarget> tex) {
         if (!std::dynamic_pointer_cast<Texture>(tex)) {
             THROW VisAssert("FrameBufferAttachment UnmanagedDepthTexture(): tex must not be a RenderBuffer!\n");
         }
@@ -229,7 +231,7 @@ class FBAFactory {
      * Defines an unmanaged stencil texture FBA
      * The named texture will not be managed by sdl_exp
      */
-    static FrameBufferAttachment UnmanagedStencilTexture(std::shared_ptr<::RenderTarget> tex) {
+    static FrameBufferAttachment UnmanagedStencilTexture(std::shared_ptr<flamegpu::visualiser::RenderTarget> tex) {
         if (!std::dynamic_pointer_cast<Texture>(tex)) {
             THROW VisAssert("FrameBufferAttachment UnmanagedStencilTexture(): tex must not be a RenderBuffer!\n");
         }
@@ -239,7 +241,7 @@ class FBAFactory {
      * Defines an unmanaged depthstencil texture FBA
      * The named texture will not be managed by sdl_exp
      */
-    static FrameBufferAttachment UnmanagedDepthStencilTexture(std::shared_ptr<::RenderTarget> tex) {
+    static FrameBufferAttachment UnmanagedDepthStencilTexture(std::shared_ptr<flamegpu::visualiser::RenderTarget> tex) {
         if (!std::dynamic_pointer_cast<Texture>(tex)) {
             THROW VisAssert("FrameBufferAttachment UnmanagedDepthStencilTexture(): tex must not be a RenderBuffer!\n");
         }
@@ -274,4 +276,8 @@ class FBAFactory {
         return FrameBufferAttachment(FrameBufferAttachment::DepthStencil, FrameBufferAttachment::RenderBufferRT, 0, 0, 0, renderBuffer);
     }
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_MULTIPASS_FRAMEBUFFERATTACHMENT_H_

@@ -7,6 +7,9 @@
 
 #include "ui/Overlay.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class Sprite2D;
 class Text;
 
@@ -32,5 +35,8 @@ class SplashScreen : public OverlayGroup {
     std::shared_ptr<Sprite2D> logo;
     std::shared_ptr<Text> text;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_UI_SPLASHSCREEN_H_

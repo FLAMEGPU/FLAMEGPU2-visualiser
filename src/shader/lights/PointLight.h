@@ -3,6 +3,9 @@
 
 #include "../ShaderHeader.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class LightsBuffer;
 
 /**
@@ -79,6 +82,9 @@ class PointLight {
     inline void QuadraticAttenuation(const float &factor);
     float QuadraticAttenuation() const { return properties->quadraticAttenuation; }
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #include "PointLight.inl"
 

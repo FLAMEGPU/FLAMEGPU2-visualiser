@@ -4,6 +4,9 @@
 #include <string>
 #include <typeindex>
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Holds data identifying a requested texture buffer
  */
@@ -86,5 +89,8 @@ struct CustomTexBufferConfig : TexBufferConfig {
      */
     std::string nameInShader;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // INCLUDE_CONFIG_TEXBUFFERCONFIG_H_

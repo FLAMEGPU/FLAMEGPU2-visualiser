@@ -7,6 +7,9 @@
 
 #include "LineConfig.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * This class holds the common components for a visualisation
  * @note I had wanted to avoid including C++ types in the Visualisation interface Lib,
@@ -138,5 +141,8 @@ struct ModelConfig {
         *target = t;
     }
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  //  INCLUDE_CONFIG_MODELCONFIG_H_

@@ -15,6 +15,9 @@
 #include "util/StringUtils.h"
 #include "util/Resources.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 #define DEFAULT_TEXCOORD_SIZE 2
 #define FACES_SIZE 3
 
@@ -276,17 +279,25 @@ Used by loadModelFromFile() in a hashmap of vertex-normal pairs
 struct VN_PAIR {
     unsigned int v, n, t;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+// Need to dropout of flamegpu::visualiser for this to end up in std::
+
 /*
 Used by loadModelFromFile() in a hashmap of vertex-normal pairs
 */
 namespace std {
-template<> struct hash<VN_PAIR> {
-    size_t operator()(const VN_PAIR & x) const {
+template<> struct hash<flamegpu::visualiser::VN_PAIR> {
+    size_t operator()(const flamegpu::visualiser::VN_PAIR & x) const {
         static int offset = sizeof(uint64_t) / 3;
         return (x.t << offset * 2) & (x.n << offset) & x.v;
     }
 };
-}
+}  // namespace std
+
+namespace flamegpu {
+namespace visualiser {
 /*
 Used by loadModelFromFile() in a hashmap of vertex-normal pairs
 */
@@ -1455,3 +1466,6 @@ Disables or enables face culling
 void Entity::setCullFace(const bool _cullFace) {
     this->cullFace = _cullFace;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

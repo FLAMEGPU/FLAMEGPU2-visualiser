@@ -10,6 +10,9 @@ DISABLE_WARNING_POP
 #include "shader/Shaders.h"
 #include "util/Resources.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 bool ShaderCore::exitOnError = false;  // Tempted to use pre-processor macros to swap this default to true on release mode
 // Constructors/Destructors
 ShaderCore::ShaderCore()
@@ -711,3 +714,6 @@ std::vector<std::string> *ShaderCore::buildFileVector(std::initializer_list<std:
     }
     return rtn;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

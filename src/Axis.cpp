@@ -1,4 +1,8 @@
 #include "Axis.h"
+
+namespace flamegpu {
+namespace visualiser {
+
 /*
 Constructs a new axis object
 @param length The length of each drawn axis
@@ -37,3 +41,6 @@ void Axis::setProjectionMatPtr(glm::mat4 const *projectionMat) {
 void Axis::setLightsBuffer(const GLuint &bufferBindingPoint) {
     pen.setLightsBuffer(bufferBindingPoint);
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

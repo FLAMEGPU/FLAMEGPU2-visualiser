@@ -4,6 +4,9 @@
 #include "DirectionalLight.h"
 #include "shader/lights/LightsBuffer.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 inline DirectionalLight::DirectionalLight(const PointLight &old)
     : PointLight(old) { }
 
@@ -21,5 +24,8 @@ inline DirectionalLight::DirectionalLight(LightProperties * const props, LightsB
 inline void DirectionalLight::Direction(const glm::vec3 &dir) {
     tProperties->spotDirection = glm::vec4(glm::normalize(dir), 0.0f);
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_SHADER_LIGHTS_DIRECTIONALLIGHT_INL_

@@ -28,6 +28,9 @@
 #include "Draw.h"
 #include "Entity.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 template <typename T>
 struct CUDATextureBuffer;
 class SplashScreen;
@@ -365,5 +368,8 @@ class Visualiser : public ViewportExt {
     SDL_JoystickID joystickInstance;
     bool gamepadConnected;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_VISUALISER_H_

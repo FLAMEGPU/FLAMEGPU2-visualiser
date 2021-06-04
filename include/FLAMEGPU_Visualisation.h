@@ -6,6 +6,9 @@
 
 #include "config/TexBufferConfig.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 struct AgentStateConfig;
 struct ModelConfig;
 class Visualiser;
@@ -74,5 +77,9 @@ class FLAMEGPU_Visualisation {
      */
     unsigned int step_ms;
 };
+
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // INCLUDE_FLAMEGPU_VISUALISATION_H_

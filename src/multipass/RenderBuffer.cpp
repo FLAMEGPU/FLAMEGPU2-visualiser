@@ -1,5 +1,8 @@
 #include "multipass/RenderBuffer.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 std::shared_ptr<RenderBuffer> RenderBuffer::make(glm::uvec2 dimensions, GLenum internalFormat, unsigned int samples) {
     return std::shared_ptr<RenderBuffer>(new RenderBuffer(dimensions, internalFormat, samples));
 }
@@ -32,3 +35,6 @@ GLuint RenderBuffer::genName() {
     GL_CALL(glGenRenderbuffers(1, &name));
     return name;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

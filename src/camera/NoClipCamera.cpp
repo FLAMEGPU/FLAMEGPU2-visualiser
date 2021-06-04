@@ -7,6 +7,9 @@ DISABLE_WARNING_POP
 
 #include "util/GLcheck.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 NoClipCamera::NoClipCamera()
     : NoClipCamera(glm::vec3(1, 1, 1)) {}
 NoClipCamera::NoClipCamera(const glm::vec3 &eye)
@@ -43,7 +46,7 @@ void NoClipCamera::turn(const float &yaw, const float &pitch) {
         // Stabilised up is perpendicular to right and look
         _up = cross(_right, _look);
         // Don't let look get too close to pure up, else we will spin
-        if (abs(dot(_look, this->pureUp)) > 0.98)
+        if (std::abs(dot(_look, this->pureUp)) > 0.98)
             return;
     }
     // Commit changes
@@ -101,3 +104,6 @@ void NoClipCamera::updateViews() {
     viewMat = glm::lookAt(eye, eye + look, up);
     skyboxViewMat = glm::lookAt(glm::vec3(0), look, up);
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

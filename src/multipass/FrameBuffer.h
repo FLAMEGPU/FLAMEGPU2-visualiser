@@ -10,6 +10,9 @@
 #include "interface/FBuffer.h"
 #include "multipass/FrameBufferAttachment.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class Texture;
 class RenderBuffer;
 
@@ -268,4 +271,8 @@ class FrameBuffer : public FBuffer {
      */
     void setDrawBuffers();
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_MULTIPASS_FRAMEBUFFER_H_

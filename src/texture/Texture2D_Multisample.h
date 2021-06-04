@@ -5,6 +5,9 @@
 #include "Texture.h"
 #include "interface/RenderTarget.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class Texture2D_Multisample : public Texture, public RenderTarget {
  public:
     static std::shared_ptr<Texture2D_Multisample> make(
@@ -85,5 +88,8 @@ class Texture2D_Multisample : public Texture, public RenderTarget {
     static const char *RAW_TEXTURE_FLAG;
     unsigned int samples;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_TEXTURE_TEXTURE2D_MULTISAMPLE_H_

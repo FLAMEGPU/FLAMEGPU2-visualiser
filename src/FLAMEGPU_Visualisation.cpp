@@ -3,6 +3,9 @@
 
 #include <mutex>
 
+namespace flamegpu {
+namespace visualiser {
+
 class LockHolder {
  public:
     explicit LockHolder(std::mutex &mtx)
@@ -75,3 +78,6 @@ void FLAMEGPU_Visualisation::releaseMutex() {
         }
     }
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

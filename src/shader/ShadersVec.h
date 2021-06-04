@@ -5,6 +5,9 @@
 
 #include "shader/Shaders.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
 * Basic class allowing common shader operations to be perfomed across a set of shaders
 */
@@ -160,5 +163,8 @@ class ShadersVec {
         return a;
     }
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_SHADER_SHADERSVEC_H_

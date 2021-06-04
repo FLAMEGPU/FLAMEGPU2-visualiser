@@ -12,6 +12,9 @@
 #include "model/Material.h"
 #include "shader/ShadersVec.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /*
 A renderable model loaded from a .obj file
 */
@@ -146,4 +149,8 @@ class Entity : public Renderable {
     static const unsigned char FILE_TYPE_FLAG = 0x12;
     static const unsigned char FILE_TYPE_VERSION = 1;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_ENTITY_H_

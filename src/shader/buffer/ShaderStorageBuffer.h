@@ -5,6 +5,10 @@
 #include <set>
 
 #include "shader/buffer/BufferCore.h"
+
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Representative of GL_SHADER_STORAGE_BUFFER
  * These can be used for reading from and writing to during shader execution
@@ -23,5 +27,8 @@ class ShaderStorageBuffer : public BufferCore {
     GLint allocateBindPoint();
     static std::set<GLint> allocatedBindPoints;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_SHADER_BUFFER_SHADERSTORAGEBUFFER_H_
