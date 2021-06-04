@@ -7,6 +7,9 @@ DISABLE_WARNING_POP
 
 #include "shader/Shaders.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 void Overlay::setWidth(unsigned int w) {
     setDimensions({ w, dimensions.y });
 }
@@ -79,3 +82,6 @@ bool OverlayGroup::getVisible() const {
     }
     return false;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

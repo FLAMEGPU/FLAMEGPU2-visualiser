@@ -7,6 +7,9 @@
 #include "util/GLcheck.h"
 #include "interface/RenderTarget.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Represents an OpenGL renderbuffer
  * These can be rendered to and blit, but not sampled like texture's
@@ -56,5 +59,8 @@ class RenderBuffer : public RenderTarget {
     const GLenum internalFormat;
     glm::uvec2 dimensions;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_MULTIPASS_RENDERBUFFER_H_

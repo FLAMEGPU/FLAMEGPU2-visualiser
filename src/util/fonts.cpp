@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <fontconfig/fontconfig.h>
 
+namespace flamegpu {
+namespace visualiser {
+
 namespace fonts {
 // private namespace
 namespace {
@@ -117,12 +120,18 @@ std::string findFont(std::initializer_list<const char *> fontNames, const Generi
 
 }  // namespace fonts
 
+}  // namespace visualiser
+}  // namespace flamegpu
+
+
 // Windows implementation using directwrite.
 #elif defined(_MSC_VER)
 
 // https://docs.microsoft.com/en-us/windows/win32/api/dwrite/nn-dwrite-idwritefontcollection
 #include <dwrite.h>
 
+namespace flamegpu {
+namespace visualiser {
 namespace fonts {
 
 // anonymous namespace to emulate private:
@@ -349,6 +358,8 @@ std::string findFont(std::initializer_list<const char *> fontNames, const Generi
 }
 
 }  // namespace fonts
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif
 

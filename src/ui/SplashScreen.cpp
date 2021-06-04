@@ -6,6 +6,9 @@
 #include "ui/Text.h"
 #include "util/fonts.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 SplashScreen::SplashScreen(const glm::vec3& textColor, const std::string& message, bool isPython)
     : logo_offset(0)
     , text_offset(0) {
@@ -21,3 +24,6 @@ SplashScreen::SplashScreen(const glm::vec3& textColor, const std::string& messag
 std::vector<SplashScreen::OverlayItem> SplashScreen::getOverlays() const {
     return std::vector<OverlayItem>{OverlayItem{ logo, logo_offset, 0 }, OverlayItem{ text, text_offset, 0 }};
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

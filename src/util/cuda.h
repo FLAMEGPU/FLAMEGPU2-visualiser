@@ -4,6 +4,9 @@
 
 #include "util/GLcheck.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 #ifndef __CUDACC__
 // Borrowed from cuda headers
 struct cudaGraphicsResource;
@@ -63,5 +66,8 @@ void freeGLInteropTextureBuffer(CUDATextureBuffer<T> *texBuf);
 * Returns true if cudaMemcpy returns cudaSuccess
 */
 bool _cudaMemcpyDeviceToDevice(void* dst, const void* src, size_t count);
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_UTIL_CUDA_H_

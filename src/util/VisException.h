@@ -5,11 +5,14 @@
 #include <exception>
 #include <cstdarg>
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * If this macro is used instead of 'throw', VisException will 
  * prepend '__FILE__ (__LINE__): ' to err_message 
  */
-#define THROW VisException::setLocation(__FILE__, __LINE__); throw
+#define THROW ::flamegpu::visualiser::VisException::setLocation(__FILE__, __LINE__); throw
 
 /*! Base class for exceptions thrown */
 class VisException : public std::exception {
@@ -108,5 +111,8 @@ DERIVED_VisException(EntityError, "Something went wrong.");
  * Lazy replacement for assert()
  */
 #define visassert(cdn) if (!(cdn)) { THROW VisAssert("VisAssert: '#cdn' failed!\n");}
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_UTIL_VISEXCEPTION_H_

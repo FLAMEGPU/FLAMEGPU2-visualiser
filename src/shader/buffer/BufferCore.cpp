@@ -4,13 +4,16 @@
 
 #include "util/GLcheck.h"
 
-BufferCore::BufferCore(GLenum bufferType, GLint bindPoint, size_t size, void* data)
+namespace flamegpu {
+namespace visualiser {
+
+flamegpu::visualiser::BufferCore::BufferCore(GLenum bufferType, GLint bindPoint, size_t size, void* data)
     : size(size)
     , bufferName(0)
     , bufferBindPoint(bindPoint)
     , bufferType(bufferType) {
     if (this->size > static_cast<size_t>(maxSize(bufferType))) {
-        THROW VisAssert("BufferCore::BufferCore(): Size (%u) exceeds max buffer size (%u)!\n", this->size, maxSize(bufferType));
+        THROW VisAssert("flamegpu::visualiser::BufferCore::BufferCore(): Size (%u) exceeds max buffer size (%u)!\n", this->size, maxSize(bufferType));
     }
     GL_CALL(glGenBuffers(1, &bufferName));
     GL_CALL(glBindBuffer(bufferType, bufferName));
@@ -18,43 +21,43 @@ BufferCore::BufferCore(GLenum bufferType, GLint bindPoint, size_t size, void* da
     GL_CALL(glBufferData(bufferType, size, data, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(bufferType, 0));
 }
-BufferCore::~BufferCore() {
+flamegpu::visualiser::BufferCore::~BufferCore() {
     GL_CALL(glDeleteBuffers(1, &bufferName));
 }
-void BufferCore::setData(void *data, size_t _size) {
+void flamegpu::visualiser::BufferCore::setData(void *data, size_t _size) {
     this->size = _size == 0 ? this->size : _size;
     if (this->size > static_cast<size_t>(maxSize(bufferType))) {
-        THROW VisAssert("BufferCore::setData(): Size (%u) exceeds max buffer size (%u)!\n", this->size, maxSize(bufferType));
+        THROW VisAssert("flamegpu::visualiser::BufferCore::setData(): Size (%u) exceeds max buffer size (%u)!\n", this->size, maxSize(bufferType));
     }
     GL_CALL(glBindBuffer(bufferType, bufferName));
     GL_CALL(glBufferData(bufferType, this->size, data, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(bufferType, 0));
 }
-void BufferCore::setData(void *data, size_t _size, size_t offset) {
+void flamegpu::visualiser::BufferCore::setData(void *data, size_t _size, size_t offset) {
     visassert(_size + offset <= this->size);
     if (_size + offset > static_cast<size_t>(maxSize(bufferType))) {
-        THROW VisAssert("BufferCore::setData(): _size (%u) + offset (%u) exceeds max buffer size (%u)!\n", _size, offset, maxSize(bufferType));
+        THROW VisAssert("flamegpu::visualiser::BufferCore::setData(): _size (%u) + offset (%u) exceeds max buffer size (%u)!\n", _size, offset, maxSize(bufferType));
     }
     GL_CALL(glBindBuffer(bufferType, bufferName));
     GL_CALL(glBufferSubData(bufferType, offset, _size, reinterpret_cast<void*>(data)));
     GL_CALL(glBindBuffer(bufferType, 0));
 }
-void BufferCore::getData(void *dataReturn, size_t _size, size_t offset) {
+void flamegpu::visualiser::BufferCore::getData(void *dataReturn, size_t _size, size_t offset) {
     _size = _size == 0 ? this->size : _size;
     GL_CALL(glBindBuffer(bufferType, bufferName));
     GL_CALL(glGetBufferSubData(bufferType, offset, _size, reinterpret_cast<void*>(dataReturn)));
     GL_CALL(glBindBuffer(bufferType, 0));
 }
-void const *BufferCore::mapBufferRead() {
+void const *flamegpu::visualiser::BufferCore::mapBufferRead() {
     return mapBuffer(GL_READ_ONLY);
 }
-void *BufferCore::mapBufferWrite() {
+void *flamegpu::visualiser::BufferCore::mapBufferWrite() {
     return mapBuffer(GL_WRITE_ONLY);
 }
-void *BufferCore::mapBufferReadWrite() {
+void *flamegpu::visualiser::BufferCore::mapBufferReadWrite() {
     return mapBuffer(GL_READ_WRITE);
 }
-void *BufferCore::mapBuffer(GLenum access) {
+void *flamegpu::visualiser::BufferCore::mapBuffer(GLenum access) {
     GL_CALL(glBindBuffer(bufferType, bufferName));
     GL_CALL(glMapBuffer(bufferType, access));
     GL_CALL(glBindBuffer(bufferType, 0));
@@ -62,12 +65,12 @@ void *BufferCore::mapBuffer(GLenum access) {
     GL_CALL(glGetBufferPointerv(bufferType, GL_BUFFER_MAP_POINTER, &rtn));
     return rtn;
 }
-void BufferCore::unmapBuffer() {
+void flamegpu::visualiser::BufferCore::unmapBuffer() {
     GL_CALL(glBindBuffer(bufferType, bufferName));
     GL_CALL(glUnmapBuffer(bufferType));
     GL_CALL(glBindBuffer(bufferType, 0));
 }
-GLenum BufferCore::getBlockType() {
+GLenum flamegpu::visualiser::BufferCore::getBlockType() {
     if (bufferType == GL_UNIFORM_BUFFER)
         return GL_UNIFORM_BLOCK;
     if (bufferType == GL_SHADER_STORAGE_BUFFER)
@@ -78,7 +81,7 @@ GLenum BufferCore::getBlockType() {
     fprintf(stderr, "Buffer type was unexpected.\n");
     return GL_INVALID_ENUM;
 }
-GLint BufferCore::maxSize(GLenum bufferType) {
+GLint flamegpu::visualiser::BufferCore::maxSize(GLenum bufferType) {
     if (bufferType == GL_UNIFORM_BUFFER) {
         static GLint maxUniformBufferSize = 0;
         if (!maxUniformBufferSize)
@@ -100,7 +103,7 @@ GLint BufferCore::maxSize(GLenum bufferType) {
     }
     return 0;
 }
-GLint BufferCore::maxBuffers(GLenum bufferType) {
+GLint flamegpu::visualiser::BufferCore::maxBuffers(GLenum bufferType) {
     if (bufferType == GL_UNIFORM_BUFFER) {
         static GLint maxUniformBindings = -1;
         if (maxUniformBindings <= 0) {
@@ -130,10 +133,18 @@ GLint BufferCore::maxBuffers(GLenum bufferType) {
     return 0;
 }
 
+}  // namespace visualiser
+}  // namespace flamegpu
+
 // Comment out this include if not making use of Shaders/ShaderCore
 #include "shader/ShaderCore.h"
 #ifdef SRC_SHADER_SHADERCORE_H_
+namespace flamegpu {
+namespace visualiser {
 bool ShaderCore::addBuffer(const char *bufferNameInShader, const std::shared_ptr<BufferCore> &buffer) {  // Treat it similar to texture binding points
     return addBuffer(bufferNameInShader, buffer->getType(), buffer->getBufferBindPoint());
 }
-#endif
+}  // namespace visualiser
+}  // namespace flamegpu
+
+#endif  // SRC_SHADER_SHADERCORE_H_

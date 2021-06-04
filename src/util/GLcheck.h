@@ -7,6 +7,9 @@
 #include <cstdlib>
 #include "VisException.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 #ifdef _DEBUG  // VS standard debug flag
 
 inline static void HandleGLError(const char *file, int line) {
@@ -36,5 +39,8 @@ inline static void InitGlew() {
     glGetError();  // This error can be ignored, GL_INVALID_ENUMERANT
 }
 #define GLEW_INIT() (InitGlew())
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_UTIL_GLCHECK_H_

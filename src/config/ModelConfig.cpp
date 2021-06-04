@@ -1,6 +1,10 @@
 #include "config/ModelConfig.h"
 
 #include <cstring>
+
+namespace flamegpu {
+namespace visualiser {
+
 ModelConfig::StaticModel::StaticModel()
     : path("")
     , texture("")
@@ -44,3 +48,7 @@ ModelConfig &ModelConfig::operator=(const ModelConfig &other) {
     // lines
     return *this;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu
+

@@ -8,6 +8,9 @@
 #include "util/cuda.cuh"
 #endif
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * This class represents a GL_TEXTURE_BUFFER
  * It contains optional CUDA support if necessary files are renamed from .cpp.cu to .cu and set to build with CUDA
@@ -103,5 +106,8 @@ class TextureBuffer : public Texture {
 #endif
     static const char *RAW_TEXTURE_FLAG;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_TEXTURE_TEXTUREBUFFER_H_

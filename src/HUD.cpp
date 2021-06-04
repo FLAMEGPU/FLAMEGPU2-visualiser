@@ -10,6 +10,8 @@ DISABLE_WARNING_POP
 #include "ui/Overlay.h"
 #include "shader/Shaders.h"
 
+namespace flamegpu {
+namespace visualiser {
 
 HUD::HUD(const unsigned int &width, const unsigned int &height)
     : HUD(glm::uvec2(width, height)) { }
@@ -197,3 +199,6 @@ void HUD::Item::resizeWindow(const glm::uvec2 &dims) {
         overlay->getShaders()->addStaticUniform("_viewportDims", glm::value_ptr(viewportDims), 2);
     }
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

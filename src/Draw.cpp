@@ -4,6 +4,9 @@
 
 #include "util/StringUtils.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 const unsigned int Draw::DEFAULT_INITIAL_VBO_LENGTH = 1024;
 const float Draw::STORAGE_MUTLIPLIER = 2.0f;
 Draw::Draw(const unsigned int &bufferLength, const glm::vec4 &initialColor, const float &initialWidth)
@@ -270,3 +273,6 @@ void Draw::setProjectionMatPtr(glm::mat4 const *projectionMat) {
 void Draw::setLightsBuffer(const GLuint &bufferBindingPoint) {
     shaders->setLightsBuffer(bufferBindingPoint);
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

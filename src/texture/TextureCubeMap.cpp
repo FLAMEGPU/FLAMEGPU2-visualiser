@@ -1,6 +1,9 @@
 #include "texture/TextureCubeMap.h"
 #include <glm/gtx/component_wise.hpp>
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Static members
  */
@@ -149,3 +152,6 @@ bool TextureCubeMap::isBound() const {
     GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &whichID));
     return static_cast<GLuint>(whichID) == glName;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

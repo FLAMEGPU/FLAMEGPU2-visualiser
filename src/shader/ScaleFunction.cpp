@@ -2,6 +2,9 @@
 
 #include <sstream>
 
+namespace flamegpu {
+namespace visualiser {
+
 ScaleFunction::ScaleFunction(const std::map<TexBufferConfig::Function, TexBufferConfig> &tex_buffers)
     : has_scale_x(tex_buffers.find(TexBufferConfig::Scale_x) != tex_buffers.end())
     , has_scale_y(tex_buffers.find(TexBufferConfig::Scale_y) != tex_buffers.end())
@@ -40,3 +43,6 @@ std::string ScaleFunction::getSrc() {
 
     return ss.str();
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

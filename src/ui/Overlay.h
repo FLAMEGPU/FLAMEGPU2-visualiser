@@ -7,6 +7,9 @@
 #include "texture/Texture2D.h"
 #include "HUD.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class Shaders;
 
 /*
@@ -118,5 +121,8 @@ class OverlayGroup {
      */
     virtual bool getVisible() const;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_UI_OVERLAY_H_

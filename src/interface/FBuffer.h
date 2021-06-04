@@ -3,6 +3,9 @@
 #include "../util/GLcheck.h"
 #include <glm/glm.hpp>
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Frame buffer interface shared by FrameBuffer and BackBuffer classes
  * Named FBuffer because Framebuffer is better suited to the actual class than the interface
@@ -56,5 +59,8 @@ class FBuffer {
         return rtn;
     }
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_INTERFACE_FBUFFER_H_

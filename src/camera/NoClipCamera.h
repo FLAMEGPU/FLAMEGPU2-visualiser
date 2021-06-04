@@ -4,6 +4,9 @@
 
 #include "interface/Camera.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class NoClipCamera : public Camera {
  public:
     /**
@@ -108,5 +111,8 @@ class NoClipCamera : public Camera {
     glm::vec3 up;
     bool stabilise;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_CAMERA_NOCLIPCAMERA_H_

@@ -13,6 +13,9 @@ DISABLE_WARNING_PUSH
 #include <glm/gtc/matrix_inverse.hpp>
 DISABLE_WARNING_POP
 
+namespace flamegpu {
+namespace visualiser {
+
 const char *Shaders::MODELVIEW_MATRIX_UNIFORM_NAME = "_modelViewMat";
 const char *Shaders::PROJECTION_MATRIX_UNIFORM_NAME = "_projectionMat";
 const char *Shaders::MODELVIEWPROJECTION_MATRIX_UNIFORM_NAME = "_modelViewProjectionMat";
@@ -453,15 +456,15 @@ void Shaders::buildVAO() {
 void Shaders::_prepare() {
     _useProgramModelMatrices();
     // Set the projection matrix (e.g. glFrustum, normally provided by the Visualisation)
-    if (this->vertexShaderVersion <= 120 && this->projectionMat.matrixPtr > nullptr) {  // If old shaders where gl_ModelViewProjectionMatrix is available
+    if (this->vertexShaderVersion <= 120 && this->projectionMat.matrixPtr != nullptr) {  // If old shaders where gl_ModelViewProjectionMatrix is available
         GL_CALL(glMatrixMode(GL_PROJECTION));
         GL_CALL(glLoadMatrixf(glm::value_ptr(*this->projectionMat.matrixPtr)));
     }
-    if (this->projectionMat.location >= 0 && this->projectionMat.matrixPtr > nullptr) {  // If projection matrix location and camera ptr are known
+    if (this->projectionMat.location >= 0 && this->projectionMat.matrixPtr != nullptr) {  // If projection matrix location and camera ptr are known
         GL_CALL(glUniformMatrix4fv(this->projectionMat.location, 1, GL_FALSE, glm::value_ptr(*this->projectionMat.matrixPtr)));
     }
     // Set the view matrix (e.g. gluLookAt, normally provided by the Camera)
-    if (this->viewMat.location >= 0 && this->viewMat.matrixPtr > nullptr) {  // If view matrix location and camera ptr are known
+    if (this->viewMat.location >= 0 && this->viewMat.matrixPtr != nullptr) {  // If view matrix location and camera ptr are known
         GL_CALL(glUniformMatrix4fv(this->viewMat.location, 1, GL_FALSE, glm::value_ptr(*this->viewMat.matrixPtr)));
     }
 }
@@ -580,3 +583,6 @@ bool Shaders::setFragOutAttribute(GLuint attachmentPoint, const char *name) {
     }
     return false;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

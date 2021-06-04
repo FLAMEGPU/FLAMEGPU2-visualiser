@@ -1,5 +1,8 @@
 #include "texture/TextureBuffer.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 template<class T>
 const char *TextureBuffer<T>::RAW_TEXTURE_FLAG = "TextureBuffer";
 
@@ -198,3 +201,6 @@ bool TextureBuffer<T>::isBound() const {
 template class TextureBuffer<float>;
 template class TextureBuffer<unsigned int>;
 template class TextureBuffer<int>;
+
+}  // namespace visualiser
+}  // namespace flamegpu

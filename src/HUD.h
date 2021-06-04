@@ -9,6 +9,9 @@
 
 #include "util/GLcheck.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class OverlayGroup;
 class Overlay;
 
@@ -150,5 +153,8 @@ class HUD {
     std::list<std::shared_ptr<Item>> stack;
     glm::uvec2 dims;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_HUD_H_

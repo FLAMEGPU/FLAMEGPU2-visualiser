@@ -14,6 +14,10 @@
 #include "util/GLcheck.h"
 #include "interface/Reloadable.h"
 
+
+namespace flamegpu {
+namespace visualiser {
+
 class BufferCore;  // Implementation of addBuffer(const char *, std::shared_ptr<BufferCore>) found in BufferCore.cpp
 class Texture;  // Impementation of addTexture(const char *textureNameInShader, std::shared_ptr<Texture> texture) found in Texture.cpp
 /**
@@ -492,5 +496,8 @@ class ShaderCore : public Reloadable {
      */
     static bool checkShaderCompileError(const GLuint shaderId, const char *shaderPath);
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_SHADER_SHADERCORE_H_

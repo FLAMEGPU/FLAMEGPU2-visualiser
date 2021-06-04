@@ -1,6 +1,9 @@
 #include "config/AgentStateConfig.h"
 #include "config/Stock.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 AgentStateConfig::AgentStateConfig()
     : model_path(nullptr)
     , model_texture(nullptr) {
@@ -29,3 +32,6 @@ AgentStateConfig &AgentStateConfig::operator=(const AgentStateConfig &other) {
     tex_buffers = other.tex_buffers;
     return *this;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

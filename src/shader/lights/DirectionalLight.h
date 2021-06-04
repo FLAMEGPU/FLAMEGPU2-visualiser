@@ -2,6 +2,9 @@
 #define SRC_SHADER_LIGHTS_DIRECTIONALLIGHT_H_
 #include "PointLight.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Denotes a directional light by setting spotCosCutoff to invalid range spotCosCutoff>1
  * Stores direction in spotDirection, ignores position and hence only has constant attenuation
@@ -36,5 +39,9 @@ class DirectionalLight : protected PointLight {
     using PointLight::LinearAttenuation;
     using PointLight::QuadraticAttenuation;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #include "DirectionalLight.inl"
 #endif  // SRC_SHADER_LIGHTS_DIRECTIONALLIGHT_H_

@@ -5,6 +5,9 @@
 // #include "PointLightModel.h"
 // #include "SpotLightModel.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 class PointLight;
 class SpotLight;
 class DirectionalLight;
@@ -104,6 +107,9 @@ class LightsBuffer : private UniformBuffer {
     // std::unique_ptr<PointLightModel> modelPointLight;
     // std::unique_ptr<SpotLightModel> modelSpotLight;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #include "PointLight.h"
 #include "SpotLight.h"

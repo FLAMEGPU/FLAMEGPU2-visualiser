@@ -4,6 +4,9 @@
 #include "shader/lights/SpotLight.h"
 #include "shader/lights/LightsBuffer.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 inline SpotLight::SpotLight(const PointLight &old)
     : PointLight(old) { }
 
@@ -25,5 +28,8 @@ inline void SpotLight::CutOff(const float &degrees) {
 inline void SpotLight::Exponent(const float &exponent) {
     properties->spotExponent = exponent;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_SHADER_LIGHTS_SPOTLIGHT_INL_

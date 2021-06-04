@@ -1,6 +1,9 @@
 #ifndef SRC_INTERFACE_RELOADABLE_H_
 #define SRC_INTERFACE_RELOADABLE_H_
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Interface for classes that can be reloaded
  * @see ShaderCore
@@ -18,5 +21,8 @@ class Reloadable {
      */
     virtual void reload() = 0;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_INTERFACE_RELOADABLE_H_

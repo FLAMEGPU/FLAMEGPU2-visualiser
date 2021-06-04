@@ -8,6 +8,8 @@
 #include <memory>
 
 #include "util/warnings.h"
+namespace flamegpu {
+namespace visualiser {
 
 namespace su {
 namespace internal {
@@ -113,5 +115,7 @@ inline bool contains(const std::string& haystack, const std::string& needle, boo
     return contains(toLower(haystack), toLower(needle), true);
 }  // namespace
 }  // namespace su
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_UTIL_STRINGUTILS_H_

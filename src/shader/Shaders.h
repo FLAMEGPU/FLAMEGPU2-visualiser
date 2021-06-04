@@ -10,6 +10,10 @@
 
 #include "shader/ShaderCore.h"
 
+
+namespace flamegpu {
+namespace visualiser {
+
 #define NORMALS_SIZE 3
 
 class UniformBuffer;  // Implementation of setMaterialBuffer(const std::shared_ptr<UniformBuffer> &buffer) found in UniformBuffer.cpp
@@ -571,5 +575,9 @@ class Shaders : public ShaderCore {
     */
     int geometryShaderVersion;
 };
+
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_SHADER_SHADERS_H_

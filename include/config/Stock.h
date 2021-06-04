@@ -1,6 +1,8 @@
 #ifndef INCLUDE_CONFIG_STOCK_H_
 #define INCLUDE_CONFIG_STOCK_H_
 
+namespace flamegpu {
+namespace visualiser {
 namespace Stock {
 namespace Models {
 /**
@@ -33,5 +35,7 @@ const Model TEAPOT{ "resources/teapot.obj", "" };
 const Model STUNTPLANE{ "resources/stuntplane.obj", "" };
 }  // namespace Models
 }  // namespace Stock
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // INCLUDE_CONFIG_STOCK_H_

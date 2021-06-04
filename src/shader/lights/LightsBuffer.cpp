@@ -7,6 +7,9 @@
 #include "shader/lights/SpotLight.h"
 #include "shader/lights/DirectionalLight.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 LightsBuffer::LightsBuffer(const glm::mat4 *viewMatPtr)
     : UniformBuffer(MAX_LIGHTS*sizeof(LightProperties))
     , tProperties()
@@ -74,10 +77,21 @@ void LightsBuffer::update() {
     setData(&uniformBlock, sizeof(glm::vec4) + (uniformBlock.lightsCount * sizeof(LightProperties)));  // sizeof(LightUniformBlock)
 }
 
+}  // namespace visualiser
+}  // namespace flamegpu
+
 // Comment out this include if not making use of Shaders/ShaderCore
 #include "interface/Renderable.h"
+
 #ifdef SRC_INTERFACE_RENDERABLE_H_
+namespace flamegpu {
+namespace visualiser {
+
 void Renderable::setLightsBuffer(std::shared_ptr<const LightsBuffer> buffer) {  // Treat it similar to texture binding points
     setLightsBuffer(buffer->getBufferBindPoint());
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif

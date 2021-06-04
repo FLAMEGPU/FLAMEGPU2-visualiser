@@ -1,5 +1,8 @@
 #include "texture/Texture2D_Multisample.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 
 const char *Texture2D_Multisample::RAW_TEXTURE_FLAG = "Texture2D_Multisample";
 
@@ -47,3 +50,6 @@ bool Texture2D_Multisample::isBound() const {
     GL_CALL(glGetIntegerv(GL_TEXTURE_BINDING_2D_MULTISAMPLE, &whichID));
     return static_cast<GLuint>(whichID) == glName;
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

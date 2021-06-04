@@ -4,6 +4,9 @@
 
 #include "util/GLcheck.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 std::set<GLint> UniformBuffer::allocatedBindPoints;
 UniformBuffer::UniformBuffer(size_t size, void* data)
     : BufferCore(GL_UNIFORM_BUFFER, allocateBindPoint(), size, data) { }
@@ -30,11 +33,19 @@ GLint UniformBuffer::MaxSize() {
 GLint UniformBuffer::MaxBuffers() {
     return BufferCore::maxBuffers(GL_UNIFORM_BUFFER);
 }
+}  // namespace visualiser
+}  // namespace flamegpu
 
 // Comment out this include if not making use of Shaders/ShaderCore
 #include "shader/Shaders.h"
 #ifdef SRC_SHADER_SHADERS_H_
+namespace flamegpu {
+namespace visualiser {
 bool Shaders::setMaterialBuffer(const std::shared_ptr<UniformBuffer> &buffer) {
     return addBuffer(MATERIAL_UNIFORM_BLOCK_NAME, buffer);
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_SHADER_SHADERS_H_

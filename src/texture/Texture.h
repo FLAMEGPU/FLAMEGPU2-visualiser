@@ -10,6 +10,9 @@
 
 struct SDL_Surface;
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Shell texture class providing various utility methods for subclasses
  * SDL_EXP intends for each texture type to assign each instance a unique texture unit
@@ -286,5 +289,9 @@ class Texture {
      */
     static bool IL_IS_INIT;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 
 #endif  // SRC_TEXTURE_TEXTURE_H_

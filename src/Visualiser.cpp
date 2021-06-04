@@ -13,6 +13,8 @@
 #include "ui/Text.h"
 #include "ui/SplashScreen.h"
 
+namespace flamegpu {
+namespace visualiser {
 
 #define FOVY 60.0f
 #define DELTA_THETA_PHI 0.01f
@@ -640,6 +642,7 @@ bool Visualiser::init() {
             printf("Swap Interval Failed: %s\n", SDL_GetError());
         }
 
+        // @todo - why is this a macro?
         GLEW_INIT();
 
         //  Setup gl stuff
@@ -1112,3 +1115,6 @@ void Visualiser::updateDebugMenu() {
         debugMenu->setString(ss.str().c_str());
     }
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

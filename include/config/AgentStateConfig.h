@@ -5,8 +5,10 @@
 #include <cstring>
 #include <map>
 
-
 #include "TexBufferConfig.h"
+
+namespace flamegpu {
+namespace visualiser {
 
 /**
 * This class holds the common components for a visualisation
@@ -59,5 +61,8 @@ struct AgentStateConfigFlags {
     unsigned int model_scale : 1;
 #endif  // __CUDACC__
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // INCLUDE_CONFIG_AGENTSTATECONFIG_H_

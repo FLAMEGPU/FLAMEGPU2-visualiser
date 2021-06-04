@@ -1,6 +1,9 @@
 #include "Sprite2D.h"
 #include "shader/Shaders.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 
 // Sprite2D::Sprite2D(const char *imagePath, std::shared_ptr<Shaders> shader, glm::uvec2 dimensions)
 //     : Sprite2D(Texture2D::load(imagePath), shader, dimensions)
@@ -20,3 +23,6 @@ Sprite2D::Sprite2D(std::shared_ptr<const Texture2D> tex, std::shared_ptr<Shaders
     setDimensions({ width, height });
     getShaders()->addTexture("_texture", tex);
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

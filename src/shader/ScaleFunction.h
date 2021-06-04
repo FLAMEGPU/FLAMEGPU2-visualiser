@@ -6,6 +6,8 @@
 
 #include "config/TexBufferConfig.h"
 
+namespace flamegpu {
+namespace visualiser {
 
 /**
  * Produces the source for a GLSL function which returns a scale multiplier vector to multiply by each model vertex
@@ -26,5 +28,8 @@ class ScaleFunction {
     bool has_scale_z;
     bool has_uniform_scale;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_SHADER_SCALEFUNCTION_H_

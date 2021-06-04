@@ -14,6 +14,9 @@ DISABLE_WARNING_POP
 
 #include "shader/Shaders.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 Text::Text(const char *string, unsigned int fontHeight, glm::vec3 color, char const *fontFile, unsigned int faceIndex)
     :Text(string, fontHeight, glm::vec4(color, 1.0f), fontFile, faceIndex) {}
 Text::Text(const char *_string, unsigned int fontHeight, glm::vec4 color, char const *fontFile, unsigned int faceIndex)
@@ -419,3 +422,6 @@ void Text::TextureString::paintGlyphMono(FT_Bitmap glyph, unsigned int penX, uns
         // memcpy(dst_ptr, src_ptr, sizeof(unsigned char)*glyph.pitch);
     }
 }
+
+}  // namespace visualiser
+}  // namespace flamegpu

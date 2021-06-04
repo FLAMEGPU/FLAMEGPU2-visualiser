@@ -6,6 +6,9 @@
 
 #include "interface/FBuffer.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Base class that binds the named FrameBuffer before calling the subclasses render() to trigger rendering.
  */
@@ -48,4 +51,8 @@ class RenderPass {
      */
     virtual void render() = 0;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #endif  // SRC_MULTIPASS_RENDERPASS_H_

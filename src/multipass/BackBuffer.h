@@ -6,6 +6,9 @@
 
 #include "interface/FBuffer.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Represents the default FrameBuffer, often called the BackBuffer in double-buffered rendering
  * FrontBuffer refers to the one currently shown, which is swapped with the BackBuffer after rendering has completed
@@ -91,5 +94,8 @@ class BackBuffer : public FBuffer {
     glm::vec3 clearColor;
     bool useStaticClear;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_MULTIPASS_BACKBUFFER_H_

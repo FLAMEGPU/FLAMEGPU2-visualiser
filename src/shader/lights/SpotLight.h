@@ -2,6 +2,9 @@
 #define SRC_SHADER_LIGHTS_SPOTLIGHT_H_
 #include "PointLight.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Denotes spotlight by setting spotCosCutoff to valid range 0 <=spotCosCutoff <=1
  * @note Protected override to prevent unwanted casting
@@ -51,5 +54,9 @@ class SpotLight : protected PointLight {
     using PointLight::LinearAttenuation;
     using PointLight::QuadraticAttenuation;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 #include "SpotLight.inl"
 #endif  // SRC_SHADER_LIGHTS_SPOTLIGHT_H_

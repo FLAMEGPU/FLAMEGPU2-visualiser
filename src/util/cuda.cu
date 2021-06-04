@@ -9,6 +9,9 @@
 #include <stdexcept>
 
 
+namespace flamegpu {
+namespace visualiser {
+
 // Drop in replacement if CUDA_CALL is missing
 #ifndef CUDA_CALL
 #define CUDA_CALL(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -166,3 +169,6 @@ template CUDATextureBuffer<unsigned int> *mallocGLInteropTextureBuffer(const uns
 template void freeGLInteropTextureBuffer(CUDATextureBuffer<float>*);
 template void freeGLInteropTextureBuffer(CUDATextureBuffer<int>*);
 template void freeGLInteropTextureBuffer(CUDATextureBuffer<unsigned int>*);
+
+}  // namespace visualiser
+}  // namespace flamegpu

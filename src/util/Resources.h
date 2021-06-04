@@ -3,6 +3,8 @@
 #include <string>
 #include <cstdio>
 
+namespace flamegpu {
+namespace visualiser {
 
 class Resources {
  public:
@@ -26,5 +28,8 @@ class Resources {
      */
     static bool exists(const std::string &path);
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_UTIL_RESOURCES_H_

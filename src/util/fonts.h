@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+namespace flamegpu {
+namespace visualiser {
 namespace fonts {
 /**
  * Enum for generic fallback fonts, used to ensure that a font is always found
@@ -22,5 +24,7 @@ enum GenericFontFamily { SANS, SERIF, CURSIVE, MONOSPACE };
 std::string findFont(std::initializer_list<const char *> fontnames, const GenericFontFamily generic);
 
 }  // namespace fonts
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_UTIL_FONTS_H_

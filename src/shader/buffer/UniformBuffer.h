@@ -5,6 +5,10 @@
 #include "util/GLcheck.h"
 #include "shader/buffer/BufferCore.h"
 
+namespace flamegpu {
+namespace visualiser {
+
+
 /**
  * Representative of GL_UNIFORM_BUFFER
  * These can be used for reading from during shader execution
@@ -22,5 +26,9 @@ class UniformBuffer : public BufferCore {
     GLint allocateBindPoint();
     static std::set<GLint> allocatedBindPoints;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
+
 
 #endif  // SRC_SHADER_BUFFER_UNIFORMBUFFER_H_

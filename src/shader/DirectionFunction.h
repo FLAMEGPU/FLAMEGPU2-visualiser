@@ -7,6 +7,9 @@
 #include "config/TexBufferConfig.h"
 
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Produces the source for a GLSL function which returns a rotation matrix to rotate a vector (1,0,0) to match the provided direction
  * The function will have the following prototype
@@ -34,5 +37,8 @@ class DirectionFunction {
     static const char* ROTATION_MAT_FN;
     static const char* ATAN2_FN;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_SHADER_DIRECTIONFUNCTION_H_

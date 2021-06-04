@@ -4,6 +4,9 @@
 
 #include "util/GLcheck.h"
 
+namespace flamegpu {
+namespace visualiser {
+
 /**
  * Interface shared by RenderBuffer, Texture2D and Texture2D_Multisample
  * These are the 3 classes which can be rendered to in a frag shader
@@ -27,5 +30,8 @@ class RenderTarget {
      */
     virtual GLenum getName() const = 0;
 };
+
+}  // namespace visualiser
+}  // namespace flamegpu
 
 #endif  // SRC_INTERFACE_RENDERTARGET_H_
