@@ -62,28 +62,7 @@ MACRO (download_glew)
 ENDMACRO()
 # Pull in GLM
 MACRO (download_glm)
-    configure_file(cmake/glm/CMakeLists.txt.in glm-download/CMakeLists.txt)
-    # Run CMake generate
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-        RESULT_VARIABLE result
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/glm-download
-        )
-    if (result)
-        message(WARNING
-                "CMake step for glm failed: ${result}\n")
-    endif ()
-    # Run CMake build (this only downloads, it is built at build time)
-    execute_process(
-    COMMAND ${CMAKE_COMMAND} --build .
-    RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/glm-download
-    )
-    if (result)
-        message(WARNING
-                "Download step for glm failed: ${result}\n"
-                "Attempting to continue\n")
-    endif ()
+    include(cmake/glm.cmake)
 ENDMACRO()
 # Pull in freetype
 MACRO (download_freetype)
@@ -513,7 +492,7 @@ else()
     # Define output
     add_library("${PROJECT_NAME}" STATIC ${VISUALISER_ALL})
     # Set up include dirs
-    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/glm-src)
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${glm_INCLUDE_DIRS})
     target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
     target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${GLEW_INCLUDE_DIRS})
     if (FREETYPE_FOUND) # Only use this if we aren't building it ourselves
