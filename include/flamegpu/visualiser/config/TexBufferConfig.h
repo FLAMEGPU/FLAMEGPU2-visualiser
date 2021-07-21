@@ -16,6 +16,8 @@ struct TexBufferConfig {
          * Agent location x/y/z
          */
         Position_x, Position_y, Position_z,
+        Position_xy,
+        Position_xyz,
         /**
          * Agent forward/up direction x/y/z
          */
@@ -46,9 +48,11 @@ struct TexBufferConfig {
     };
     static std::string SamplerName(Function f) {
         switch (f) {
-        case Position_x: return "x_pos";
-        case Position_y: return "y_pos";
-        case Position_z: return "z_pos";
+        case Position_x: return "_pos_x";
+        case Position_y: return "_pos_y";
+        case Position_z: return "_pos_z";
+        case Position_xy: return "_pos_xy";
+        case Position_xyz: return "_pos_xyz";
         case Forward_x: return "_fw_x";
         case Forward_y: return "_fw_y";
         case Forward_z: return "_fw_z";
@@ -66,6 +70,34 @@ struct TexBufferConfig {
         case Color:
         case Unknown:
         default: return "";
+        }
+    }
+    static int SamplerElements(Function f) {
+        switch (f) {
+        case Position_xyz:
+            return 3;
+        case Position_xy:
+            return 2;
+        case Position_x:
+        case Position_y:
+        case Position_z:
+        case Forward_x:
+        case Forward_y:
+        case Forward_z:
+        case Up_x:
+        case Up_y:
+        case Up_z:
+        case Heading:
+        case Pitch:
+        case Bank:
+        case Scale_x:
+        case Scale_y:
+        case Scale_z:
+        case UniformScale:
+        case Color:
+        case Unknown:
+        default:
+            return 1;
         }
     }
     explicit TexBufferConfig(const std::string& _agentVariableName = "")

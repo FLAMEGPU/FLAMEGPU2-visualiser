@@ -258,6 +258,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/ShaderHeader.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/Shaders.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/ShadersVec.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/PositionFunction.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/DirectionFunction.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/ScaleFunction.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/texture/Texture.h
@@ -289,6 +290,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/lights/LightsBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/ShaderCore.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/Shaders.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/PositionFunction.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/DirectionFunction.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/shader/ScaleFunction.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/flamegpu/visualiser/texture/Texture.cpp
@@ -567,8 +569,8 @@ else()
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/stuntplane.obj
 # Tdir: These shaders are setup to receive an appended rotation function
 # Tcolor: These shaders are setup to receive an appended color function
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tdir_Tscale.vert
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tcolor_Tdir_Tscale.vert
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tpos_Tdir_Tscale.vert
+        ${CMAKE_CURRENT_SOURCE_DIR}/resources/instanced_default_Tcolor_Tpos_Tdir_Tscale.vert
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/material_flat_Tcolor.frag
     )
     cmrc_add_resource_library(resources ${RESOURCES_ALL})

@@ -7,6 +7,7 @@
 
 #include "flamegpu/visualiser/util/cuda.h"
 #include "flamegpu/visualiser/util/fonts.h"
+#include "flamegpu/visualiser/shader/PositionFunction.h"
 #include "flamegpu/visualiser/shader/DirectionFunction.h"
 #include "flamegpu/visualiser/shader/ScaleFunction.h"
 #include "flamegpu/visualiser/shader/lights/LightsBuffer.h"
@@ -56,6 +57,7 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
             custom_texture_buffers.emplace(c.first, std::make_pair(c.second, nullptr));
         }
         // Select the corresponding shader
+        PositionFunction pf(_core_tex_buffers);
         DirectionFunction df(_core_tex_buffers);
         ScaleFunction sf(_core_tex_buffers);
         if (!vc.color_shader_src.empty()) {
@@ -64,20 +66,20 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
                 vc.model_path,
                 *reinterpret_cast<const glm::vec3*>(vc.model_scale),
                 std::make_shared<Shaders>(
-                    "resources/instanced_default_Tcolor_Tdir_Tscale.vert",
+                    "resources/instanced_default_Tcolor_Tpos_Tdir_Tscale.vert",
                     "resources/material_flat_Tcolor.frag",
                     "",
-                    sf.getSrc() + df.getSrc() + vc.color_shader_src));
+                    pf.getSrc() + df.getSrc() + sf.getSrc() + vc.color_shader_src));
         } else if (vc.model_texture) {
             // Entity has texture
             entity = std::make_shared<Entity>(
                 vc.model_path,
                 *reinterpret_cast<const glm::vec3*>(vc.model_scale),
                 std::make_shared<Shaders>(
-                    "resources/instanced_default_Tdir_Tscale.vert",
+                    "resources/instanced_default_Tpos_Tdir_Tscale.vert",
                     "resources/material_phong.frag",
                     "",
-                    sf.getSrc() + df.getSrc()),
+                    pf.getSrc() + df.getSrc() + sf.getSrc()),
                 Texture2D::load(vc.model_texture));
         } else {
             // Entity does not have a texture
@@ -85,10 +87,10 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
                 vc.model_path,
                 *reinterpret_cast<const glm::vec3*>(vc.model_scale),
                 std::make_shared<Shaders>(
-                    "resources/instanced_default_Tdir_Tscale.vert",
+                    "resources/instanced_default_Tpos_Tdir_Tscale.vert",
                     "resources/material_flat.frag",
                     "",
-                    sf.getSrc() + df.getSrc()));
+                    pf.getSrc() + df.getSrc() + sf.getSrc()));
             entity->setMaterial(glm::vec3(0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.7f));
         }
 }
@@ -488,10 +490,10 @@ void Visualiser::renderAgentStates() {
                 shader_vec->removeTextureUniform(samplerName.c_str());
                 CUDATextureBuffer<float> *old_tb = tb;
                 // Alloc new buffs (this needs to occur in render thread!)
-                tb = mallocGLInteropTextureBuffer<float>(newSize, 1);
+                tb = mallocGLInteropTextureBuffer<float>(newSize * TexBufferConfig::SamplerElements(_tb.first), 1);
                 // Copy any old data to the buffer
                 if (old_tb && tb && old_tb->d_mappedPointer && tb->d_mappedPointer && as.dataSize)
-                    _cudaMemcpyDeviceToDevice(tb->d_mappedPointer, old_tb->d_mappedPointer, as.dataSize * sizeof(float));
+                    _cudaMemcpyDeviceToDevice(tb->d_mappedPointer, old_tb->d_mappedPointer, as.dataSize * sizeof(float) * TexBufferConfig::SamplerElements(_tb.first));
                 // Bind texture name to texture unit
                 GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui));
                 GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, tb->glTexName));
@@ -509,10 +511,10 @@ void Visualiser::renderAgentStates() {
                 shader_vec->removeTextureUniform(_tb.second.first.nameInShader.c_str());
                 CUDATextureBuffer<float>* old_tb = tb;
                 // Alloc new buffs (this needs to occur in other thread!!!)
-                tb = mallocGLInteropTextureBuffer<float>(newSize, 1);
+                tb = mallocGLInteropTextureBuffer<float>(newSize * TexBufferConfig::SamplerElements(_tb.first), 1);
                 // Copy any old data to the buffer
                 if (old_tb && tb && old_tb->d_mappedPointer && tb->d_mappedPointer && as.dataSize)
-                    _cudaMemcpyDeviceToDevice(tb->d_mappedPointer, old_tb->d_mappedPointer, as.dataSize * sizeof(float));
+                    _cudaMemcpyDeviceToDevice(tb->d_mappedPointer, old_tb->d_mappedPointer, as.dataSize * sizeof(float) * TexBufferConfig::SamplerElements(_tb.first));
                 // Bind texture name to texture unit
                 GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui));
                 GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, tb->glTexName));
@@ -583,13 +585,13 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
         for (const auto &_ext_tb : ext_core_tex_buffers) {
             auto &ext_tb = _ext_tb.second;
             auto &int_tb = as.core_texture_buffers.at(_ext_tb.first);
-            visassert(_cudaMemcpyDeviceToDevice(int_tb->d_mappedPointer, ext_tb.t_d_ptr, as.dataSize * sizeof(float)));
+            visassert(_cudaMemcpyDeviceToDevice(int_tb->d_mappedPointer, ext_tb.t_d_ptr, as.dataSize * sizeof(float) * TexBufferConfig::SamplerElements(_ext_tb.first)));
         }
         for (const auto& _ext_tb : ext_tex_buffers) {
             auto& ext_tb = _ext_tb.second;
             for (auto int_tb = as.custom_texture_buffers.find(_ext_tb.first); int_tb != as.custom_texture_buffers.end(); ++int_tb) {
                 if (ext_tb.nameInShader == int_tb->second.first.nameInShader) {
-                    visassert(_cudaMemcpyDeviceToDevice(int_tb->second.second->d_mappedPointer, ext_tb.t_d_ptr, as.dataSize * sizeof(float)));
+                    visassert(_cudaMemcpyDeviceToDevice(int_tb->second.second->d_mappedPointer, ext_tb.t_d_ptr, as.dataSize * sizeof(float) * TexBufferConfig::SamplerElements(_ext_tb.first)));
                 }
             }
         }
