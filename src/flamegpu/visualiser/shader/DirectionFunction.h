@@ -28,12 +28,17 @@ class DirectionFunction {
     bool has_fw_x;
     bool has_fw_y;
     bool has_fw_z;
+    bool has_fw_xz;
+    bool has_fw_xyz;
     bool has_up_x;
     bool has_up_y;
     bool has_up_z;
+    bool has_up_xyz;
     bool has_heading;
     bool has_pitch;
     bool has_bank;
+    bool has_direction_hp;
+    bool has_direction_hpb;
     static const char* ROTATION_MAT_FN;
     static const char* ATAN2_FN;
 };
