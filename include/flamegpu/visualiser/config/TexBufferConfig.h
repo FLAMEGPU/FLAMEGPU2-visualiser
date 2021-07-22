@@ -36,6 +36,8 @@ struct TexBufferConfig {
          * Agent scale
          */
         Scale_x, Scale_y, Scale_z,
+        Scale_xy,
+        Scale_xyz,
         /**
          * Uniform agent scale
          * (Alternate to individual scale components)
@@ -65,6 +67,8 @@ struct TexBufferConfig {
         case Scale_x: return "_scale_x";
         case Scale_y: return "_scale_y";
         case Scale_z: return "_scale_z";
+        case Scale_xy: return "_scale_x";
+        case Scale_xyz: return "_scale_xyz";
         case UniformScale: return "_scale";
         // These always get name from elsewhere so return empty string
         case Color:
@@ -75,8 +79,10 @@ struct TexBufferConfig {
     static int SamplerElements(Function f) {
         switch (f) {
         case Position_xyz:
+        case Scale_xyz:
             return 3;
         case Position_xy:
+        case Scale_xy:
             return 2;
         case Position_x:
         case Position_y:
