@@ -37,12 +37,17 @@ DirectionFunction::DirectionFunction(const std::map<TexBufferConfig::Function, T
     : has_fw_x(tex_buffers.find(TexBufferConfig::Forward_x) != tex_buffers.end())
     , has_fw_y(tex_buffers.find(TexBufferConfig::Forward_y) != tex_buffers.end())
     , has_fw_z(tex_buffers.find(TexBufferConfig::Forward_z) != tex_buffers.end())
+    , has_fw_xz(tex_buffers.find(TexBufferConfig::Forward_xz) != tex_buffers.end())
+    , has_fw_xyz(tex_buffers.find(TexBufferConfig::Forward_xyz) != tex_buffers.end())
     , has_up_x(tex_buffers.find(TexBufferConfig::Up_x) != tex_buffers.end())
     , has_up_y(tex_buffers.find(TexBufferConfig::Up_y) != tex_buffers.end())
     , has_up_z(tex_buffers.find(TexBufferConfig::Up_z) != tex_buffers.end())
+    , has_up_xyz(tex_buffers.find(TexBufferConfig::Up_xyz) != tex_buffers.end())
     , has_heading(tex_buffers.find(TexBufferConfig::Heading) != tex_buffers.end())
     , has_pitch(tex_buffers.find(TexBufferConfig::Pitch) != tex_buffers.end())
     , has_bank(tex_buffers.find(TexBufferConfig::Bank) != tex_buffers.end())
+    , has_direction_hp(tex_buffers.find(TexBufferConfig::Direction_hp) != tex_buffers.end())
+    , has_direction_hpb(tex_buffers.find(TexBufferConfig::Direction_hpb) != tex_buffers.end())
 { }
 
 std::string DirectionFunction::getSrc() {
@@ -66,12 +71,17 @@ std::string DirectionFunction::getSrc() {
     if (has_fw_x) ss << "uniform samplerBuffer _fw_x;" << "\n";
     if (has_fw_y) ss << "uniform samplerBuffer _fw_y;" << "\n";
     if (has_fw_z) ss << "uniform samplerBuffer _fw_z;" << "\n";
+    if (has_fw_xz) ss << "uniform samplerBuffer _fw_xz;" << "\n";
+    if (has_fw_xyz) ss << "uniform samplerBuffer _fw_xyz;" << "\n";
     if (has_up_x) ss << "uniform samplerBuffer _up_x;" << "\n";
     if (has_up_y) ss << "uniform samplerBuffer _up_y;" << "\n";
     if (has_up_z) ss << "uniform samplerBuffer _up_z;" << "\n";
+    if (has_up_xyz) ss << "uniform samplerBuffer _up_xyz;" << "\n";
     if (has_heading) ss << "uniform samplerBuffer _heading;" << "\n";
     if (has_pitch) ss << "uniform samplerBuffer _pitch;" << "\n";
     if (has_bank) ss << "uniform samplerBuffer _bank;" << "\n";
+    if (has_direction_hp) ss << "uniform samplerBuffer _direction_hp;" << "\n";
+    if (has_direction_hpb) ss << "uniform samplerBuffer _direction_hpb;" << "\n";
     // Begin function
     ss << "mat3 getDirection() {" << "\n";
     // Define vectors for our global coordinate system
@@ -79,58 +89,100 @@ std::string DirectionFunction::getSrc() {
     ss << "vec3 UP = vec3(0, 1, 0);" << "\n";
     ss << "vec3 RIGHT = vec3(0, 0, 1);" << "\n";
     // Grab model direction from texture array
-    if (has_fw_x || has_fw_y || has_fw_z) {
+    if (has_fw_x || has_fw_y || has_fw_z || has_fw_xz || has_fw_xyz) {
         // missing buffers always return 0
         ss << "vec3 target = vec3(" << "\n";
-        ss << (has_fw_x ? "    texelFetch(_fw_x, gl_InstanceID).x" : "0") << "," << "\n";
-        ss << (has_fw_y ? "    texelFetch(_fw_y, gl_InstanceID).x" : "0") << "," << "\n";
-        ss << (has_fw_z ? "    texelFetch(_fw_z, gl_InstanceID).x" : "0") << ");" << "\n";
+        if (has_fw_x) {
+            ss << "    texelFetch(_fw_x, gl_InstanceID).x," << "\n";
+        } else if (has_fw_xz) {
+            ss << "    texelFetch(_fw_xz, gl_InstanceID * 2).x," << "\n";
+        } else if (has_fw_xyz) {
+            ss << "    texelFetch(_fw_xyz, gl_InstanceID * 3).x," << "\n";
+        } else {
+            ss << "    0," << "\n";
+        }
+        if (has_fw_y) {
+            ss << "    texelFetch(_fw_y, gl_InstanceID).x," << "\n";
+        } else if (has_fw_xyz) {
+            ss << "    texelFetch(_fw_xyz, (gl_InstanceID * 3) + 1).x," << "\n";
+        } else {
+            ss << "    0," << "\n";
+        }
+        if (has_fw_z) {
+            ss << "    texelFetch(_fw_z, gl_InstanceID).x);" << "\n";
+        } else if (has_fw_xz) {
+            ss << "    texelFetch(_fw_xz, (gl_InstanceID * 2) + 1).x);" << "\n";
+        } else if (has_fw_xyz) {
+            ss << "    texelFetch(_fw_xyz, (gl_InstanceID * 3) + 2).x);" << "\n";
+        } else {
+            ss << "    0);" << "\n";
+        }
         // If target is null, don't rotate
         ss << "if (target.xyz == vec3(0))" << "\n";
         ss << "    return mat3(1);" << "\n";
         // Normalize target incase the user forgot
         ss << "target = normalize(target);" << "\n";
     } else {
-        if (has_heading) {
-            ss << "const float angle_H = texelFetch(_heading, gl_InstanceID).x" << "\n";
-        }
-        if (has_pitch) {
-            ss << "const float angle_P = texelFetch(_pitch, gl_InstanceID).x" << "\n";
+        if (has_direction_hp) {
+            ss << "const int t = gl_InstanceID * 2;" << "\n";
+            ss << "const float angle_H = texelFetch(_direction_hp, t).x;" << "\n";
+            ss << "const float angle_P = texelFetch(_direction_hp, t + 1).x;" << "\n";
+        } else if (has_direction_hpb) {
+            ss << "const int t = gl_InstanceID * 3;" << "\n";
+            ss << "const float angle_H = texelFetch(_direction_hpb, t).x;" << "\n";
+            ss << "const float angle_P = texelFetch(_direction_hpb, t + 1).x;" << "\n";
+        } else {
+            if (has_heading) {
+                ss << "const float angle_H = texelFetch(_heading, gl_InstanceID).x;" << "\n";
+            }
+            if (has_pitch) {
+                ss << "const float angle_P = texelFetch(_pitch, gl_InstanceID).x;" << "\n";
+            }
         }
     }
-    if (has_fw_x && has_fw_y && has_fw_z && has_up_x && has_up_y && has_up_z) {
+    if (((has_fw_x && has_fw_y && has_fw_z) || (has_fw_xz && has_fw_y) || has_fw_xyz) && ((has_up_x && has_up_y && has_up_z)|| has_up_xyz)) {
         ss << "vec3 target_up = vec3(" << "\n";
-        ss << "    texelFetch(_up_x, gl_InstanceID).x," << "\n";
-        ss << "    texelFetch(_up_y, gl_InstanceID).x," << "\n";
-        ss << "    texelFetch(_up_z, gl_InstanceID).x);" << "\n";
+        if (has_up_xyz) {
+            ss << "    texelFetch(_up_xyz, gl_InstanceID * 3).x," << "\n";
+            ss << "    texelFetch(_up_xyz, (gl_InstanceID * 3) + 1).x," << "\n";
+            ss << "    texelFetch(_up_xyz, (gl_InstanceID * 3) + 2).x);" << "\n";
+        } else {
+            ss << "    texelFetch(_up_x, gl_InstanceID).x," << "\n";
+            ss << "    texelFetch(_up_y, gl_InstanceID).x," << "\n";
+            ss << "    texelFetch(_up_z, gl_InstanceID).x);" << "\n";
+        }
+        // Normalize target_up incase the user forgot
+        ss << "target_up = normalize(target_up);" << "\n";
     } else if (has_bank) {
-        ss << "const float angle_B = texelFetch(_bank, gl_InstanceID).x" << "\n";
+        ss << "const float angle_B = texelFetch(_bank, gl_InstanceID).x;" << "\n";
+    } else if (has_direction_hpb) {
+        ss << "const float angle_B = texelFetch(_direction_hpb, t + 2).x;" << "\n";
     }
     // Begin to perform rotation
     ss << "mat3 rm = mat3(1);" << "\n";
     // Euler angle extraction is based on: https://stackoverflow.com/questions/21622956/how-to-convert-direction-vector-to-euler-angles
      // Apply rotation about 1st axis
-    if (has_heading || (has_fw_x || has_fw_z)) {
+    if (has_heading || (has_fw_x || has_fw_z) || has_fw_xz || has_fw_xyz || has_direction_hp || has_direction_hpb) {
         // Calculate the heading angle (yaw, about Y)
-        if (!has_heading) {
+        if (!(has_heading || has_direction_hp || has_direction_hpb)) {
             ss << "float angle_H = atan2(target.z, target.x);" << "\n";
         }
         // Apply the heading angle
         ss << "rm = RotationMat(UP, angle_H) * rm;" << "\n";
     }
     // Apply rotation about 2nd axis
-    if (has_pitch || has_fw_y) {
+    if (has_pitch || has_fw_y || has_fw_xyz || has_direction_hp || has_direction_hpb) {
         // Calculate the pitch angle (pitch, about Z)
-        if (!has_pitch) {
+        if (!(has_pitch || has_direction_hp || has_direction_hpb)) {
             ss << "float angle_P = -asin(target.y);" << "\n";
         }
         // Apply the pitch angle
         ss << "rm = RotationMat(rm * RIGHT, angle_P) * rm;" << "\n";
     }
     // Apply rotation about 3rd axis
-    if (has_bank || (has_fw_x && has_fw_z && has_up_x && has_up_y && has_up_z)) {
+    if (has_bank || has_direction_hpb || (((has_fw_x && has_fw_y && has_fw_z) || (has_fw_xz && has_fw_y) || has_fw_xyz) && ((has_up_x && has_up_y && has_up_z) || has_up_xyz))) {
         // Calculate the bank angle (roll, about X)
-        if (!has_bank) {
+        if (!(has_bank || has_direction_hpb)) {
             ss << "float angle_B = 0; " << "\n";
             ss << "if (target.x != 0 || target.z != 0) {" << "\n";
             ss << "    vec3 W0 = vec3(-target.z, 0, target.x);" << "\n";

@@ -22,12 +22,17 @@ struct TexBufferConfig {
          * Agent forward/up direction x/y/z
          */
         Forward_x, Forward_y, Forward_z,
+        Forward_xz,
+        Forward_xyz,
         Up_x, Up_y, Up_z,
+        Up_xyz,
         /**
          * Agent rotation
          * (Alternate to Forward/Up vectors)
          */
         Heading, Pitch, Bank,
+        Direction_hp,
+        Direction_hpb,
         /**
          * Agent color
          */
@@ -58,12 +63,17 @@ struct TexBufferConfig {
         case Forward_x: return "_fw_x";
         case Forward_y: return "_fw_y";
         case Forward_z: return "_fw_z";
+        case Forward_xz: return "_fw_xz";
+        case Forward_xyz: return "_fw_xyz";
         case Up_x: return "_up_x";
         case Up_y: return "_up_y";
         case Up_z: return "_up_z";
+        case Up_xyz: return "_up_xyz";
         case Heading: return "_heading";
         case Pitch: return "_pitch";
         case Bank: return "_bank";
+        case Direction_hp: return "_direction_hp";
+        case Direction_hpb: return "_direction_hpb";
         case Scale_x: return "_scale_x";
         case Scale_y: return "_scale_y";
         case Scale_z: return "_scale_z";
@@ -79,9 +89,14 @@ struct TexBufferConfig {
     static int SamplerElements(Function f) {
         switch (f) {
         case Position_xyz:
+        case Forward_xyz:
+        case Up_xyz:
+        case Direction_hpb:
         case Scale_xyz:
             return 3;
         case Position_xy:
+        case Forward_xz:
+        case Direction_hp:
         case Scale_xy:
             return 2;
         case Position_x:
