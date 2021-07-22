@@ -26,6 +26,8 @@ class ScaleFunction {
     bool has_scale_x;
     bool has_scale_y;
     bool has_scale_z;
+    bool has_scale_xy;
+    bool has_scale_xyz;
     bool has_uniform_scale;
 };
 
