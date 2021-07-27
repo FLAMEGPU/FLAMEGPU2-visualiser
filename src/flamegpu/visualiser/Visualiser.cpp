@@ -223,7 +223,7 @@ void Visualiser::start() {
         this->continueRender = true;
         this->background_thread = new std::thread(&Visualiser::run, this);
     } else {
-        printf("Already running! Call quit() to close it first!\n");
+        fprintf(stderr, "Already running! Call quit() to close it first!\n");
     }
 }
 void Visualiser::join() {
@@ -248,16 +248,15 @@ void Visualiser::join() {
     }
 }
 void Visualiser::stop() {
-    printf("Visualiser::stop()\n");
     this->continueRender = false;
 }
 void Visualiser::run() {
     if (!this->isInitialised) {
-        printf("Visualisation not initialised yet.\n");
+        fprintf(stderr, "Visualisation not initialised yet.\n");
     // } else if (!this->scene) {
-    //     printf("Scene not yet set.\n");
+    //     fprintf(stderr, "Scene not yet set.\n");
     } else if (agentStates.size() == 0) {
-        printf("No agents set to render.\n");
+        fprintf(stderr, "No agents set to render.\n");
     } else {
         // Recreate window in current thread (else IO fails)
         if (this->window) {
@@ -272,7 +271,7 @@ void Visualiser::run() {
             this->windowedBounds.h,
             SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);  // | SDL_WINDOW_BORDERLESS
         if (!this->window) {
-            printf("Window failed to init.\n");
+            fprintf(stderr, "Window failed to init.\n");
         } else {
             setWindowIcon();
             int err = SDL_GL_MakeCurrent(this->window, this->context);
@@ -629,7 +628,7 @@ bool Visualiser::init() {
         SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);  // | SDL_WINDOW_BORDERLESS
 
     if (!this->window) {
-        printf("Window failed to init.\n");
+        fprintf(stderr, "Window failed to init.\n");
     } else {
         setWindowIcon();
         SDL_GetWindowPosition(window, &this->windowedBounds.x, &this->windowedBounds.y);
@@ -641,7 +640,7 @@ bool Visualiser::init() {
         // Enable VSync
         int swapIntervalResult = SDL_GL_SetSwapInterval(VSYNC);
         if (swapIntervalResult == -1) {
-            printf("Swap Interval Failed: %s\n", SDL_GetError());
+            fprintf(stderr, "Swap Interval Failed: %s\n", SDL_GetError());
         }
 
         // @todo - why is this a macro?
@@ -1065,9 +1064,9 @@ void Visualiser::screenshot(const bool verbose) {
     const bool result = Texture::saveImage(pixels, w, h, SCREENSHOT_FILENAME);
     if (verbose) {
         if (result) {
-            printf("Failed to write screenshot to '%s'\n", SCREENSHOT_FILENAME);
+            fprintf(stderr, "Failed to write screenshot to '%s'\n", SCREENSHOT_FILENAME);
         } else {
-            printf("Screenshot written to '%s'\n", SCREENSHOT_FILENAME);
+            fprintf(stdout, "Screenshot written to '%s'\n", SCREENSHOT_FILENAME);
         }
     }
     delete[] pixels;
