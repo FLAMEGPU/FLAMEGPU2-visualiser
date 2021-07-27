@@ -39,12 +39,12 @@ namespace {
         static path result;
         if (result.empty()) {
             path tmp =  std::getenv("FLAMEGPU2_TMP_DIR") ? std::getenv("FLAMEGPU2_TMP_DIR") : temp_directory_path();
-            // Create the $tmp/fgpu2/vis folder hierarchy
+            // Create the $tmp/flamegpu/vis folder hierarchy
             if (!::exists(tmp) && !create_directory(tmp)) {
                 THROW InvalidFilePath("Directory '%s' does not exist and cannot be created by visualisation.", tmp.generic_string().c_str());
             }
             if (!std::getenv("FLAMEGPU2_TMP_DIR")) {
-                tmp /= "fgpu2";
+                tmp /= "flamegpu";
                 if (!::exists(tmp)) {
                     create_directory(tmp);
                 }
