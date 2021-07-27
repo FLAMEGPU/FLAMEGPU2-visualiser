@@ -1,0 +1,4 @@
+set(SDL2_INCLUDE_DIRS "@SDL2_DIR@/include" CACHE INTERNAL "SDL2 include directory")
+set(SDL2_LIB_DIR "@SDL2_DIR@/lib/x64/" CACHE INTERNAL "SDL2 lib directory")
+set(SDL2_LIBRARIES "@SDL2_DIR@/lib/x64/SDL2.lib;@SDL2_DIR@/lib/x64/SDL2main.lib" CACHE INTERNAL "SDL2 lib files")
+set(SDL2_RUNTIME_LIBRARIES "@SDL2_DIR@/lib/x64/SDL2.dll" CACHE INTERNAL "SDL2 runtime lib files")

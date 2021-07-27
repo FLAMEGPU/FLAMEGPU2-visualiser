@@ -1,0 +1,8 @@
+set(IL_INCLUDE_DIR "@DevIL_DIR@/include" CACHE INTERNAL "DevIL include directory")
+set(IL_LIB_DIR "@DevIL_DIR@/lib/x64/Release" CACHE INTERNAL "DevIL lib directory")
+set(IL_LIBRARIES "@DevIL_DIR@/lib/x64/Release/DevIL.lib" CACHE INTERNAL "DevIL lib files")
+set(ILU_LIBRARIES "@DevIL_DIR@/lib/x64/Release/ILU.lib" CACHE INTERNAL "ILU lib files")
+set(ILUT_LIBRARIES "@DevIL_DIR@/lib/x64/Release/ILUT.lib" CACHE INTERNAL "ILUT lib files")
+set(IL_RUNTIME_LIBRARIES "@DevIL_DIR@/lib/x64/Release/DevIL.dll" CACHE INTERNAL "DevIL runtime lib files")
+set(ILU_RUNTIME_LIBRARIES "@DevIL_DIR@/lib/x64/Release/ILU.dll" CACHE INTERNAL "ILU runtime lib files")
+set(ILUT_RUNTIME_LIBRARIES "@DevIL_DIR@/lib/x64/Release/ILUT.dll" CACHE INTERNAL "ILUT runtime lib files")

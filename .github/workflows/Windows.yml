@@ -16,12 +16,11 @@ jobs:
           # Windows2019 & VS 2019 supports 10.1+
           - os: windows-2019
             cuda: "11.2.0"
+            cuda_arch: "52"
             visual_studio: "Visual Studio 16 2019"
     env:
-      cuda_arch: "52"
       build_dir: "build"
       config: "Release"
-      build_tests: "OFF"
       Werror: "ON"
 
     steps:
@@ -45,7 +44,7 @@ jobs:
 
     - name: Configure CMake
       id: configure
-      run: cmake . -B ${{ env.build_dir }} -G "${{ matrix.visual_studio }}" -A x64 -Wnoerror=dev
+      run: cmake . -B ${{ env.build_dir }} -G "${{ matrix.visual_studio }}" -A x64 -DCUDA_ARCH="${{ matrix.cuda_arch }}" -DWARNINGS_AS_ERRORS=${{ env.Werror }} -Werror=dev
       shell: bash
 
     - name: Build Visualiser
