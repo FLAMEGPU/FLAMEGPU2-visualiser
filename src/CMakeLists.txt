@@ -8,7 +8,7 @@ if (NOT GIT_FOUND)
 endif ()
 
 # Set the project name, but do not specify languages immediately so we can have lint only builds.
-project(flamegpu2_visualiser)
+project(flamegpu_visualiser)
 
 # handle cpplint.
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/cpplint.cmake)
