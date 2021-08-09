@@ -74,3 +74,12 @@ To do this, set the `ALLOW_LINT_ONLY` CMake option to `ON`. I.e.:
 cmake .. -DALLOW_LINT_ONLY=ON
 cmake --build . --target lint_flamegpu_visualiser
 ```
+
+## Git Tags
+
+To allow simple version pinning of the visualiser from within the main FLAMEGPU/FLAMEGPU2 repository, tags are used to identify which version of the visualisation repository are used in each release of the main repository.
+
+The main repository uses semantic versioning, with tags `vX.Y.Z[-PRERELEASE]`.
+Versions of this repository included by the main repository are tagged with `flamegpu-X.Y.Z[-PRERELEASE]` to allow standalone versioning options in the future.
+
+I.e. the initial alpha release of FLAMEGPU/FLAMEGPU2 `v2.0.0-alpha` corresponds to the `flamegpu-2.0.0-alpha` tag. Subsequent pre-releases may not update the tag to be an exact match.
