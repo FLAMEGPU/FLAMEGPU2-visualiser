@@ -1,11 +1,10 @@
-# @todo - better / more robust parsing of inputs from env vars.
+# Install CUDA on CentOS/manylinux2014. 
+
 ## -------------------
 ## Constants
 ## -------------------
 
-# @todo - apt repos/known supported versions?
-
-# @todo - GCC support matrix?
+# yum install cuda-nvrtc-devel-11-4 cuda-compiler-11-4 cuda-cudart-devel-11-4 cuda-nvcc-11-4 cuda-nvrtc-11-4 cuda-nvtx-11-4 libcurand-devel-11-4 
 
 # List of sub-packages to install.
 # @todo - pass this in from outside the script? 
@@ -13,8 +12,12 @@
 
 # Ideally choose from the list of meta-packages to minimise variance between cuda versions (although it does change too)
 CUDA_PACKAGES_IN=(
-    "command-line-tools"
-    "libraries-dev"
+    "cuda-compiler"
+    "cuda-cudart-devel" # libcudart.so
+    "cuda-driver-devel" # libcuda.so
+    "cuda-nvtx"
+    "cuda-nvrtc-devel"
+    "libcurand-devel" # 11-0+
 )
 
 ## -------------------
@@ -41,6 +44,7 @@ function version_lt() {
     [ "$1" = "$2" ] && return 1 || version_le $1 $2
 }
 
+
 ## -------------------
 ## Select CUDA version
 ## -------------------
@@ -53,15 +57,13 @@ CUDA_VERSION_MAJOR_MINOR=${cuda}
 CUDA_MAJOR=$(echo "${CUDA_VERSION_MAJOR_MINOR}" | cut -d. -f1)
 CUDA_MINOR=$(echo "${CUDA_VERSION_MAJOR_MINOR}" | cut -d. -f2)
 CUDA_PATCH=$(echo "${CUDA_VERSION_MAJOR_MINOR}" | cut -d. -f3)
-# use lsb_release to find the OS.
-UBUNTU_VERSION=$(lsb_release -sr)
-UBUNTU_VERSION="${UBUNTU_VERSION//.}"
+# query rpm to find the major centos release
+CENTOS_MAJOR=$(rpm -E %{rhel})
 
 echo "CUDA_MAJOR: ${CUDA_MAJOR}"
 echo "CUDA_MINOR: ${CUDA_MINOR}"
 echo "CUDA_PATCH: ${CUDA_PATCH}"
-# echo "UBUNTU_NAME: ${UBUNTU_NAME}"
-echo "UBUNTU_VERSION: ${UBUNTU_VERSION}"
+echo "CENTOS_MAJOR: ${CENTOS_MAJOR}"
 
 # If we don't know the CUDA_MAJOR or MINOR, error.
 if [ -z "${CUDA_MAJOR}" ] ; then
@@ -73,17 +75,10 @@ if [ -z "${CUDA_MINOR}" ] ; then
     exit 1
 fi
 # If we don't know the Ubuntu version, error.
-if [ -z ${UBUNTU_VERSION} ]; then
-    echo "Error: Unknown Ubuntu version. Aborting."
+if [ -z ${CENTOS_MAJOR} ]; then
+    echo "Error: Unknown CentOS version. Aborting."
     exit 1
 fi
-
-
-## ---------------------------
-## GCC studio support check?
-## ---------------------------
-
-# @todo
 
 ## -------------------------------
 ## Select CUDA packages to install
@@ -91,15 +86,17 @@ fi
 CUDA_PACKAGES=""
 for package in "${CUDA_PACKAGES_IN[@]}"
 do : 
-    # @todo This is not perfect. Should probably provide a separate list for diff versions
-    # cuda-compiler-X-Y if CUDA >= 9.1 else cuda-nvcc-X-Y
-    if [[ "${package}" == "nvcc" ]] && version_ge "$CUDA_VERSION_MAJOR_MINOR" "9.1" ; then
-        package="compiler"
-    elif [[ "${package}" == "compiler" ]] && version_lt "$CUDA_VERSION_MAJOR_MINOR" "9.1" ; then
-        package="nvcc"
+    # for centos 7, cuda-9.1 appears to be the earliest supported pacakge. cuda-nvcc- and cuda-compiler subpackages both exist.
+    # CUDA < 11, lib* packages were actaully cuda-cu* (generally, this might be greedy.)
+    if [[ ${package} == libcu* ]] && version_lt "$CUDA_VERSION_MAJOR_MINOR" "11.0" ; then
+        package="${package/libcu/cuda-cu}"
+    fi
+    # CUDA < 11, -devel- packages were actually -dev
+    if [[ ${package} == *devel* ]] && version_lt "$CUDA_VERSION_MAJOR_MINOR" "11.0" ; then
+        package="${package//devel/dev}"
     fi
     # Build the full package name and append to the string.
-    CUDA_PACKAGES+=" cuda-${package}-${CUDA_MAJOR}-${CUDA_MINOR}"
+    CUDA_PACKAGES+=" ${package}-${CUDA_MAJOR}-${CUDA_MINOR}"
 done
 echo "CUDA_PACKAGES ${CUDA_PACKAGES}"
 
@@ -107,32 +104,49 @@ echo "CUDA_PACKAGES ${CUDA_PACKAGES}"
 ## Prepare to install
 ## -----------------
 
-PIN_FILENAME="cuda-ubuntu${UBUNTU_VERSION}.pin"
-PIN_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu${UBUNTU_VERSION}/x86_64/${PIN_FILENAME}"
-APT_KEY_URL="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu${UBUNTU_VERSION}/x86_64/7fa2af80.pub"
-REPO_URL="http://developer.download.nvidia.com/compute/cuda/repos/ubuntu${UBUNTU_VERSION}/x86_64/"
+YUM_REPO_URI="https://developer.download.nvidia.com/compute/cuda/repos/rhel${CENTOS_MAJOR}/x86_64/cuda-rhel${CENTOS_MAJOR}.repo"
 
-echo "PIN_FILENAME ${PIN_FILENAME}"
-echo "PIN_URL ${PIN_URL}"
-echo "APT_KEY_URL ${APT_KEY_URL}"
+echo "YUM_REPO_URI ${YUM_REPO_URI}"
+
+## -----------------
+## Check for root/sudo
+## -----------------
+
+# Detect if the script is being run as root, storing true/false in is_root.
+is_root=false
+if (( $EUID == 0)); then
+   is_root=true
+fi
+# Find if sudo is available
+has_sudo=false
+if command -v sudo &> /dev/null ; then
+    has_sudo=true
+fi
+# Decide if we can proceed or not (root or sudo is required) and if so store whether sudo should be used or not. 
+if [ "$is_root" = false ] && [ "$has_sudo" = false ]; then 
+    echo "Root or sudo is required. Aborting."
+    exit 1
+elif [ "$is_root" = false ] ; then
+    USE_SUDO=sudo
+else
+    USE_SUDO=
+fi
 
 ## -----------------
 ## Install
 ## -----------------
 echo "Adding CUDA Repository"
-wget ${PIN_URL}
-sudo mv ${PIN_FILENAME} /etc/apt/preferences.d/cuda-repository-pin-600
-sudo apt-key adv --fetch-keys ${APT_KEY_URL}
-sudo add-apt-repository "deb ${REPO_URL} /"
-sudo apt-get update
+$USE_SUDO yum-config-manager --add-repo ${YUM_REPO_URI}
+$USE_SUDO yum clean all
 
 echo "Installing CUDA packages ${CUDA_PACKAGES}"
-sudo apt-get -y install ${CUDA_PACKAGES}
+$USE_SUDO yum -y install ${CUDA_PACKAGES}
 
 if [[ $? -ne 0 ]]; then
     echo "CUDA Installation Error."
     exit 1
 fi
+
 ## -----------------
 ## Set environment vars / vars to be propagated
 ## -----------------
@@ -140,9 +154,18 @@ fi
 CUDA_PATH=/usr/local/cuda-${CUDA_MAJOR}.${CUDA_MINOR}
 echo "CUDA_PATH=${CUDA_PATH}"
 export CUDA_PATH=${CUDA_PATH}
-
-
-# Quick test. @temp
 export PATH="$CUDA_PATH/bin:$PATH"
 export LD_LIBRARY_PATH="$CUDA_PATH/lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$CUDA_PATH/lib64:$LD_LIBRARY_PATH"
+# Check nvcc is now available.
 nvcc -V
+
+# If executed on github actions, make the appropriate echo statements to update the environment
+if [[ $GITHUB_ACTIONS ]]; then
+    # Set paths for subsequent steps, using ${CUDA_PATH}
+    echo "Adding CUDA to CUDA_PATH, PATH and LD_LIBRARY_PATH"
+    echo "CUDA_PATH=${CUDA_PATH}" >> $GITHUB_ENV
+    echo "${CUDA_PATH}/bin" >> $GITHUB_PATH
+    echo "LD_LIBRARY_PATH=${CUDA_PATH}/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+    echo "LD_LIBRARY_PATH=${CUDA_PATH}/lib64:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+fi
