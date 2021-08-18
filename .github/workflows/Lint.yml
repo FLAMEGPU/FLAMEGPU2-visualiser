@@ -3,32 +3,52 @@ name: Lint
 
 on:
   push:
+    branches:
+      - '**'
+    paths:
+      - "**"
+      - "!.github/**"
+      - ".github/workflows/Lint.yml"
   pull_request:
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   cpplint:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.cudacxx.os }}
+    name: "cpplint (${{ matrix.cudacxx.cuda }}, ${{ matrix.cudacxx.os }})"
     strategy:
       fail-fast: false
+      # Multiplicative build matrix
+      # optional exclude: can be partial, include: must be specific
       matrix:
-        include:
-          - os: ubuntu-18.04
-            cuda: "11.2"
+        cudacxx:
+          - cuda: "11.0"
+            os: ubuntu-20.04
     env:
-      build_dir: "build"
+      # Define constants
+      BUILD_DIR: "build"
+      BUILD_TESTS: "ON"
+      # Port matrix options to environment, for more portability.
+      CUDA: ${{ matrix.cudacxx.cuda }}
+      OS: ${{ matrix.cudacxx.os }}
 
     steps:
     - uses: actions/checkout@v2
 
-    # Also install the linter.
     - name: Install cpplint
-      run: pip3 install cpplint && echo "$HOME/.local/bin" >> $GITHUB_PATH
+      run: |
+        python3 -m pip install cpplint
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-    # Configure cmake, including tests to make sure they are linted.
     - name: Configure cmake
-      run: cmake . -B ${{ env.build_dir }} -DALLOW_LINT_ONLY=ON
+      run: >
+        cmake . -B "${{ env.BUILD_DIR }}"
+        -DALLOW_LINT_ONLY=ON
 
-    # Run the linter.
     - name: Lint
+      working-directory: ${{ env.BUILD_DIR }}
       run: cmake --build . --target all_lint --verbose -j `nproc` 
-      working-directory: ${{ env.build_dir }}
+

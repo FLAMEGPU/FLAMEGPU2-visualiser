@@ -1,52 +1,74 @@
-# Windows builds.
+# Compile project on Windows
 name: Windows
 
 on:
   push:
+    branches:
+      - '**'
+    paths:
+      - "**"
+      - "!.github/**"
+      - ".github/workflows/Windows.yml"
   pull_request:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  build-visualiser:
-    runs-on: ${{ matrix.os }}
+  build:
+    runs-on: ${{ matrix.cudacxx.os }}
     strategy:
       fail-fast: false
-      # explicit include-based build matrix, of known valid options
+      # Multiplicative build matrix
+      # optional exclude: can be partial, include: must be specific
       matrix:
-        include:
-          # Windows2019 & VS 2019 supports 10.1+
-          - os: windows-2019
-            cuda: "11.2.0"
-            cuda_arch: "52"
-            visual_studio: "Visual Studio 16 2019"
+        cudacxx:
+          - cuda: "11.0.3"
+            cuda_arch: "35"
+            hostcxx: "Visual Studio 16 2019"
+            os: windows-2019
+        config:
+          - name: "Release"
+            config: "Release"
+
+    # Name the job based on matrix/env options
+    name: "build (${{ matrix.cudacxx.cuda }}, ${{ matrix.config.name }}, ${{ matrix.cudacxx.os }})"
+
+    # Define job-wide env constants, and promote matrix elements to env constants for portable steps.
     env:
-      build_dir: "build"
-      config: "Release"
-      Werror: "ON"
+      # Define constants
+      BUILD_DIR: "build"
+      BUILD_TESTS: "OFF"
+      # Port matrix options to environment, for more portability.
+      CUDA: ${{ matrix.cudacxx.cuda }}
+      CUDA_ARCH: ${{ matrix.cudacxx.cuda_arch }}
+      HOSTCXX: ${{ matrix.cudacxx.hostcxx }}
+      OS: ${{ matrix.cudacxx.os }}
+      CONFIG: ${{ matrix.config.config }}
+      # Kept for portable steps between this and the main repository.
+      VISUALISATION: "ON"
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install CUDA
-      env: 
-        cuda: ${{ matrix.cuda }}
-        visual_studio: ${{ matrix.visual_studio }}
-      run: |
-        # Install CUDA via a powershell script
-        .\scripts\actions\install_cuda_windows.ps1
-        if ($?) {
-          # Set paths for subsequent steps, using $env:CUDA_PATH
-          echo "Adding CUDA to CUDA_PATH, CUDA_PATH_X_Y and PATH"
-          echo "CUDA_PATH=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "$env:CUDA_PATH_VX_Y=$env:CUDA_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "$env:CUDA_PATH/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        }
+    - name: Install CUDA (Windows)
+      if: ${{ runner.os == 'Windows' && env.CUDA != '' }}
       shell: powershell
+      env:
+        cuda: ${{ env.CUDA }}
+        visual_studio: ${{ env.HOSTCXX }}
+      run: .github\scripts\install_cuda_windows.ps1
 
-    - name: Configure CMake
-      id: configure
-      run: cmake . -B ${{ env.build_dir }} -G "${{ matrix.visual_studio }}" -A x64 -DCUDA_ARCH="${{ matrix.cuda_arch }}" -DWARNINGS_AS_ERRORS=${{ env.Werror }} -Werror=dev
-      shell: bash
+    - name: Configure cmake
+      run: >
+        cmake . -B "${{ env.BUILD_DIR }}" 
+        -G "${{ env.HOSTCXX }}" -A x64
+        -Werror=dev
+        -DCMAKE_WARN_DEPRECATED="OFF"
+        -DWARNINGS_AS_ERRORS="ON"
+        -DCUDA_ARCH="${{ env.CUDA_ARCH }}"
 
-    - name: Build Visualiser
-      run: cmake --build . --config ${{ env.config }} --target ALL_BUILD --verbose
-      working-directory: ${{ env.build_dir }}
+    - name: Build
+      working-directory: ${{ env.BUILD_DIR }}
+      run: cmake --build . --config ${{ env.CONFIG }} --target ALL_BUILD --verbose -j `nproc`
