@@ -393,7 +393,8 @@ Text::TextureString::~TextureString() {
     }
 }
 void Text::TextureString::paintGlyph(FT_Bitmap glyph, unsigned int penX, unsigned int penY) {
-    for (unsigned int y = 0; y < glyph.rows; y++) {
+    // The static_cast on glyph.rows is required for warning supperssion with older versions of freetype such as in CenotOs 7
+    for (unsigned int y = 0; y < static_cast<unsigned int>(glyph.rows); y++) {
         // src ptr maps to the start of the current row in the glyph
         unsigned char *src_ptr = glyph.buffer + y*glyph.pitch;
         // dst ptr maps to the pens current Y pos, adjusted for the current glyph row
@@ -407,7 +408,8 @@ void Text::TextureString::paintGlyph(FT_Bitmap glyph, unsigned int penX, unsigne
     }
 }
 void Text::TextureString::paintGlyphMono(FT_Bitmap glyph, unsigned int penX, unsigned int penY) {
-    for (unsigned int y = 0; y < glyph.rows; y++) {
+    // The static_cast on glyph.rows is required for warning supperssion with older versions of freetype such as in CenotOs 7
+    for (unsigned int y = 0; y < static_cast<unsigned int>(glyph.rows); y++) {
         // src ptr maps to the start of the current row in the glyph
         unsigned char *src_ptr = glyph.buffer + y*glyph.pitch;
         // dst ptr maps to the pens current Y pos, adjusted for the current glyph row
