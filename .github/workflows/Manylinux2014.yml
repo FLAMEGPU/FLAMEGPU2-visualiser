@@ -44,6 +44,8 @@ jobs:
     name: "build (${{ matrix.cudacxx.cuda }}, ${{ matrix.config.name }}, ${{ matrix.cudacxx.os }})"
 
     env:
+      # Control if static GLEW should be built and used or not.
+      USE_STATIC_GLEW: "ON"
       # Define constants
       BUILD_DIR: "build"
       # Port matrix options to environment, for more portability.
@@ -97,6 +99,19 @@ jobs:
         make -j `nproc`
         make install
 
+    - name: Build and install GLEW including static GLEW
+      if: ${{ env.VISUALISATION == 'ON' && env.USE_STATIC_GLEW == 'ON' }}
+      env:
+        GLEW_VERSION: "2.2.0"
+      run: |
+        yum install -y wget
+        wget https://github.com/nigels-com/glew/releases/download/glew-${{ env.GLEW_VERSION }}/glew-${{ env.GLEW_VERSION }}.tgz
+        tar -zxf glew-${{ env.GLEW_VERSION }}.tgz
+        cd glew-${{ env.GLEW_VERSION }}
+        make
+        make install
+
+    # For manylinux, also set if Using static glew, and to use legacy opengl bindings.
     - name: Configure cmake
       run: >
         cmake . -B "${{ env.BUILD_DIR }}"
@@ -105,6 +120,8 @@ jobs:
         -DCMAKE_WARN_DEPRECATED="OFF" 
         -DWARNINGS_AS_ERRORS="OFF"
         -DCUDA_ARCH="${{ env.CUDA_ARCH }}"
+        -DGLEW_USE_STATIC_LIBS="${{ env.USE_STATIC_GLEW }}"
+        -DOpenGL_GL_PREFERENCE:STRING=LEGACY
 
     - name: Build
       working-directory: ${{ env.BUILD_DIR }}
