@@ -25,8 +25,20 @@ if(CMAKE_CUDA_COMPILER)
     include(${CMAKE_CURRENT_LIST_DIR}/../cmake/cuda_arch.cmake)
 endif()
 
-# Check to see if OpenGL is available.
-include(FindOpenGL)
+# Openg GL is required, unless doing a lint only build.
+
+# Under linux, glnvd is prefferred, unless building portable binaries (i.e. manylinux) in which case the legacy must be used. Control via -DOpenGL_GL_PREFERENCE:STRING=LEGACY 
+# This might not be compatble with EGL, if required in the future (remove vis, docker vis). Therefore conda might be preffered.
+# Use the OpenGL::GL target, and check OPENGL_gl_LIBRARY to determine if using legacy or not.
+find_package(OpenGL)
+# Output status message confirming which opengl is being used. 
+if (UNIX AND OPENGL_FOUND)
+    if(OPENGL_gl_LIBRARY STREQUAL "")
+        message(STATUS "Using GLVND OpenGL (libOpenGL.so)")
+    else()
+        message(STATUS "Using Legacy OpenGL (libGL.so)")
+    endif()
+endif()
 
 # If CUDA was not found, or opengl was not found we cannot build, but can lint, otherwise tehre should be a fatal error
 set(LINT_ONLY_BUILD "OFF")
@@ -257,7 +269,13 @@ endif()
 # Strip trailiing whitespace from SDL2_Libraries for Ubuntu1604 / libsdl2-dev 2.0.4
 string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
 target_link_libraries("${PROJECT_NAME}" "${SDL2_LIBRARIES}")
-target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
+# Link against GLEW, via GLEW::GLEW which is an alias for GLEW::glew or GLEW::glew_s based on availability. 
+if(TARGET GLEW::GLEW)
+    target_link_libraries("${PROJECT_NAME}" GLEW::GLEW)
+else()
+    # Fallback to the variable for our partial windows CMake config file. We should add an imported target alias to this.
+    target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
+endif()
 target_link_libraries("${PROJECT_NAME}" freetype)
 target_link_libraries("${PROJECT_NAME}" "${IL_LIBRARIES}")
 target_link_libraries("${PROJECT_NAME}" OpenGL::GL)

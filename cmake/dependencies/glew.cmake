@@ -3,6 +3,7 @@
 
 if(UNIX)
     # On Linux, if glew is not available the user is instructed to install it themselves.
+    # Users can opt-into static glew, by setting -DGLEW_USE_STATIC_LIBS=ON
     find_package(GLEW)
     if (NOT GLEW_FOUND)
         message(FATAL_ERROR "glew is required for building, install it via your package manager.\n"
