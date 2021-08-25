@@ -463,7 +463,7 @@ void Shaders::_prepare() {
     if (this->projectionMat.location >= 0 && this->projectionMat.matrixPtr != nullptr) {  // If projection matrix location and camera ptr are known
         GL_CALL(glUniformMatrix4fv(this->projectionMat.location, 1, GL_FALSE, glm::value_ptr(*this->projectionMat.matrixPtr)));
     }
-    // Set the view matrix (e.g. gluLookAt, normally provided by the Camera)
+    // Set the view matrix (e.g. normally provided by the Camera)
     if (this->viewMat.location >= 0 && this->viewMat.matrixPtr != nullptr) {  // If view matrix location and camera ptr are known
         GL_CALL(glUniformMatrix4fv(this->viewMat.location, 1, GL_FALSE, glm::value_ptr(*this->viewMat.matrixPtr)));
     }
@@ -566,7 +566,7 @@ bool Shaders::setFragOutAttribute(GLuint attachmentPoint, const char *name) {
     GLuint error = glGetError();
     if (error != GL_NO_ERROR) {
         if (error == GL_INVALID_VALUE)
-            printf("%s(%i) GL Error Occurred;\n%s\n", __FILE__, __LINE__, reinterpret_cast<const char*>(gluErrorString(error)));
+            printf("%s(%i) GL Error Occurred;\n%s\n", __FILE__, __LINE__, reinterpret_cast<const char*>(glErrorString(error)));
 #ifdef EXIT_ON_ERROR
         getchar();
         exit(1);

@@ -76,18 +76,6 @@ void NoClipCamera::roll(const float &roll) {
 void NoClipCamera::setStabilise(const bool &_stabilise) {
     this->stabilise = _stabilise;
 }
-void NoClipCamera::gluLookAt() {
-    GL_CALL(::gluLookAt(
-        eye.x, eye.y, eye.z,
-        eye.x + look.x, eye.y + look.y, eye.z + look.z,
-        up.x, up.y, up.z));
-}
-void NoClipCamera::skyboxGluLookAt() const {
-    GL_CALL(::gluLookAt(
-        0, 0, 0,
-        look.x, look.y, look.z,
-        up.x, up.y, up.z));
-}
 glm::vec3 NoClipCamera::getLook() const {
     return look;
 }
