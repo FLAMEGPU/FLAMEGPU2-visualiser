@@ -189,8 +189,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/../cmake/warnings.cmake)
 # Find third party dependencies. Downloading them if required. 
 # glm
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/dependencies/glm.cmake)
-# glu (not downloaded)
-include(${CMAKE_CURRENT_LIST_DIR}/../cmake/dependencies/glu.cmake)
 # glew
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/dependencies/glew.cmake)
 # sdl
@@ -279,7 +277,6 @@ endif()
 target_link_libraries("${PROJECT_NAME}" freetype)
 target_link_libraries("${PROJECT_NAME}" "${IL_LIBRARIES}")
 target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
-target_link_libraries("${PROJECT_NAME}" OpenGL::GLU)
 target_link_libraries("${PROJECT_NAME}" Threads::Threads)
 if(TARGET Fontconfig::Fontconfig)
     target_link_libraries("${PROJECT_NAME}" Fontconfig::Fontconfig)

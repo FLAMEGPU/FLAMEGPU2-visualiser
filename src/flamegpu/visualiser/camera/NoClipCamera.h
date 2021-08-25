@@ -64,18 +64,6 @@ class NoClipCamera : public Camera {
      */
     void setStabilise(const bool &stabilise);
     /**
-     * Calls gluLookAt()
-     * For people using fixed function pipeline
-     * @see view()
-     */
-    void gluLookAt();
-    /**
-     * Calls gluLookAt() from the perspective required for rendering a skybox (direction only)
-     * For people using fixed function pipeline, although manually setting the matrix with glLoadMatrixf() also works.
-     * @see skyboxView()
-     */
-    void skyboxGluLookAt() const;
-    /**
      * Returns the cameras normalized direction vector
      * @return The normalized direction of the camera
      */
