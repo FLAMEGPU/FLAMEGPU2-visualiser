@@ -1,11 +1,14 @@
 # Parity with main FGPU2 CMake
-cmake_minimum_required(VERSION VERSION 3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION VERSION 3.18 FATAL_ERROR)
 
 project(FLAMEGPU2_VISUALISER LANGUAGES NONE)
 
 # Don't create installation scripts (and hide CMAKE_INSTALL_PREFIX from cmake-gui)
 set(CMAKE_SKIP_INSTALL_RULES TRUE)
 set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE INTERNAL ""  FORCE)
+
+# Ensure this is not an in-source build
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OutOfSourceOnly.cmake)
 
 # Define some CMake Options which apply to all (sub) projects
 

@@ -1,5 +1,5 @@
 # Parity with main FGPU2 CMake
-cmake_minimum_required(VERSION VERSION 3.15 FATAL_ERROR)
+cmake_minimum_required(VERSION VERSION 3.18 FATAL_ERROR)
 
 # Find git which is a hard dependency
 find_package(Git)
@@ -20,9 +20,6 @@ if(CMAKE_CUDA_COMPILER)
     enable_language(C)
     enable_language(CXX)
     enable_language(CUDA)
-    # CUDA_ARCH is used to control the compute capabilities to build for, via cmake/cuda_arch.cmake.
-    # @todo - use the same value as the parent project if imported.
-    include(${CMAKE_CURRENT_LIST_DIR}/../cmake/cuda_arch.cmake)
 endif()
 
 # Openg GL is required, unless doing a lint only build.
@@ -205,19 +202,23 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-# On windows, define NOMINMAX to remove the annoying defined min and max macros
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    add_compile_definitions(NOMINMAX)
-endif()
-
+# CUDA_ARCH is used to control the compute capabilities to build for, via cmake/cuda_arch.cmake.
+# @todo - use the same value as the parent project if imported.
+include(${CMAKE_CURRENT_LIST_DIR}/../cmake/cuda_arch.cmake)
 # Select the C++ standard to use 
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/cxxstd.cmake)
+# Import function to set compiler settings for the target
+include(${CMAKE_CURRENT_LIST_DIR}/../cmake/CommonCompilerSettings.cmake)
 
 # Define output
 add_library("${PROJECT_NAME}" STATIC ${VISUALISER_ALL})
 
-# Set warning flags for the target.
-EnableCompilerWarnings(TARGET "${PROJECT_NAME}")
+# Set target level warnings.
+EnableFLAMEGPUCompilerWarnings(TARGET "${PROJECT_NAME}")
+# Apply common compiler settings
+CommonCompilerSettings(TARGET "${PROJECT_NAME}")
+# Set the cuda gencodes, potentially using the user-provided CUDA_ARCH
+SetCUDAGencodes(TARGET "${PROJECT_NAME}")
 
 # Prevent fscanf warnings for msvc. 
 if (WIN32)
