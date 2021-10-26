@@ -576,8 +576,9 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
     if (as.core_texture_buffers.empty() || buffLen == 0)
         return;
     //  Copy Data
-    const auto& first_buff = as.core_texture_buffers.begin()->second;
-    const unsigned int buff_size = first_buff ? first_buff->elementCount : 0;
+    const auto& first = as.core_texture_buffers.begin();
+    const auto& first_buff = first->second;
+    const unsigned int buff_size = first_buff ? first_buff->elementCount / TexBufferConfig::SamplerElements(first->first) : 0;
     if (buff_size) {
         // If buffer has to resize, we may not copy data for new agents
         as.dataSize = buffLen < buff_size ? buffLen : buff_size;
