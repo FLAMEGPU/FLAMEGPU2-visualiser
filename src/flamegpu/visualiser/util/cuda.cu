@@ -150,8 +150,8 @@ CUDATextureBuffer<T> *mallocGLInteropTextureBuffer(const unsigned int elementCou
 }
 template<class T>
 void freeGLInteropTextureBuffer(CUDATextureBuffer<T> *texBuf) {
-    cudaDestroyTextureObject(texBuf->cuTextureObj);
-    cudaGraphicsUnregisterResource(texBuf->cuGraphicsRes);
+    CUDA_CALL(cudaDestroyTextureObject(texBuf->cuTextureObj));
+    CUDA_CALL(cudaGraphicsUnregisterResource(texBuf->cuGraphicsRes));
     GL_CALL(glDeleteBuffers(1, &texBuf->glTBO));
     GL_CALL(glDeleteTextures(1, &texBuf->glTexName));
     delete texBuf;
@@ -160,7 +160,9 @@ void freeGLInteropTextureBuffer(CUDATextureBuffer<T> *texBuf) {
  * Returns true if cudaMemcpy returns cudaSuccess
  */
 bool _cudaMemcpyDeviceToDevice(void* dst, const void* src, size_t count) {
-    return cudaMemcpy(dst, src, count, cudaMemcpyDeviceToDevice) == cudaSuccess;
+    auto t = cudaMemcpy(dst, src, count, cudaMemcpyDeviceToDevice);
+    CUDA_CALL(t);
+    return t == cudaSuccess;
 }
 // Explicit instantiation of templates
 template CUDATextureBuffer<float> *mallocGLInteropTextureBuffer(const unsigned int, const unsigned int);
