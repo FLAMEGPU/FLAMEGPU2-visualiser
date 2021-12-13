@@ -28,7 +28,7 @@
 
 namespace flamegpu {
 namespace visualiser {
-
+class FrameBuffer;
 template <typename T>
 struct CUDATextureBuffer;
 class SplashScreen;
@@ -365,6 +365,9 @@ class Visualiser : public ViewportExt {
     SDL_Joystick *joystick;
     SDL_JoystickID joystickInstance;
     bool gamepadConnected;
+
+    std::shared_ptr<FrameBuffer> render_buffer;
+    std::shared_ptr<FrameBuffer> screenshot_buffer;
 };
 
 }  // namespace visualiser

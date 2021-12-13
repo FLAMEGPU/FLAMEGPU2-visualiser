@@ -14,13 +14,7 @@ class Texture2D_Multisample : public Texture, public RenderTarget {
         const glm::uvec2 &dimensions,
         const Texture::Format &format,
         const unsigned int &samples,
-        const void *data = nullptr,
         const uint64_t &options = FILTER_MIN_LINEAR_MIPMAP_LINEAR | FILTER_MAG_LINEAR | WRAP_REPEAT);
-    static std::shared_ptr<Texture2D_Multisample> make(
-        const glm::uvec2 &dimensions,
-        const Texture::Format &format,
-        const unsigned int &samples,
-        const uint64_t &options);
 
     // Cant fill multi sample texture from host so don't allow copy (can be done with compute shader?)
     Texture2D_Multisample(const Texture2D_Multisample& b) = delete;

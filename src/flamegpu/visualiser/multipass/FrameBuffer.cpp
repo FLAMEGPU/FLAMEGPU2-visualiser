@@ -116,7 +116,7 @@ void FrameBuffer::makeAttachment(const FBA &attachmentConfig, GLenum attachPoint
                 if (!attachmentConfig.RenderTarget()) {  // If texture is managed
                         Texture::Format fmt(attachmentConfig.PixelFormat(), attachmentConfig.InternalFormat(), 0, attachmentConfig.StorageType());  // Size is unused for our requirements, so 0 will suffice
                         renderTarget = samples
-                            ? std::dynamic_pointer_cast<RenderTarget>(Texture2D_Multisample::make(dimensions, fmt, samples, nullptr,
+                            ? std::dynamic_pointer_cast<RenderTarget>(Texture2D_Multisample::make(dimensions, fmt, samples,
                                 Texture::WRAP_CLAMP_TO_EDGE | Texture::FILTER_MAG_LINEAR | Texture::FILTER_MIN_LINEAR | Texture::DISABLE_MIPMAP))
                             : std::dynamic_pointer_cast<RenderTarget>(Texture2D::make(dimensions, fmt, nullptr,
                                 Texture::WRAP_CLAMP_TO_EDGE | Texture::FILTER_MAG_LINEAR | Texture::FILTER_MIN_LINEAR | Texture::DISABLE_MIPMAP));
@@ -191,8 +191,11 @@ bool FrameBuffer::isValid() const {
 }
 void FrameBuffer::resize(const glm::uvec2 &dims) {
     if (scale > 0) {
-        dimensions = glm::uvec2(ceil(glm::vec2(dims)*scale));
-        makeAttachments();
+        const glm::uvec2 new_dims = glm::uvec2(ceil(glm::vec2(dims) * scale));
+        if (new_dims != dimensions) {
+            dimensions = new_dims;
+            makeAttachments();
+        }
     }
 }
 bool FrameBuffer::use()  {
