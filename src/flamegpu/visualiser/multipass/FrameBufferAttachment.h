@@ -129,7 +129,7 @@ class FBAFactory {
     /**
      * Defines a FBA capable of representing a RGBA color renderbuffer FBA using a default configuration
      */
-    static FrameBufferAttachment ManagedColorRenderBuffereRGBA() {
+    static FrameBufferAttachment ManagedColorRenderBufferRGBA() {
         return ManagedColorRenderBuffer(GL_RGBA);
     }
     ////////////////////////////

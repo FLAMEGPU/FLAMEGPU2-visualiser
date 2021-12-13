@@ -13,6 +13,8 @@
 #include "flamegpu/visualiser/shader/lights/LightsBuffer.h"
 #include "flamegpu/visualiser/ui/Text.h"
 #include "flamegpu/visualiser/ui/SplashScreen.h"
+#include "flamegpu/visualiser/multipass/FrameBuffer.h"
+#include "flamegpu/visualiser/multipass/FrameBufferAttachment.h"
 
 namespace flamegpu {
 namespace visualiser {
@@ -401,8 +403,8 @@ void Visualiser::render() {
     // Update lighting
     lighting->update();
     updateDebugMenu();
-    //  render
-    BackBuffer::useStatic();
+    //  Render
+    render_buffer->use();
     for (auto &sm : staticModels)
         sm->render();
     renderAgentStates();
@@ -421,11 +423,13 @@ void Visualiser::render() {
         GL_CALL(glDisable(GL_BLEND));
     }
     GL_CALL(glViewport(0, 0, windowDims.x, windowDims.y));
-    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     this->hud->render();
-
     GL_CHECK();
-
+    // Blit render_buffer framebuffer to back buffer.
+    GL_CALL(glBlitNamedFramebuffer(this->render_buffer->getFrameBufferName(), 0,
+        0, 0, this->windowDims.x, this->windowDims.y,
+        0, 0, this->windowDims.x, this->windowDims.y,
+        GL_COLOR_BUFFER_BIT, GL_LINEAR));
     //  update the screen
     SDL_GL_SwapWindow(window);
 }
@@ -656,6 +660,10 @@ bool Visualiser::init() {
         GL_CALL(glBlendEquation(GL_FUNC_ADD));
         GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         BackBuffer::setClear(true, glm::vec3(0));  // Clear to black
+        // Allocate the render texture, we render to this, then blit it to the back buffer
+        render_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorTextureRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 8, 1.0f, true, *reinterpret_cast<glm::vec3*>(modelConfig.clearColor));
+        // Allocate the screenshot renderbuffer
+        screenshot_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorRenderBufferRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 1, 1.0f, true, *reinterpret_cast<glm::vec3*>(modelConfig.clearColor));
         setMSAA(this->msaaState);
 
         //  Setup the projection matrix
@@ -688,8 +696,7 @@ void Visualiser::resizeWindow() {
         modelConfig.nearFarClip[1]);
     //  Notify other elements
     this->hud->resizeWindow(this->windowDims);
-    //  if (this->scene)
-    //     this->scene->_resize(this->windowDims);  //  Not required unless we use multipass framebuffering
+    this->render_buffer->resize(this->windowDims);
     resizeBackBuffer(this->windowDims);
 }
 void Visualiser::deallocateGLObjects() {
@@ -705,6 +712,8 @@ void Visualiser::deallocateGLObjects() {
         as.second.entity.reset();
     }
     this->lines.reset();
+    render_buffer.reset();
+    screenshot_buffer.reset();
 }
 
 void Visualiser::close() {
@@ -1055,14 +1064,19 @@ void Visualiser::screenshot() {
 
 void Visualiser::screenshot(const bool verbose) {
     const char *SCREENSHOT_FILENAME = "screenshot.png";
-    int w = 1;
-    int h = 1;
-
-    SDL_GetWindowSize(this->window, &w, &h);
-    unsigned char *pixels = new unsigned char[w * h * 4];  // 4 bytes for RGBA;
+    unsigned char *pixels = new unsigned char[this->windowDims.x * this->windowDims.y * 4];  // 4 bytes for RGBA;
+    // Resize screenshot framebuffer (if required)
+    this->screenshot_buffer->resize(this->windowDims);
+    // Blit to screenshot framebuffer
+    GL_CALL(glBlitNamedFramebuffer(this->render_buffer->getFrameBufferName(), screenshot_buffer->getFrameBufferName(),
+        0, 0, this->windowDims.x, this->windowDims.y,
+        0, 0, this->windowDims.x, this->windowDims.y,
+        GL_COLOR_BUFFER_BIT, GL_LINEAR));
+    // Ensure active framebuffer is our render tex (if we call render_buffer->use() it triggers clear)
+    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, screenshot_buffer->getFrameBufferName()));
     // Get data
-    glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-    const bool result = Texture::saveImage(pixels, w, h, SCREENSHOT_FILENAME);
+    GL_CALL(glReadPixels(0, 0, this->windowDims.x, this->windowDims.y, GL_RGBA, GL_UNSIGNED_BYTE, pixels));
+    const bool result = Texture::saveImage(pixels, this->windowDims.x, this->windowDims.y, SCREENSHOT_FILENAME);
     if (verbose) {
         if (result) {
             fprintf(stderr, "Failed to write screenshot to '%s'\n", SCREENSHOT_FILENAME);

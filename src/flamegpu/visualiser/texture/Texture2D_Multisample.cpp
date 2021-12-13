@@ -5,7 +5,6 @@ namespace visualiser {
 
 
 const char *Texture2D_Multisample::RAW_TEXTURE_FLAG = "Texture2D_Multisample";
-
 std::shared_ptr<Texture2D_Multisample> Texture2D_Multisample::make(const glm::uvec2 &dimensions, const Texture::Format &format, const unsigned int &samples, const uint64_t &options) {
     return std::shared_ptr<Texture2D_Multisample>(new Texture2D_Multisample(dimensions, format, samples, options));
 }
