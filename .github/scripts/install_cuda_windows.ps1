@@ -28,10 +28,15 @@ $CUDA_KNOWN_URLS = @{
     "11.3.1" = "https://developer.download.nvidia.com/compute/cuda/11.3.1/network_installers/cuda_11.3.1_win10_network.exe"
     "11.4.0" = "https://developer.download.nvidia.com/compute/cuda/11.4.0/network_installers/cuda_11.4.0_win10_network.exe"
     "11.4.1" = "https://developer.download.nvidia.com/compute/cuda/11.4.1/network_installers/cuda_11.4.1_win10_network.exe"
+    "11.4.2" = "https://developer.download.nvidia.com/compute/cuda/11.4.1/network_installers/cuda_11.4.1_win10_network.exe"
+    "11.5.0" = "https://developer.download.nvidia.com/compute/cuda/11.5.0/network_installers/cuda_11.5.0_win10_network.exe"
+    "11.5.1" = "https://developer.download.nvidia.com/compute/cuda/11.5.1/network_installers/cuda_11.5.1_windows_network.exe"
+    "11.6.0" = "https://developer.download.nvidia.com/compute/cuda/11.6.0/network_installers/cuda_11.6.0_windows_network.exe"
 }
 
 # @todo - change this to be based on _MSC_VER intead, or invert it to be CUDA keyed instead?
 $VISUAL_STUDIO_MIN_CUDA = @{
+    "2022" = "11.6.0";
     "2019" = "10.1";
     "2017" = "10.0"; # Depends on which version of 2017! 9.0 to 10.0 depending on  version
     "2015" = "8.0"; # might support older, unsure. Depracated as of 11.1, unsupported in 11.2
@@ -106,15 +111,23 @@ echo "$($CUDA_PACKAGES)"
 
 # Select the download link if known, otherwise have a guess.
 $CUDA_REPO_PKG_REMOTE=""
+$CUDA_REPO_PKG_LOCAL=""
 if($CUDA_KNOWN_URLS.containsKey($CUDA_VERSION_FULL)){
     $CUDA_REPO_PKG_REMOTE=$CUDA_KNOWN_URLS[$CUDA_VERSION_FULL]
 } else{
     # Guess what the url is given the most recent pattern (at the time of writing, 10.1)
     Write-Output "note: URL for CUDA ${$CUDA_VERSION_FULL} not known, estimating."
-    $CUDA_REPO_PKG_REMOTE="http://developer.download.nvidia.com/compute/cuda/$($CUDA_MAJOR).$($CUDA_MINOR)/Prod/network_installers/cuda_$($CUDA_VERSION_FULL)_win10_network.exe"
+    if([version]$CUDA_VERSION_FULL -ge [version]"11.5.1"){
+        $CUDA_REPO_PKG_REMOTE="http://developer.download.nvidia.com/compute/cuda/$($CUDA_MAJOR).$($CUDA_MINOR)/Prod/network_installers/cuda_$($CUDA_VERSION_FULL)_windows_network.exe"
+    } else {
+        $CUDA_REPO_PKG_REMOTE="http://developer.download.nvidia.com/compute/cuda/$($CUDA_MAJOR).$($CUDA_MINOR)/Prod/network_installers/cuda_$($CUDA_VERSION_FULL)_win10_network.exe"
+    }
 }
-$CUDA_REPO_PKG_LOCAL="cuda_$($CUDA_VERSION_FULL)_win10_network.exe"
-
+if([version]$CUDA_VERSION_FULL -ge [version]"11.5.1"){
+    $CUDA_REPO_PKG_LOCAL="cuda_$($CUDA_VERSION_FULL)_windows_network.exe"
+} else {
+    $CUDA_REPO_PKG_LOCAL="cuda_$($CUDA_VERSION_FULL)_win10_network.exe"
+}
 
 ## ------------
 ## Install CUDA
