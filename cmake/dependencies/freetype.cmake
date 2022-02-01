@@ -10,10 +10,11 @@ if(UNIX)
 elseif(WIN32)
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.
     # Declare source properties
-    # Alt official mirror: https://git.sv.nongnu.org/r/freetype/freetype2.git
+    # Alt official git: https://gitlab.freedesktop.org/freetype/freetype.git
+    # Instead we use the official GitHub mirror, assuming it will have better UpTime for CI
     FetchContent_Declare(
         freetype
-        GIT_REPOSITORY    https://git.savannah.gnu.org/git/freetype/freetype2.git
+        GIT_REPOSITORY    https://github.com/freetype/freetype.git
         GIT_TAG           tags/VER-2-10-1
     )
 
