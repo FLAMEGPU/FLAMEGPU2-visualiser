@@ -86,6 +86,6 @@ class PointLight {
 }  // namespace visualiser
 }  // namespace flamegpu
 
-#include "PointLight.inl"
+#include "flamegpu/visualiser/shader/lights/PointLight.inl"
 
 #endif  // SRC_FLAMEGPU_VISUALISER_SHADER_LIGHTS_POINTLIGHT_H_
