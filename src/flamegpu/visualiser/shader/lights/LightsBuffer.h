@@ -2,8 +2,8 @@
 #define SRC_FLAMEGPU_VISUALISER_SHADER_LIGHTS_LIGHTSBUFFER_H_
 #include "flamegpu/visualiser/shader/buffer/UniformBuffer.h"
 #include "flamegpu/visualiser/shader/ShaderHeader.h"
-// #include "PointLightModel.h"
-// #include "SpotLightModel.h"
+// #include "flamegpu/visualiser/shader/lights/PointLightModel.h"
+// #include "flamegpu/visualiser/shader/lights/SpotLightModel.h"
 
 namespace flamegpu {
 namespace visualiser {

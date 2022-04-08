@@ -1,6 +1,6 @@
 #ifndef SRC_FLAMEGPU_VISUALISER_SHADER_LIGHTS_DIRECTIONALLIGHT_H_
 #define SRC_FLAMEGPU_VISUALISER_SHADER_LIGHTS_DIRECTIONALLIGHT_H_
-#include "PointLight.h"
+#include "flamegpu/visualiser/shader/lights/PointLight.h"
 
 namespace flamegpu {
 namespace visualiser {
@@ -43,5 +43,5 @@ class DirectionalLight : protected PointLight {
 }  // namespace visualiser
 }  // namespace flamegpu
 
-#include "DirectionalLight.inl"
+#include "flamegpu/visualiser/shader/lights/DirectionalLight.inl"
 #endif  // SRC_FLAMEGPU_VISUALISER_SHADER_LIGHTS_DIRECTIONALLIGHT_H_

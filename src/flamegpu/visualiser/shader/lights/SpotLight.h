@@ -1,6 +1,6 @@
 #ifndef SRC_FLAMEGPU_VISUALISER_SHADER_LIGHTS_SPOTLIGHT_H_
 #define SRC_FLAMEGPU_VISUALISER_SHADER_LIGHTS_SPOTLIGHT_H_
-#include "PointLight.h"
+#include "flamegpu/visualiser/shader/lights/PointLight.h"
 
 namespace flamegpu {
 namespace visualiser {
@@ -58,5 +58,5 @@ class SpotLight : protected PointLight {
 }  // namespace visualiser
 }  // namespace flamegpu
 
-#include "SpotLight.inl"
+#include "flamegpu/visualiser/shader/lights/SpotLight.inl"
 #endif  // SRC_FLAMEGPU_VISUALISER_SHADER_LIGHTS_SPOTLIGHT_H_
