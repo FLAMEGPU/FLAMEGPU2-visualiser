@@ -2,6 +2,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <algorithm>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -557,8 +558,9 @@ void Visualiser::renderAgentStates() {
     //  Render agents
     if (closeSplashScreen) {
         for (auto &as : agentStates) {
-            if (!as.second.core_texture_buffers.empty() && as.second.dataSize)  // Extra check to make sure buffer has been allocated successfully
-                as.second.entity->renderInstances(as.second.dataSize);
+            if (!as.second.core_texture_buffers.empty() && as.second.dataSize)  // Check to make sure buffer has been allocated successfully
+                if (as.second.requiredSize)  // Also check we actually have agents (buffer might be bigger than the agents)
+                    as.second.entity->renderInstances(static_cast<int>(std::min(as.second.dataSize, as.second.requiredSize)));
         }
     }
     if (guard)
