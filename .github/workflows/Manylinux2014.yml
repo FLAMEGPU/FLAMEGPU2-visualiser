@@ -111,6 +111,9 @@ jobs:
         make
         make install
 
+    - name: Add custom problem matchers for annotations
+      run: echo "::add-matcher::.github/problem-matchers.json"
+
     # For manylinux, also set if Using static glew, and to use legacy opengl bindings.
     - name: Configure cmake
       run: >

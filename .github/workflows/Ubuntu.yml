@@ -82,6 +82,9 @@ jobs:
           sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype6-dev libgl1-mesa-dev
         fi
 
+    - name: Add custom problem matchers for annotations
+      run: echo "::add-matcher::.github/problem-matchers.json"
+
     - name: Configure cmake
       run: >
         cmake . -B "${{ env.BUILD_DIR }}"
