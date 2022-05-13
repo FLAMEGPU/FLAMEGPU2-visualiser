@@ -32,10 +32,6 @@ jobs:
             cuda_arch: "35"
             hostcxx: devtoolset-8
             os: ubuntu-20.04
-          # - cuda: "10.0"
-          #   cuda_arch: "35"
-          #   hostcxx: devtoolset-7
-          #   os: ubuntu-18.04
         config:
           - name: "Release"
             config: "Release"

@@ -7,13 +7,10 @@ It is unlikely to be useful independently.
 ## Requirements
 
 + [CMake](https://cmake.org/download/) `>= 3.18`
-  + CMake `>= 3.15` currently works, but support will be dropped in a future release.
 + [CUDA](https://developer.nvidia.com/cuda-downloads) `>= 11.0` and a Compute Capability `>= 3.5` NVIDIA GPU.
-  + CUDA `>= 10.0` currently works, but support will be dropped in a future release.
 + C++17 capable C++ compiler (host), compatible with the installed CUDA version
   + [Microsoft Visual Studio 2019](https://visualstudio.microsoft.com/) (Windows)
-  + [make](https://www.gnu.org/software/make/) and either [GCC](https://gcc.gnu.org/) `>= 7` or [Clang](https://clang.llvm.org/) `>= 5` (Linux)
-  + Older C++ compilers which support C++14 may currently work, but support will be dropped in a future release.
+  + [make](https://www.gnu.org/software/make/) and [GCC](https://gcc.gnu.org/) `>= 8.1`
 + [git](https://git-scm.com/)
 + [SDL](https://www.libsdl.org/)
 + [GLM](http://glm.g-truc.net/) *(consistent C++/GLSL vector maths functionality)*

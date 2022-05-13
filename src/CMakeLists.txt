@@ -13,7 +13,10 @@ project(flamegpu_visualiser)
 # handle cpplint.
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/cpplint.cmake)
 
-# Check to see if CUDA is available.
+# Check to see if CUDA is available, and meets the required minimum version for non-lint builds
+if(NOT DEFINED MINIMUM_CUDA_VERSION)
+    set(MINIMUM_CUDA_VERSION 11.0)
+endif()
 include(CheckLanguage)
 check_language(CUDA)
 if(CMAKE_CUDA_COMPILER)
@@ -165,8 +168,8 @@ if(LINT_ONLY_BUILD)
     if (NOT OPENGL_FOUND)
         message(STATUS "OpenGL is required for building")
     endif ()
-    if (NOT CMAKE_CUDA_COMPILER)
-        message(STATUS "CUDA is required for building")
+    if (NOT CMAKE_CUDA_COMPILER OR CMAKE_CUDA_COMPILER_VERSION VERSION_LESS ${MINIMUM_CUDA_VERSION})
+        message(STATUS "CUDA >= ${MINIMUM_CUDA_VERSION} is required for building")
     endif ()
     # return from the file.
     return()
@@ -176,10 +179,9 @@ endif()
 if (NOT OPENGL_FOUND)
     message(FATAL_ERROR "OpenGL is required for building")
 endif ()
-if (NOT CMAKE_CUDA_COMPILER)
-    message(FATAL_ERROR "CUDA is required for building")
+if (NOT CMAKE_CUDA_COMPILER OR CMAKE_CUDA_COMPILER_VERSION VERSION_LESS ${MINIMUM_CUDA_VERSION})
+    message(FATAL_ERROR "CUDA >= ${MINIMUM_CUDA_VERSION} is required for building")
 endif ()
-
 # Include the warnings cmake file. Disabling all warning by default, and providing a mechanism to opt-in for some targets
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/warnings.cmake)
 
@@ -225,15 +227,13 @@ if (WIN32)
   target_compile_definitions("${PROJECT_NAME}" PRIVATE _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
 endif()
 
-# Ensure VS uses SYSTEM if available.
+# Ensure VS uses SYSTEM if available, present in 19.10+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.10)
-        # These flags don't currently have any effect on how CMake passes system-private includes to msvc (VS 2017+)
-        set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "/external:I")
-        set(CMAKE_INCLUDE_SYSTEM_FLAG_CUDA "/external:I")
-        # VS 2017+
-        target_compile_options("${PROJECT_NAME}" PRIVATE "$<$<COMPILE_LANGUAGE:C,CXX>:/experimental:external>")
-    endif()
+    # These flags don't currently have any effect on how CMake passes system-private includes to msvc (VS 2017+)
+    set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "/external:I")
+    set(CMAKE_INCLUDE_SYSTEM_FLAG_CUDA "/external:I")
+    # VS 2017+
+    target_compile_options("${PROJECT_NAME}" PRIVATE "$<$<COMPILE_LANGUAGE:C,CXX>:/experimental:external>")
 endif()
 
 # Set up include dirs
@@ -263,8 +263,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 # If gcc, need to add flag for std::experimental::filesystem (for c++14 support)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries("${PROJECT_NAME}" "-lstdc++fs")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+    target_link_libraries("${PROJECT_NAME}" stdc++fs)
 endif()
 
 # Strip trailiing whitespace from SDL2_Libraries for Ubuntu1604 / libsdl2-dev 2.0.4
