@@ -1,18 +1,6 @@
 #include "flamegpu/visualiser/texture/Texture2D.h"
 #include <cassert>
-
-// If earlier than VS 2019
-#if defined(_MSC_VER) && _MSC_VER < 1920
 #include <filesystem>
-using std::tr2::sys::exists;
-using std::tr2::sys::path;
-#else
-// VS2019 requires this macro, as building pre c++17 cant use std::filesystem
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#include <experimental/filesystem>
-using std::experimental::filesystem::v1::exists;
-using std::experimental::filesystem::v1::path;
-#endif
 
 #include <glm/gtx/component_wise.hpp>
 #include <SDL_surface.h>
@@ -86,13 +74,13 @@ std::shared_ptr<const Texture2D> Texture2D::load(const std::string &texPath, con
      // Locate the file
      std::string filePath;
      // Raw exists
-     if (exists(path(texPath)))
+     if (std::filesystem::exists(std::filesystem::path(texPath)))
          filePath = texPath;
      // Exists in model dir
-     else if (!modelFolder.empty() && exists(path((modelFolder + texPath).c_str())))
+     else if (!modelFolder.empty() && std::filesystem::exists(std::filesystem::path((modelFolder + texPath).c_str())))
          filePath = modelFolder + texPath;
      // Exists in model dir [path incorrect]
-     else if (!modelFolder.empty() && exists(path((modelFolder + su::getFilenameFromPath(texPath)).c_str())))
+     else if (!modelFolder.empty() && std::filesystem::exists(std::filesystem::path((modelFolder + su::getFilenameFromPath(texPath)).c_str())))
          filePath = std::string(modelFolder) + su::getFilenameFromPath(texPath);
      // Exists in resources
      else if (Resources::exists(texPath))

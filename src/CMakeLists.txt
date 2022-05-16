@@ -262,7 +262,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_link_libraries("${PROJECT_NAME}" "legacy_stdio_definitions") # This won't be required if we rebuild freetype with newer than vs2013
 endif()
 
-# If gcc, need to add flag for std::experimental::filesystem (for c++14 support)
+# If gcc < 9, needs to link against stdc++fs
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
     target_link_libraries("${PROJECT_NAME}" stdc++fs)
 endif()
