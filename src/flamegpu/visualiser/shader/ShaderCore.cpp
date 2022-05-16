@@ -594,47 +594,10 @@ int ShaderCore::compileShader(const GLuint t_shaderProgram, GLenum type, std::ve
     }
     return rtn;
 }
-// If earlier than VS 2019
-// #if defined(_MSC_VER) && _MSC_VER < 1920
-// #include <filesystem>
-// using std::tr2::sys::exists;
-// using std::tr2::sys::path;
-// #else
-// // VS2019 requires this macro, as building pre c++17 cant use std::filesystem
-// #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-// #include <experimental/filesystem>
-// using std::experimental::filesystem::v1::exists;
-// using std::experimental::filesystem::v1::path;
-// #endif
+
 char* ShaderCore::loadShaderSource(const char* file) {
-    // static std::string shadersRoot;
-    // if (shadersRoot.empty()) {
-    //     // Locate the root directory of the solution
-    //     // Follow up tree a few layers checking for a shaders directory.
-    //     shadersRoot = "./shaders/";
-    //     for (unsigned int i = 0; i < 5; ++i) {
-    //         if (exists(path(shadersRoot)))
-    //             break;
-    //         shadersRoot = std::string("./.") + shadersRoot;
-    //     }
-    //     if (!exists(path(shadersRoot)))
-    //         shadersRoot = "./";
-    // }
     //  If file path is 0 it is being omitted. kinda gross
     if (file != nullptr) {
-        // std::string shaderPath = shadersRoot + file;
-        // FILE* fptr = fopen(shaderPath.c_str(), "rb");  // Attempt with shader root
-        // if (!fptr) {
-        //     fptr = fopen(file, "rb");  // Attempt without shader root
-        //     if (!fptr) {
-        //         fprintf(stderr, "Shader source not found: %s\n", file);
-        //         if (exitOnError) {
-        //             getchar();
-        //             exit(1);
-        //         }
-        //         return nullptr;
-        //     }
-        // }
         FILE* fptr = Resources::fopen(file, "rb");  // Attempt with shader root
         fseek(fptr, 0, SEEK_END);
         int64_t length = ftell(fptr);
