@@ -647,9 +647,11 @@ bool Visualiser::init() {
         GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         BackBuffer::setClear(true, glm::vec3(0));  // Clear to black
         // Allocate the render texture, we render to this, then blit it to the back buffer
-        render_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorTextureRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 8, 1.0f, true, *reinterpret_cast<const glm::vec3*>(modelConfig.clearColor));
+        render_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorTextureRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(),
+            8, 1.0f, true, *reinterpret_cast<const glm::vec3*>(modelConfig.clearColor));
         // Allocate the screenshot renderbuffer
-        screenshot_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorRenderBufferRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 1, 1.0f, true, *reinterpret_cast<const glm::vec3*>(modelConfig.clearColor));
+        screenshot_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorRenderBufferRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(),
+            1, 1.0f, true, *reinterpret_cast<const glm::vec3*>(modelConfig.clearColor));
         setMSAA(this->msaaState);
 
         //  Setup the projection matrix
