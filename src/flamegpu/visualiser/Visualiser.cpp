@@ -144,9 +144,6 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
         debugMenu->setVisible(false);
         hud->add(debugMenu, HUD::AnchorV::North, HUD::AnchorH::West, glm::ivec2(0, 0), INT_MAX);
     }
-    lines = std::make_shared<Draw>();
-    lines->setViewMatPtr(camera->getViewMatPtr());
-    lines->setProjectionMatPtr(&this->projMat);
     // Process static models
     for (auto &sm : modelcfg.staticModels) {
         std::shared_ptr<Entity> entity;
@@ -180,25 +177,10 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
         }
     }
     // Process lines
-    for (auto &line : modelcfg.lines) {
-        // Check it's valid
-        if (line->lineType == LineConfig::Type::Polyline) {
-            if (line->vertices.size() < 6 || line->vertices.size() % 3 != 0 || line->colors.size() % 4 != 0 || (line->colors.size() / 4) * 3 != line->vertices.size()) {
-                THROW SketchError("Polyline sketch contains invalid number of vertices (%d/3) or colours (%d/4).\n", line->vertices.size(), line->colors.size());
-            }
-        } else if (line->lineType == LineConfig::Type::Lines) {
-            if (line->vertices.size() < 6 || line->vertices.size() % 6 != 0 || line->colors.size() % 4 != 0 || (line->colors.size() / 4) * 3 != line->vertices.size()) {
-                THROW SketchError("Lines sketch contains invalid number of vertices (%d/3) or colours (%d/4).\n", line->vertices.size(), line->colors.size());
-            }
-        }
-        // Convert to Draw
-        lines->begin(line->lineType == LineConfig::Type::Polyline ? Draw::Type::Polyline : Draw::Type::Lines, std::to_string(totalLines++));
-        for (size_t i = 0; i < line->vertices.size() / 3; ++i) {
-            lines->color(*reinterpret_cast<const glm::vec4*>(&line->colors[i * 4]));
-            lines->vertex(*reinterpret_cast<const glm::vec3*>(&line->vertices[i * 3]));
-        }
-        lines->save();
-    }
+    lines = std::make_shared<Draw>();
+    lines->setViewMatPtr(camera->getViewMatPtr());
+    lines->setProjectionMatPtr(&this->projMat);
+    updateLines();
     // Default lighting, single point light attached to camera
     // Maybe in future let user specify lights instead of this
     {
@@ -558,9 +540,11 @@ void Visualiser::renderAgentStates() {
     //  Render agents
     if (closeSplashScreen) {
         for (auto &as : agentStates) {
-            if (!as.second.core_texture_buffers.empty() && as.second.dataSize)  // Check to make sure buffer has been allocated successfully
-                if (as.second.requiredSize)  // Also check we actually have agents (buffer might be bigger than the agents)
+            if (!as.second.core_texture_buffers.empty() && as.second.dataSize) {  // Check to make sure buffer has been allocated successfully
+                if (as.second.requiredSize) {  // Also check we actually have agents (buffer might be bigger than the agents)
                     as.second.entity->renderInstances(static_cast<int>(std::min(as.second.dataSize, as.second.requiredSize)));
+                }
+            }
         }
     }
     if (guard)
@@ -663,9 +647,9 @@ bool Visualiser::init() {
         GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         BackBuffer::setClear(true, glm::vec3(0));  // Clear to black
         // Allocate the render texture, we render to this, then blit it to the back buffer
-        render_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorTextureRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 8, 1.0f, true, *reinterpret_cast<glm::vec3*>(modelConfig.clearColor));
+        render_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorTextureRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 8, 1.0f, true, *reinterpret_cast<const glm::vec3*>(modelConfig.clearColor));
         // Allocate the screenshot renderbuffer
-        screenshot_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorRenderBufferRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 1, 1.0f, true, *reinterpret_cast<glm::vec3*>(modelConfig.clearColor));
+        screenshot_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorRenderBufferRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 1, 1.0f, true, *reinterpret_cast<const glm::vec3*>(modelConfig.clearColor));
         setMSAA(this->msaaState);
 
         //  Setup the projection matrix
@@ -1131,6 +1115,30 @@ void Visualiser::updateDebugMenu() {
         // Last item (don't end \n)
         ss << "Pause Simulation: " << (this->pause_guard ? "On" : "Off");
         debugMenu->setString(ss.str().c_str());
+    }
+}
+void Visualiser::updateLines() {
+    for (auto& line : modelConfig.lines) {
+        if (!line.second->hasChanged)
+            continue;
+        // Check it's valid
+        if (line.second->lineType == LineConfig::Type::Polyline) {
+            if (line.second->vertices.size() < 6 || line.second->vertices.size() % 3 != 0 || line.second->colors.size() % 4 != 0 || (line.second->colors.size() / 4) * 3 != line.second->vertices.size()) {
+                THROW SketchError("Polyline sketch contains invalid number of vertices (%d/3) or colours (%d/4).\n", line.second->vertices.size(), line.second->colors.size());
+            }
+        } else if (line.second->lineType == LineConfig::Type::Lines) {
+            if (line.second->vertices.size() < 6 || line.second->vertices.size() % 6 != 0 || line.second->colors.size() % 4 != 0 || (line.second->colors.size() / 4) * 3 != line.second->vertices.size()) {
+                THROW SketchError("Lines sketch contains invalid number of vertices (%d/3) or colours (%d/4).\n", line.second->vertices.size(), line.second->colors.size());
+            }
+        }
+        // Convert to Draw
+        lines->begin(line.second->lineType == LineConfig::Type::Polyline ? Draw::Type::Polyline : Draw::Type::Lines, line.first);
+        for (size_t i = 0; i < line.second->vertices.size() / 3; ++i) {
+            lines->color(*reinterpret_cast<const glm::vec4*>(&line.second->colors[i * 4]));
+            lines->vertex(*reinterpret_cast<const glm::vec3*>(&line.second->vertices[i * 3]));
+        }
+        lines->save();
+        line.second->hasChanged = false;
     }
 }
 

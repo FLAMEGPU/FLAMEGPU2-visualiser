@@ -235,6 +235,7 @@ class Visualiser : public ViewportExt {
 
  private:
     void updateDebugMenu();
+    void updateLines();
     SDL_Window *window;
     SDL_Rect windowedBounds;
     SDL_GLContext context;
@@ -320,7 +321,7 @@ class Visualiser : public ViewportExt {
     /**
      * User defined model configuration options
      */
-    ModelConfig modelConfig;
+    const ModelConfig &modelConfig;
     /**
      * User defined agent states to be rendered and their configuration options
      */

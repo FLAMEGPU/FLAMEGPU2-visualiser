@@ -26,6 +26,10 @@ struct LineConfig {
      * Vector filled with 4 floats per vertex (must be same 4/3 the length of vertices vector)
      */
     std::vector<float> colors;
+    /**
+     * Flag set to mark if Visualiser needs to update the line
+     */
+    mutable bool hasChanged = true;
 };
 
 }  // namespace visualiser
