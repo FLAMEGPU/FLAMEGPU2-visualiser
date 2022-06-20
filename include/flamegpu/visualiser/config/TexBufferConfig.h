@@ -134,13 +134,23 @@ struct TexBufferConfig {
 };
 
 struct CustomTexBufferConfig : TexBufferConfig {
-    CustomTexBufferConfig(const std::string& _agentVariableName, const std::string& _nameInShader)
+    CustomTexBufferConfig(const std::string& _agentVariableName, const std::string& _nameInShader, const unsigned int _element, const unsigned int _array_length)
         : TexBufferConfig(_agentVariableName)
-        , nameInShader(_nameInShader) { }
+        , nameInShader(_nameInShader)
+        , element(_element)
+        , array_length(_array_length) { }
     /**
      * Name in shader, this may be ignored by some functions
      */
     std::string nameInShader;
+    /**
+     * Index of the element to be used if an array variable (else 0)
+     */
+    unsigned int element;
+    /**
+     * Length of the variable if an array variable (else 1)
+     */
+    unsigned int array_length;
 };
 
 }  // namespace visualiser
