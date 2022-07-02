@@ -313,6 +313,8 @@ SET(RESOURCES_ALL
     ${CMAKE_CURRENT_SOURCE_DIR}/../resources/cube.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/../resources/teapot.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/../resources/stuntplane.obj
+    ${CMAKE_CURRENT_SOURCE_DIR}/../resources/pyramid.obj
+    ${CMAKE_CURRENT_SOURCE_DIR}/../resources/arrowhead.obj
     # Tdir: These shaders are setup to receive an appended rotation function
     # Tcolor: These shaders are setup to receive an appended color function
     ${CMAKE_CURRENT_SOURCE_DIR}/../resources/instanced_default_Tpos_Tdir_Tscale.vert

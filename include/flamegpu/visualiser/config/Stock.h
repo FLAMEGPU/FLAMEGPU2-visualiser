@@ -33,6 +33,27 @@ const Model TEAPOT{ "resources/teapot.obj", "" };
  * Created following this tutorial: https://www.youtube.com/watch?v=qiK6A4HJhmA
  */
 const Model STUNTPLANE{ "resources/stuntplane.obj", "" };
+/**
+ * Equilateral triangular pyramid (4 poly, 4 vertices)
+ *
+ * Orientation:
+ *   - Front: +X
+ *   - Top: +Z
+ *
+ * Made with blender by zeyus (https://github.com/zeyus)
+ */
+const Model PYRAMID{ "resources/pyramid.obj", "" };
+/**
+ * Arrow-head triangular pyramid (4 poly, 4 vertices)
+ * useful for visualising vectors
+ *
+ * Orientation:
+ *   - Front: +X
+ *   - Top: +Z
+ *
+ * Made with blender by zeyus (https://github.com/zeyus)
+ */
+const Model ARROWHEAD{ "resources/arrowhead.obj", "" };
 }  // namespace Models
 }  // namespace Stock
 }  // namespace visualiser
