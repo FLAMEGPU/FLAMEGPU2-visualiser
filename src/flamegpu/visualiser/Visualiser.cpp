@@ -515,10 +515,10 @@ void Visualiser::renderAgentStates() {
                 shader_vec->removeTextureUniform(_tb.second.first.nameInShader.c_str());
                 CUDATextureBuffer<float>* old_tb = tb;
                 // Alloc new buffs (this needs to occur in other thread!!!)
-                tb = mallocGLInteropTextureBuffer<float>(newSize * TexBufferConfig::SamplerElements(_tb.first), 1);
+                tb = mallocGLInteropTextureBuffer<float>(newSize * _tb.second.first.array_length * TexBufferConfig::SamplerElements(_tb.first), 1);
                 // Copy any old data to the buffer
                 if (old_tb && tb && old_tb->d_mappedPointer && tb->d_mappedPointer && as.dataSize)
-                    _cudaMemcpyDeviceToDevice(tb->d_mappedPointer, old_tb->d_mappedPointer, as.dataSize * sizeof(float) * TexBufferConfig::SamplerElements(_tb.first));
+                    _cudaMemcpyDeviceToDevice(tb->d_mappedPointer, old_tb->d_mappedPointer, as.dataSize * _tb.second.first.array_length * sizeof(float) * TexBufferConfig::SamplerElements(_tb.first));
                 // Bind texture name to texture unit
                 GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui));
                 GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, tb->glTexName));
@@ -597,7 +597,7 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
             auto& ext_tb = _ext_tb.second;
             for (auto int_tb = as.custom_texture_buffers.find(_ext_tb.first); int_tb != as.custom_texture_buffers.end(); ++int_tb) {
                 if (ext_tb.nameInShader == int_tb->second.first.nameInShader) {
-                    visassert(_cudaMemcpyDeviceToDevice(int_tb->second.second->d_mappedPointer, ext_tb.t_d_ptr, as.dataSize * sizeof(float) * TexBufferConfig::SamplerElements(_ext_tb.first)));
+                    visassert(_cudaMemcpyDeviceToDevice(int_tb->second.second->d_mappedPointer, ext_tb.t_d_ptr, as.dataSize * ext_tb.array_length * sizeof(float) * TexBufferConfig::SamplerElements(_ext_tb.first)));
                 }
             }
         }
