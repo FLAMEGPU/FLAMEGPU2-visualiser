@@ -38,7 +38,7 @@ const Model STUNTPLANE{ "resources/stuntplane.obj", "" };
  *
  * Orientation:
  *   - Front: +X
- *   - Top: +Z
+ *   - Top: +Y
  *
  * Made with blender by zeyus (https://github.com/zeyus)
  */
@@ -49,7 +49,7 @@ const Model PYRAMID{ "resources/pyramid.obj", "" };
  *
  * Orientation:
  *   - Front: +X
- *   - Top: +Z
+ *   - Top: +Y
  *
  * Made with blender by zeyus (https://github.com/zeyus)
  */
