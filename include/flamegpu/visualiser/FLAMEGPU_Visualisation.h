@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <cstdint>
 
 #include "flamegpu/visualiser/config/TexBufferConfig.h"
 
@@ -36,10 +37,18 @@ class FLAMEGPU_Visualisation {
         updateAgentStateBuffer(agent_name.c_str(), state_name.c_str(), buffLen, core_tex_buffers, tex_buffers);
     }
     /**
+     * Provide the random seed, so it can be displayed in the debug menu
+     */
+    void registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements);
+    /**
      * Update the UI step counter
      * @note When this value is first set non-0, the visualiser assumes sim has begun executing
      */
-    void setStepCount(const unsigned int stepCount);
+    void setStepCount(unsigned int stepCount);
+    /**
+     * Provide the random seed, so it can be displayed in the debug menu
+     */
+    void setRandomSeed(uint64_t randomSeed);
     /*
      * Start visualiser in background thread
      */

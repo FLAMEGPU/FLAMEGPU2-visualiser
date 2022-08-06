@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <utility>
 #include <map>
+#include <cstdint>
 #undef main  // SDL breaks the regular main entry point, this fixes
 #define GLM_FORCE_NO_CTOR_INIT
 #include <glm/glm.hpp>
@@ -117,6 +118,10 @@ class Visualiser : public ViewportExt {
      */
     void updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen,
         const std::map<TexBufferConfig::Function, TexBufferConfig>& _core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& _tex_buffers);
+    /**
+     * Todo
+     */
+    void registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements) { }
 
  private:
     void run();
@@ -231,7 +236,11 @@ class Visualiser : public ViewportExt {
      * Sets the value to be rendered to the HUD step counter (if enabled)
      * @param stepCount The step value to be displayed
      */
-    void setStepCount(const unsigned int &stepCount);
+    void setStepCount(unsigned int stepCount);
+    /**
+     * Sets the value to be rendered for random seed in the debug menu
+     */
+    void setRandomSeed(uint64_t randomSeed);
 
  private:
     void updateDebugMenu();
@@ -300,6 +309,10 @@ class Visualiser : public ViewportExt {
      * Displays internal status info to screen
      */
     std::shared_ptr<Text> debugMenu;
+    /**
+     * Random seed, displayed in debugMenu
+     */
+    uint64_t randomSeed = 0;
     /**
      * If set true, we don't display agent states in debug menu because agents only have one state.
      */

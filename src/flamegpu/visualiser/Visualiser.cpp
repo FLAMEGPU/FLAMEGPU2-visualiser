@@ -873,7 +873,7 @@ void Visualiser::updateFPS() {
         this->frameCount = 0;
     }
 }
-void Visualiser::setStepCount(const unsigned int &_stepCount) {
+void Visualiser::setStepCount(const unsigned int _stepCount) {
     // This boring value is used to display the number of steps
     stepCount = _stepCount;
     // The rest is to calcualted steps/second, basically the same as FPS
@@ -888,6 +888,9 @@ void Visualiser::setStepCount(const unsigned int &_stepCount) {
         this->previousStepTime = this->currentStepTime;
         this->lastStepCount = _stepCount;
     }
+}
+void Visualiser::setRandomSeed(const uint64_t _randomSeed) {
+    randomSeed = _randomSeed;
 }
 //  Overrides
 unsigned Visualiser::getWindowWidth() const {
@@ -1101,6 +1104,7 @@ void Visualiser::updateDebugMenu() {
         ss << std::setprecision(3);
         ss << std::fixed;  // To stop camera floats from changing box width
         ss << "===Debug Menu===" << "\n";
+        ss << "Random Seed: " << randomSeed << "\n";
         const glm::vec3 eye = camera->getEye();
         const glm::vec3 look = camera->getLook();
         const glm::vec3 up = camera->getUp();
