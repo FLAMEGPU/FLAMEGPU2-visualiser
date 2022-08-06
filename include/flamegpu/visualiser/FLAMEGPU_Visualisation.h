@@ -39,7 +39,7 @@ class FLAMEGPU_Visualisation {
     /**
      * Provide the random seed, so it can be displayed in the debug menu
      */
-    void registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements);
+    void registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements, bool is_const);
     /**
      * Update the UI step counter
      * @note When this value is first set non-0, the visualiser assumes sim has begun executing

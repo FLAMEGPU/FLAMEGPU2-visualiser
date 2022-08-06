@@ -144,6 +144,12 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
         debugMenu->setVisible(false);
         hud->add(debugMenu, HUD::AnchorV::North, HUD::AnchorH::West, glm::ivec2(0, 0), INT_MAX);
     }
+    {  // Environment menu
+        environmentMenu = std::make_shared<Text>("", 16, glm::vec3(1.0f), fonts::findFont({ "Consolas", "Arial" }, fonts::GenericFontFamily::SANS).c_str());
+        environmentMenu->setBackgroundColor(glm::vec4(*reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]), 0.65f));
+        environmentMenu->setVisible(false);
+        hud->add(environmentMenu, HUD::AnchorV::North, HUD::AnchorH::West, glm::ivec2(0, 0), INT_MAX);
+    }
     lines = std::make_shared<Draw>();
     lines->setViewMatPtr(camera->getViewMatPtr());
     lines->setProjectionMatPtr(&this->projMat);
@@ -404,6 +410,7 @@ void Visualiser::render() {
     // Update lighting
     lighting->update();
     updateDebugMenu();
+    updateEnvironmentMenu();
     //  Render
     render_buffer->use();
     for (auto &sm : staticModels)
@@ -604,6 +611,11 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
     }
 }
 
+void Visualiser::registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements, bool is_const) {
+    // Construct an (ordered) map of the registered properties
+    env_properties.emplace(property_name, EnvPropReference{ ptr, type, elements, is_const});
+}
+
 //  Items taken from sdl_exp
 bool Visualiser::init() {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) {
@@ -708,6 +720,7 @@ void Visualiser::deallocateGLObjects() {
     stepDisplay.reset();
     spsDisplay.reset();
     debugMenu.reset();
+    environmentMenu.reset();
     this->hud->clear();
     // Don't clear the map, as update buffer methods might still be called
     for (auto &as : agentStates) {
@@ -804,8 +817,18 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         this->hud->reload();
         break;
     case SDLK_F1:
-        if (this->debugMenu)
+        if (this->debugMenu) {
             this->debugMenu->setVisible(!this->debugMenu->getVisible());
+            if (this->debugMenu->getVisible() && this->environmentMenu)
+                this->environmentMenu->setVisible(false);
+        }
+        break;
+    case SDLK_F2:
+        if (this->environmentMenu) {
+            this->environmentMenu->setVisible(!this->environmentMenu->getVisible());
+            if (this->environmentMenu->getVisible() && this->debugMenu)
+                this->debugMenu->setVisible(false);
+        }
         break;
     case SDLK_p:
         if (this->pause_guard) {
@@ -1135,6 +1158,60 @@ void Visualiser::updateDebugMenu() {
         // Last item (don't end \n)
         ss << "Pause Simulation: " << (this->pause_guard ? "On" : "Off");
         debugMenu->setString(ss.str().c_str());
+    }
+}
+void writeType(std::stringstream &ss, const std::type_index &type, const void * ptr, const unsigned int offset = 0) {
+    // Would be nice if we could grab the appropriate function pointer to the function for each type once and cache it?
+    if (type == std::type_index(typeid(int8_t))) {
+        ss << static_cast<const int8_t*>(ptr)[offset];
+    } else if (type == std::type_index(typeid(int16_t))) {
+        ss << static_cast<const int16_t*>(ptr)[offset];
+    } else if (type == std::type_index(typeid(int32_t))) {
+        ss << static_cast<const int32_t*>(ptr)[offset];
+    } else if (type == std::type_index(typeid(int64_t))) {
+        ss << static_cast<const int64_t*>(ptr)[offset];
+    } else if (type == std::type_index(typeid(uint8_t))) {
+        ss << static_cast<const uint8_t*>(ptr)[offset];
+    } else if (type == std::type_index(typeid(uint16_t))) {
+        ss << static_cast<const uint16_t*>(ptr)[offset];
+    } else if (type == std::type_index(typeid(uint32_t))) {
+        ss << static_cast<const uint32_t*>(ptr)[offset];
+    } else if (type == std::type_index(typeid(uint64_t))) {
+        ss << static_cast<const uint64_t*>(ptr)[offset];
+    } else if (type == std::type_index(typeid(float))) {
+        ss << static_cast<const float*>(ptr)[offset];
+    } else if (type == std::type_index(typeid(double))) {
+        ss << static_cast<const double*>(ptr)[offset];
+    } else if (type == std::type_index(typeid(bool))) {
+        ss << (static_cast<const bool*>(ptr)[offset] ? "True" : "False");
+    } else if (offset == 0) {
+        ss << "Unsupported";
+    }
+}
+void Visualiser::updateEnvironmentMenu() {
+    if (environmentMenu && environmentMenu->getVisible()) {
+        std::stringstream ss;
+        ss << std::setprecision(5);  // Stop changing properties from changing panel width
+        ss << std::fixed;
+        ss << "===Environment Properties===" << "\n";
+        for (const auto &prop : env_properties) {
+            // Can't (easily) align all colons, the Text code does multi-space width wrong (and we can't guarantee fixed width font)
+            ss << prop.first.c_str() <<": ";
+            if (prop.second.elements == 1) {
+                writeType(ss, prop.second.type, prop.second.ptr);
+            } else {
+                // Array
+                ss << "[";
+                for (unsigned int i = 0; i < prop.second.elements; ++i) {
+                    if (i != 0)
+                        ss << ", ";
+                    writeType(ss, prop.second.type, prop.second.ptr, i);
+                }
+                ss << "]";
+            }
+            ss << "\n";
+        }
+        environmentMenu->setString(ss.str().c_str());
     }
 }
 

@@ -37,8 +37,8 @@ void FLAMEGPU_Visualisation::updateAgentStateBuffer(const char *agent_name, cons
     const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
     vis->updateAgentStateBuffer(agent_name, state_name, buffLen, core_tex_buffers, tex_buffers);
 }
-void FLAMEGPU_Visualisation::registerEnvironmentProperty(const std::string& property_name, void* ptr, const std::type_index type, const unsigned int elements) {
-    vis->registerEnvironmentProperty(property_name, ptr, type, elements);
+void FLAMEGPU_Visualisation::registerEnvironmentProperty(const std::string& property_name, void* ptr, const std::type_index type, const unsigned int elements, const bool is_const) {
+    vis->registerEnvironmentProperty(property_name, ptr, type, elements, is_const);
 }
 void FLAMEGPU_Visualisation::setStepCount(const unsigned int stepCount) {
     vis->setStepCount(stepCount);

@@ -121,7 +121,7 @@ class Visualiser : public ViewportExt {
     /**
      * Todo
      */
-    void registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements) { }
+    void registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements, bool is_const);
 
  private:
     void run();
@@ -244,6 +244,7 @@ class Visualiser : public ViewportExt {
 
  private:
     void updateDebugMenu();
+    void updateEnvironmentMenu();
     SDL_Window *window;
     SDL_Rect windowedBounds;
     SDL_GLContext context;
@@ -310,18 +311,26 @@ class Visualiser : public ViewportExt {
      */
     std::shared_ptr<Text> debugMenu;
     /**
-     * Random seed, displayed in debugMenu
-     */
-    uint64_t randomSeed = 0;
-    /**
      * If set true, we don't display agent states in debug menu because agents only have one state.
      */
     bool debugMenu_showStateNames = false;
+    /**
+     * Random seed, displayed in debugMenu
+     */
+    uint64_t randomSeed = 0;
     /**
      * Steps equivalent of FPS.
      * Calculated in the wrong thread, so we update it whenever FPS updates
      */
     double stepsPerSecond = 0.0;
+    struct EnvPropReference {
+        void *ptr;
+        std::type_index type;
+        unsigned int elements;
+        bool is_const;
+    };
+    std::map<std::string, EnvPropReference> env_properties;
+    std::shared_ptr<Text> environmentMenu;
     /**
      * Pressing F8 changes whether FPS is displayed in the bottom corner, according to this schema
      * The list is iterated in reverse (2, 1, 0)
