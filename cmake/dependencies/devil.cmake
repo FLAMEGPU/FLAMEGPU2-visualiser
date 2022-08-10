@@ -1,6 +1,5 @@
 # DevIL
 # Ensure that DevIL is available, either by finding DevIL, or by downloading DevIL if required (on windows) 
-    
 if(UNIX)
     # On Linux, if DevIL is not available the user is instructed to install it themselves.
     find_package(DevIL)
@@ -9,6 +8,12 @@ if(UNIX)
                         "e.g. sudo apt install libdevil-dev")
     endif()
 elseif(WIN32)
+
+    # As the URL method is used for download, set the policy if available
+    if(POLICY CMP0135)
+    cmake_policy(SET CMP0135 NEW)
+    endif()
+
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.
     # Declare source properties
     FetchContent_Declare(

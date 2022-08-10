@@ -10,6 +10,10 @@ if(UNIX)
 elseif(WIN32)
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.
     # Declare source properties
+    # As the URL method is used for download, set the policy if available
+    if(POLICY CMP0135)
+        cmake_policy(SET CMP0135 NEW)
+    endif()
     FetchContent_Declare(
         SDL2
         URL "https://www.libsdl.org/release/SDL2-devel-2.0.12-VC.zip"

@@ -10,6 +10,10 @@ if(UNIX)
                             "e.g. sudo apt install libglew-dev")
     endif ()
 elseif(WIN32)
+    # As the URL method is used for download, set the policy if available
+    if(POLICY CMP0135)
+        cmake_policy(SET CMP0135 NEW)
+    endif()
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.
     # Declare source properties
     FetchContent_Declare(
