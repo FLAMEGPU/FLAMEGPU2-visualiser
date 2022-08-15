@@ -54,6 +54,18 @@ const Model PYRAMID{ "resources/pyramid.obj", "" };
  * Made with blender by zeyus (https://github.com/zeyus)
  */
 const Model ARROWHEAD{ "resources/arrowhead.obj", "" };
+/**
+ * Path to model files and optional texture within integrated resources
+ */
+struct KeyFrameModel {
+    const char* modelPathA;
+    const char* modelPathB;
+    const char* texturePath;
+};
+/**
+ * Two frame pedestrian model
+ */
+const KeyFrameModel PEDESTRIAN{ "resources/pedestrian_a.obj", "resources/pedestrian_b.obj", "" };
 }  // namespace Models
 }  // namespace Stock
 }  // namespace visualiser

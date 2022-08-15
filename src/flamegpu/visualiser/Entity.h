@@ -2,6 +2,7 @@
 #define SRC_FLAMEGPU_VISUALISER_ENTITY_H_
 #include <memory>
 #include <vector>
+#include <string>
 
 #include <glm/glm.hpp>
 
@@ -52,6 +53,11 @@ class Entity : public Renderable {
         Stock::Materials::Material const material,
         const glm::vec3 &scale = glm::vec3(1.0f));
     virtual ~Entity();
+    /**
+     * Loads a second model (must have the same vertex/polygon count) and attaches it to _vertex2, _normal2 within the shader
+     * This is used for keyframe animations
+     */
+    void loadKeyFrameModel(const std::string &modelpathB);
     virtual void render(unsigned int shaderIndex = 0);
     void renderInstances(int count, unsigned int shaderIndex = 0);
     /**
@@ -118,7 +124,8 @@ class Entity : public Renderable {
     static std::vector<std::shared_ptr<Shaders>> convertToShader(std::initializer_list<const Stock::Shaders::ShaderSet> ss) {
         std::vector<std::shared_ptr<Shaders>> rtn;
         for (auto&& s : ss)
-            rtn.push_back(std::make_shared<Shaders>(s.vertex, s.fragment, s.geometry));
+            if ((s.vertex && s.vertex[0] != '\0') || (s.fragment && s.fragment[0] != '\0') || (s.geometry && s.geometry[0] != '\0'))
+                rtn.push_back(std::make_shared<Shaders>(s.vertex, s.fragment, s.geometry));
         return rtn;
     }
     // Set by importModel if the imported model was of an older version.
@@ -127,6 +134,7 @@ class Entity : public Renderable {
     static const char *OBJ_TYPE;
     static const char *EXPORT_TYPE;
     void importModel(const char *path);
+    std::unique_ptr<Entity> keyframe_model;
 
  private:
     struct ExportMask {
