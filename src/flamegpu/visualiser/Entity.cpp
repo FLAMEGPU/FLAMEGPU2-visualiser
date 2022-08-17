@@ -180,7 +180,7 @@ Entity::Entity(
                 it->setMaterialBuffer(materialBuffer);
                 it->setFaceVBO(faces.vbo);
             } else if (this->shaders.empty()) {
-                THROW EntityError("Entity has no shaders!\n");
+                // THROW EntityError("Entity has no shaders!\n");  // Disabled to support loading an empty model for keyframe animation
             }
         }
         m.setCustomShaders(this->shaders);
@@ -203,6 +203,7 @@ Entity::~Entity() {
     materialBuffer.reset();
     materials.clear();
     texture.reset();
+    keyframe_model.reset();
 }
 glm::mat4 Entity::getModelMat() const {
     // Apply world transforms (in reverse order that we wish for them to be applied)
@@ -216,6 +217,32 @@ glm::mat4 Entity::getModelMat() const {
     if (this->scaleFactor != glm::vec4(1.0f))
         modelMat = glm::scale(modelMat, glm::vec3(this->scaleFactor));
     return modelMat;
+}
+void Entity::loadKeyFrameModel(const std::string& modelpathB) {
+    // Create an entity with no shaders so we can just use the data it loads
+    keyframe_model = std::make_unique<Entity>(modelpathB.c_str(), SCALE, Stock::Shaders::FIXED_FUNCTION);
+    visassert(positions.componentSize == keyframe_model->positions.componentSize);
+    visassert(positions.componentType == keyframe_model->positions.componentType);
+    visassert(positions.components == keyframe_model->positions.components);
+    visassert(positions.count == keyframe_model->positions.count);
+    visassert(normals.componentSize == keyframe_model->normals.componentSize);
+    visassert(normals.componentType == keyframe_model->normals.componentType);
+    visassert(normals.components == keyframe_model->normals.components);
+    visassert(normals.count == keyframe_model->normals.count);
+    // If shaders have been provided, set them up
+    for (auto&& it : this->shaders) {
+        if (keyframe_model->positions.data && it) {
+            it->addGenericAttributeDetail("_vertex2", keyframe_model->positions, false);
+            it->addGenericAttributeDetail("_normal2", keyframe_model->normals, true);
+        }
+    }
+    for (auto& m : materials) {
+        for (unsigned int i = 0; i < m.getShaderCount(); ++i) {
+            auto sh = m.getShaders(i);
+            sh->addGenericAttributeDetail("_vertex2", keyframe_model->positions, false);
+            sh->addGenericAttributeDetail("_normal2", keyframe_model->normals, true);
+        }
+    }
 }
 /*
 Calls the necessary code to render a single instance of the entity
@@ -1060,6 +1087,10 @@ void Entity::setMaterial(const glm::vec3 &ambient, const glm::vec3 &diffuse, con
                 it->setTexCoordsAttributeDetail(texcoords);
                 it->setMaterialBuffer(materialBuffer);
                 it->setFaceVBO(faces.vbo);
+                if (keyframe_model) {
+                    it->addGenericAttributeDetail("_vertex2", keyframe_model->positions, false);
+                    it->addGenericAttributeDetail("_normal2", keyframe_model->normals, true);
+                }
             } else if (shaders.empty()) {
                 THROW EntityError("Entity has no shaders!\n");
             }

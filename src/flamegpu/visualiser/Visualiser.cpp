@@ -8,6 +8,7 @@
 
 #include "flamegpu/visualiser/util/cuda.h"
 #include "flamegpu/visualiser/util/fonts.h"
+#include "flamegpu/visualiser/shader/VertexFunction.h"
 #include "flamegpu/visualiser/shader/PositionFunction.h"
 #include "flamegpu/visualiser/shader/DirectionFunction.h"
 #include "flamegpu/visualiser/shader/ScaleFunction.h"
@@ -60,6 +61,7 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
             custom_texture_buffers.emplace(c.first, std::make_pair(c.second, nullptr));
         }
         // Select the corresponding shader
+        VertexFunction vf(_core_tex_buffers, vc.model_pathB);
         PositionFunction pf(_core_tex_buffers);
         DirectionFunction df(_core_tex_buffers);
         ScaleFunction sf(_core_tex_buffers);
@@ -72,7 +74,7 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
                     "resources/instanced_default_Tcolor_Tpos_Tdir_Tscale.vert",
                     "resources/material_flat_Tcolor.frag",
                     "",
-                    pf.getSrc() + df.getSrc() + sf.getSrc() + vc.color_shader_src));
+                    vf.getSrc() + pf.getSrc() + df.getSrc() + sf.getSrc() + vc.color_shader_src));
         } else if (vc.model_texture) {
             // Entity has texture
             entity = std::make_shared<Entity>(
@@ -82,7 +84,7 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
                     "resources/instanced_default_Tpos_Tdir_Tscale.vert",
                     "resources/material_phong.frag",
                     "",
-                    pf.getSrc() + df.getSrc() + sf.getSrc()),
+                    vf.getSrc() + pf.getSrc() + df.getSrc() + sf.getSrc()),
                 Texture2D::load(vc.model_texture));
         } else {
             // Entity does not have a texture
@@ -93,8 +95,11 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
                     "resources/instanced_default_Tpos_Tdir_Tscale.vert",
                     "resources/material_flat.frag",
                     "",
-                    pf.getSrc() + df.getSrc() + sf.getSrc()));
+                    vf.getSrc() + pf.getSrc() + df.getSrc() + sf.getSrc()));
             entity->setMaterial(glm::vec3(0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.7f));
+        }
+        if (vc.model_pathB) {
+            entity->loadKeyFrameModel(vc.model_pathB);
         }
 }
 

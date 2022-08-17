@@ -515,7 +515,7 @@ bool Shaders::addGenericAttributeDetail(const char* attributeName, VertexAttribu
             gvads.push_back(gvad);
             if (update)
                 buildVAO();
-            buildVAO();
+            buildVAO();  // This must be called twice to work?
             return true;
         }
         fprintf(stderr, "%s: Generic vertex attrib named: %s was not found.\n", this->getShaderTag(), gvad.attributeName);

@@ -49,6 +49,10 @@ struct TexBufferConfig {
          */
         UniformScale,
         /**
+         * Keyframe animation lerp variable
+         */
+        AnimationLerp,
+        /**
          * Some other use, e.g. custom shaders in future
          */
         Unknown,
@@ -80,6 +84,7 @@ struct TexBufferConfig {
         case Scale_xy: return "_scale_x";
         case Scale_xyz: return "_scale_xyz";
         case UniformScale: return "_scale";
+        case AnimationLerp: return "_animation_lerp";
         // These always get name from elsewhere so return empty string
         case Color:
         case Unknown:
@@ -115,6 +120,7 @@ struct TexBufferConfig {
         case Scale_y:
         case Scale_z:
         case UniformScale:
+        case AnimationLerp:
         case Color:
         case Unknown:
         default:

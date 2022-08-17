@@ -21,7 +21,11 @@ struct AgentStateConfig {
     AgentStateConfig(const AgentStateConfig &other);
     AgentStateConfig &operator=(const AgentStateConfig &other);
 
-    const char *model_path = nullptr;
+    const char* model_path = nullptr;
+    /**
+     * If set, model is treated as 2-frame animated
+     */
+    const char *model_pathB = nullptr;
     const char *model_texture = nullptr;
     float model_scale[3];
     /**

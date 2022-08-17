@@ -212,6 +212,7 @@ class Material : protected Renderable {
     bool getTwoSided() const { return !faceCull; }
     ShadingMode getShadingMode() const { return shaderMode; }
     std::shared_ptr<Shaders> getShaders(unsigned int index = UINT_MAX) const { return index < shaders.size() ? shaders[index] : defaultShader; }
+    size_t getShaderCount() const { return shaders.size(); }
     std::pair<GLenum, GLenum> getAlphaBlendMode() const { return std::make_pair(alphaBlendMode[0], alphaBlendMode[1]); }
     /**
      * Creates and sets up the default shader

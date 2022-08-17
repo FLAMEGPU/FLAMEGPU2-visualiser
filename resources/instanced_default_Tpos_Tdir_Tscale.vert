@@ -13,13 +13,15 @@ out vec3 eyeVertex;
 out vec3 eyeNormal;
 out vec2 texCoords;
 
+vec3 getVertex();
+vec3 getNormal();
 vec3 getScale();
 mat3 getDirection();
 vec3 getPosition();
 void main()
 {
   // Apply model matrix to raw vertex
-  vec4 vert = _modelMat * vec4(_vertex,1.0f);
+  vec4 vert = _modelMat * vec4(getVertex(),1.0f);
   // Apply a user defined scale multiplier
   vert.xyz *= getScale();
   // Apply a user defined rotation
@@ -35,7 +37,7 @@ void main()
   gl_Position = _projectionMat * vec4(eyeVertex, 1.0f);
   
   // Calc eye normal
-  eyeNormal = normalize(_normalMat * transpose(inverse(directionMat)) * normalize(_normal));
+  eyeNormal = normalize(_normalMat * transpose(inverse(directionMat)) * normalize(getNormal()));
   // Calc tex coords
   texCoords = _texCoords;
 }

@@ -101,6 +101,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/shader/PositionFunction.h
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/shader/DirectionFunction.h
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/shader/ScaleFunction.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/shader/VertexFunction.h
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/Texture.h
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/Texture2D.h
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/Texture2D_Multisample.h
@@ -133,6 +134,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/shader/PositionFunction.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/shader/DirectionFunction.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/shader/ScaleFunction.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/shader/VertexFunction.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/Texture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/Texture2D.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/Texture2D_Multisample.cpp
@@ -315,6 +317,8 @@ SET(RESOURCES_ALL
     ${CMAKE_CURRENT_SOURCE_DIR}/../resources/stuntplane.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/../resources/pyramid.obj
     ${CMAKE_CURRENT_SOURCE_DIR}/../resources/arrowhead.obj
+    ${CMAKE_CURRENT_SOURCE_DIR}/../resources/pedestrian_a.obj
+    ${CMAKE_CURRENT_SOURCE_DIR}/../resources/pedestrian_b.obj
     # Tdir: These shaders are setup to receive an appended rotation function
     # Tcolor: These shaders are setup to receive an appended color function
     ${CMAKE_CURRENT_SOURCE_DIR}/../resources/instanced_default_Tpos_Tdir_Tscale.vert
