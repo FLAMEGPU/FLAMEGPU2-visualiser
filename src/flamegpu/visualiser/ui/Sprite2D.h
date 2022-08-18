@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "flamegpu/visualiser/texture/Texture2D.h"
-#include "Overlay.h"
+#include "flamegpu/visualiser/ui/Overlay.h"
 
 namespace flamegpu {
 namespace visualiser {

@@ -43,7 +43,7 @@ class Overlay {
      * @param proj The projection matrix
      * @param fbo The buffer object holding the face indices
      */
-    void render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo);
+    virtual void render(const glm::mat4 *mv, const glm::mat4 *proj, GLuint fbo);
     unsigned int getWidth() const { return dimensions.x; }
     unsigned int getHeight() const { return dimensions.y;}
     std::shared_ptr<Shaders> getShaders() const { return shaders; }

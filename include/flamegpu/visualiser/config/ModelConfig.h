@@ -3,9 +3,11 @@
 
 #include <string>
 #include <list>
+#include <map>
 #include <memory>
 
 #include "LineConfig.h"
+#include "PanelConfig.h"
 
 namespace flamegpu {
 namespace visualiser {
@@ -123,6 +125,10 @@ struct ModelConfig {
      * Store of user defined line renderings
      */
     std::list<std::shared_ptr<LineConfig>> lines;
+    /**
+     * Store of user defined UI panels
+     */
+    std::map<std::string, std::shared_ptr<PanelConfig>> panels;
     /**
      * Notify visualisation that it's running under python
      * This mostly just allows the logos to be swapped

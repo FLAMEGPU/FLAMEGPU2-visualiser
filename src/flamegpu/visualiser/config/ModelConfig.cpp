@@ -46,6 +46,7 @@ ModelConfig &ModelConfig::operator=(const ModelConfig &other) {
     isPython = other.isPython;
     // staticModels
     // lines
+    // panels
     return *this;
 }
 

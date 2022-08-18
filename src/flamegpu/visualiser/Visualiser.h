@@ -2,6 +2,7 @@
 #define SRC_FLAMEGPU_VISUALISER_VISUALISER_H_
 
 #include <SDL.h>
+#undef main  // SDL breaks the regular main entry point, this fixes
 
 #include <atomic>
 #include <list>
@@ -12,7 +13,7 @@
 #include <unordered_map>
 #include <utility>
 #include <map>
-#undef main  // SDL breaks the regular main entry point, this fixes
+#include <cstdint>
 #define GLM_FORCE_NO_CTOR_INIT
 #include <glm/glm.hpp>
 
@@ -20,6 +21,7 @@
 #include "flamegpu/visualiser/Entity.h"
 #include "flamegpu/visualiser/HUD.h"
 #include "flamegpu/visualiser/ui/Text.h"
+#include "flamegpu/visualiser/ui/ImGuiPanel.h"
 #include "flamegpu/visualiser/camera/NoClipCamera.h"
 #include "flamegpu/visualiser/config/AgentStateConfig.h"
 #include "flamegpu/visualiser/config/TexBufferConfig.h"
@@ -40,6 +42,7 @@ class LightsBuffer;
  * This is the main class of the visualisation, hosting the window and render loop
  */
 class Visualiser : public ViewportExt {
+    friend class ImGuiPanel;
     typedef std::pair<std::string, std::string> NamePair;
     struct NamePairHash {
         size_t operator()(const NamePair &k) const { return std::hash<std::string>()(k.first) ^ (std::hash<std::string>()(k.second) << 1); }
@@ -117,6 +120,10 @@ class Visualiser : public ViewportExt {
      */
     void updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen,
         const std::map<TexBufferConfig::Function, TexBufferConfig>& _core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& _tex_buffers);
+    /**
+     * Provide the env_cache ptr for the specified environment property, for visualisation
+     */
+    void registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements, bool is_const);
 
  private:
     void run();
@@ -232,9 +239,12 @@ class Visualiser : public ViewportExt {
      * @param stepCount The step value to be displayed
      */
     void setStepCount(const unsigned int &stepCount);
+    /**
+     * Sets the value to be rendered for random seed in the debug menu
+     */
+    void setRandomSeed(uint64_t randomSeed);
 
  private:
-    void updateDebugMenu();
     SDL_Window *window;
     SDL_Rect windowedBounds;
     SDL_GLContext context;
@@ -297,13 +307,17 @@ class Visualiser : public ViewportExt {
      */
     unsigned int previousStepTime = 0, currentStepTime, stepCount = 0, lastStepCount = 0;
     /**
-     * Displays internal status info to screen
+     * Handles the ImGui supported rendering of the debug menu and user-specified UI panels
      */
-    std::shared_ptr<Text> debugMenu;
+    std::shared_ptr<ImGuiPanel> imguiPanel;
     /**
      * If set true, we don't display agent states in debug menu because agents only have one state.
      */
     bool debugMenu_showStateNames = false;
+    /**
+     * Random seed, displayed in debugMenu
+     */
+    uint64_t randomSeed = 0;
     /**
      * Steps equivalent of FPS.
      * Calculated in the wrong thread, so we update it whenever FPS updates

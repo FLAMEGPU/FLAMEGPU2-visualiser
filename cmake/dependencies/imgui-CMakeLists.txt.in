@@ -1,0 +1,57 @@
+project(imgui LANGUAGES CXX)
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    # If top level project
+    SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE}/)
+else()
+    # If called via add_subdirectory()
+    SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../lib/${CMAKE_BUILD_TYPE}/)
+endif()
+
+# Glob for sources
+file(GLOB imgui_sources LIST_DIRECTORIES false ${PROJECT_SOURCE_DIR}/imgui/*.cpp ${PROJECT_SOURCE_DIR}/imgui/*.h)
+
+# Include back-end specific sources
+set(imgui_sources ${imgui_sources}
+  ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_sdl.h
+  ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_sdl.cpp
+  ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp
+  ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.h
+  ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3_loader.h
+)
+if(MSVC) 
+set(imgui_sources ${imgui_sources}
+  ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_win32.h
+  ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_win32.cpp
+)
+endif()
+
+# Depends on the cpp and header files in case of changes
+add_library(imgui STATIC ${imgui_sources})
+
+
+# Specify the include directory, to be forwared to targets which link against the imgui target.
+# Mark this as SYSTEM INTERFACE, so that it does not result in compiler warnings being generated for dependent projects.
+# For our use  case, this is up a folder so we can use imgui/imgui.h as the include, by resolving the relative path to get an abs path
+get_filename_component(imgui_inc_dir ${imgui_SOURCE_DIR} REALPATH)
+target_include_directories("${PROJECT_NAME}" SYSTEM INTERFACE ${imgui_SOURCE_DIR}/imgui ${imgui_SOURCE_DIR})
+
+# Because we're using a nested dir rather than root, specify include path
+target_include_directories("${PROJECT_NAME}" PUBLIC ${imgui_SOURCE_DIR}/imgui)
+# Also depends on SDL for backend
+target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
+
+# Add some compile time definitions
+target_compile_definitions(imgui INTERFACE $<$<CONFIG:Debug>:IMGUI_DEBUG>)
+set_target_properties(imgui PROPERTIES
+    COMPILE_DEFINITIONS "IMGUI_EXPORT"
+)
+
+# Pic is sensible for any library
+set_property(TARGET imgui PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+# Suppress warnigns from this target. (Not currently required)
+#include(${CMAKE_CURRENT_LIST_DIR}/../warnings.cmake)
+#DisableCompilerWarnings(TARGET imgui)
+
+# Create an alias target for imgui to namespace it / make it more like other modern cmake 
+add_library(ImGui::ImGui ALIAS imgui)
