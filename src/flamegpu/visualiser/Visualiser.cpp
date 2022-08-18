@@ -1,5 +1,9 @@
 #include "flamegpu/visualiser/Visualiser.h"
 
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
+#include <imgui/backends/imgui_impl_sdl.h>
+
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
@@ -116,7 +120,6 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , fpsDisplay(nullptr)
     , stepDisplay(nullptr)
     , spsDisplay(nullptr)
-    , debugMenu(nullptr)
     , modelConfig(modelcfg)
     , lighting(nullptr)
     , gamepad(nullptr)
@@ -143,11 +146,9 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
         stepDisplay->setUseAA(false);
         hud->add(stepDisplay, HUD::AnchorV::South, HUD::AnchorH::East, glm::ivec2(0, 0), INT_MAX - 1);
     }
-    {  // Debug menu
-        debugMenu = std::make_shared<Text>("", 16, glm::vec3(1.0f), fonts::findFont({ "Consolas", "Arial" }, fonts::GenericFontFamily::SANS).c_str());
-        debugMenu->setBackgroundColor(glm::vec4(*reinterpret_cast<const glm::vec3*>(&modelcfg.clearColor[0]), 0.65f));
-        debugMenu->setVisible(false);
-        hud->add(debugMenu, HUD::AnchorV::North, HUD::AnchorH::West, glm::ivec2(0, 0), INT_MAX);
+    {  // ImGui Panels
+        imguiPanel = std::make_shared<ImGuiPanel>(modelcfg.panels, *this);
+        hud->add(imguiPanel, HUD::AnchorV::North, HUD::AnchorH::West, glm::ivec2(0, 0), INT_MAX-2);
     }
     lines = std::make_shared<Draw>();
     lines->setViewMatPtr(camera->getViewMatPtr());
@@ -363,6 +364,10 @@ void Visualiser::render() {
     this->lighting->getPointLight(0).Position(this->camera->getEye());
     //  handle each event on the queue
     while (SDL_PollEvent(&e) != 0) {
+        if (!SDL_GetRelativeMouseMode()) {
+            // Assume ImGUI is top level, allow it first chance on IO if mouse isn't locked for movement
+            ImGui_ImplSDL2_ProcessEvent(&e);
+        }
         switch (e.type) {
         case SDL_QUIT:
             continueRender = false;
@@ -372,7 +377,7 @@ void Visualiser::render() {
                 resizeWindow();
             break;
         case SDL_KEYDOWN:
-            {
+            if (!ImGui::GetIO().WantCaptureKeyboard) {
                 int x = 0;
                 int y = 0;
                 SDL_GetMouseState(&x, &y);
@@ -385,7 +390,8 @@ void Visualiser::render() {
             this->handleMouseMove(e.motion.xrel, e.motion.yrel);
             break;
         case SDL_MOUSEBUTTONDOWN:
-            this->toggleMouseMode();
+            if (!ImGui::GetIO().WantCaptureMouse)
+                this->toggleMouseMode();
             break;
         case SDL_CONTROLLERDEVICEADDED:
             this->addController(e.cdevice);
@@ -408,7 +414,6 @@ void Visualiser::render() {
     this->queryControllerAxis(frameTime);
     // Update lighting
     lighting->update();
-    updateDebugMenu();
     //  Render
     render_buffer->use();
     for (auto &sm : staticModels)
@@ -608,7 +613,10 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
         }
     }
 }
-
+void Visualiser::registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index /*type*/, unsigned int elements, bool is_const) {
+    // Construct an (ordered) map of the registered properties
+    imguiPanel->registerProperty(property_name, ptr, is_const, elements > 1);
+}
 //  Items taken from sdl_exp
 bool Visualiser::init() {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) != 0) {
@@ -673,6 +681,21 @@ bool Visualiser::init() {
         screenshot_buffer = std::make_shared<FrameBuffer>(FBAFactory::ManagedColorRenderBufferRGBA(), FBAFactory::ManagedDepthRenderBuffer(), FBAFactory::Disabled(), 1, 1.0f, true, *reinterpret_cast<glm::vec3*>(modelConfig.clearColor));
         setMSAA(this->msaaState);
 
+        // Setup Dear ImGui context
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+        // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+        io.IniFilename = nullptr;  // Don't automatically save ImGui panel position/state to file
+        // Setup Dear ImGui style
+        ImGui::StyleColorsDark();
+        // ImGui::StyleColorsLight();
+
+        // Setup Platform/Renderer backends
+        ImGui_ImplSDL2_InitForOpenGL(window, this->context);
+        ImGui_ImplOpenGL3_Init();
+
         //  Setup the projection matrix
         this->resizeWindow();
         GL_CHECK();
@@ -693,6 +716,9 @@ void Visualiser::resizeWindow() {
         glm::ivec2 tDims;
         SDL_GL_GetDrawableSize(this->window, &tDims.x, &tDims.y);
         this->windowDims = tDims;
+        // Setup display size (every frame to accommodate for window resizing)
+        ImGuiIO& io = ImGui::GetIO();
+        io.DisplaySize = ImVec2(static_cast<float>(tDims.x), static_cast<float>(tDims.y));
     }
     //  Get the view frustum using GLM. Alternatively glm::perspective could be used.
     this->projMat = glm::perspectiveFov<float>(
@@ -712,7 +738,7 @@ void Visualiser::deallocateGLObjects() {
     fpsDisplay.reset();
     stepDisplay.reset();
     spsDisplay.reset();
-    debugMenu.reset();
+    imguiPanel.reset();
     this->hud->clear();
     // Don't clear the map, as update buffer methods might still be called
     for (auto &as : agentStates) {
@@ -721,6 +747,11 @@ void Visualiser::deallocateGLObjects() {
     this->lines.reset();
     render_buffer.reset();
     screenshot_buffer.reset();
+
+    // Release imgui state
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 }
 
 void Visualiser::close() {
@@ -809,8 +840,12 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         this->hud->reload();
         break;
     case SDLK_F1:
-        if (this->debugMenu)
-            this->debugMenu->setVisible(!this->debugMenu->getVisible());
+        if (this->imguiPanel)
+            this->imguiPanel->toggleDebugMenuVisible();
+        break;
+    case SDLK_F2:
+        if (this->imguiPanel)
+            this->imguiPanel->toggleUIVisible();
         break;
     case SDLK_p:
         if (this->pause_guard) {
@@ -893,6 +928,9 @@ void Visualiser::setStepCount(const unsigned int &_stepCount) {
         this->previousStepTime = this->currentStepTime;
         this->lastStepCount = _stepCount;
     }
+}
+void Visualiser::setRandomSeed(const uint64_t _randomSeed) {
+    randomSeed = _randomSeed;
 }
 //  Overrides
 unsigned Visualiser::getWindowWidth() const {
@@ -1099,44 +1137,6 @@ void Visualiser::setWindowIcon() {
     auto surface = Texture::loadImage(modelConfig.isPython ? "resources/pyflamegpu_icon.png" : "resources/flamegpu_icon.png");
     if (surface)
         SDL_SetWindowIcon(window, surface.get());
-}
-void Visualiser::updateDebugMenu() {
-    if (debugMenu && debugMenu->getVisible()) {
-        std::stringstream ss;
-        ss << std::setprecision(3);
-        ss << std::fixed;  // To stop camera floats from changing box width
-        ss << "===Debug Menu===" << "\n";
-        const glm::vec3 eye = camera->getEye();
-        const glm::vec3 look = camera->getLook();
-        const glm::vec3 up = camera->getUp();
-        ss << "Camera Location: (" << eye.x  << ", " << eye.y << ", " << eye.z << ")" "\n";
-        ss << "Camera Direction: (" << look.x << ", " << look.y << ", " << look.z << ")" "\n";
-        ss << "Camera Up: (" << up.x << ", " << up.y << ", " << up.z << ")" "\n";
-        ss << "MSAA: " << (this->msaaState ? "On" : "Off") << "\n";
-        switch (this->fpsStatus) {
-            case 2:
-                ss << "Display FPS: Show All" << "\n";
-            break;
-            case 1:
-                ss << "Display FPS: Show Step Count" << "\n";
-                break;
-            default:
-                ss << "Display FPS: Off" << "\n";
-        }
-        ss << "Display Lines: " << (this->renderLines ? "On" : "Off") << "\n";
-        ss << "Agent Populations:" << "\n";
-        for (const auto &as : agentStates) {
-            if (debugMenu_showStateNames) {
-                ss << "  " << as.first.first << "(" << as.first.second << "): " << as.second.requiredSize << "\n";
-            } else {
-                ss << "  " << as.first.first << ": " << as.second.requiredSize << "\n";
-            }
-        }
-
-        // Last item (don't end \n)
-        ss << "Pause Simulation: " << (this->pause_guard ? "On" : "Off");
-        debugMenu->setString(ss.str().c_str());
-    }
 }
 
 }  // namespace visualiser

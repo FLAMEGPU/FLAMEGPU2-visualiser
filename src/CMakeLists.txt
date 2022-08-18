@@ -53,8 +53,10 @@ SET(VISUALISER_INCLUDE
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/flamegpu/visualiser/config/AgentStateConfig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/flamegpu/visualiser/config/ModelConfig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/flamegpu/visualiser/config/LineConfig.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/flamegpu/visualiser/config/PanelConfig.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/flamegpu/visualiser/config/Stock.h
     ${CMAKE_CURRENT_SOURCE_DIR}/../include/flamegpu/visualiser/config/TexBufferConfig.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/../include/flamegpu/visualiser/config/ImGuiWidgets.h
 )
 # Prepare list of source files
 SET(VISUALISER_SRC
@@ -107,6 +109,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/Texture2D_Multisample.h
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/TextureBuffer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/TextureCubeMap.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/ui/ImGuiPanel.h
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/ui/Overlay.h
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/ui/SplashScreen.h
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/ui/Sprite2D.h
@@ -140,6 +143,7 @@ SET(VISUALISER_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/Texture2D_Multisample.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/TextureBuffer.cu.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/texture/TextureCubeMap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/ui/ImGuiPanel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/ui/Overlay.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/ui/SplashScreen.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flamegpu/visualiser/ui/Sprite2D.cpp
@@ -200,6 +204,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/../cmake/dependencies/fontconfig.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/dependencies/freetype.cmake)
 # DevIL
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/dependencies/devil.cmake)
+# imgui
+include(${CMAKE_CURRENT_LIST_DIR}/../cmake/dependencies/imgui.cmake)
 
 # GCC requires -lpthreads for std::thread
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -242,6 +248,7 @@ endif()
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${glm_INCLUDE_DIRS})
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${GLEW_INCLUDE_DIRS})
+target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${IMGUI_INCLUDE_DIRS})
 if (FREETYPE_FOUND) # Only use this if we aren't building it ourselves
     target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS})
 endif ()
@@ -281,6 +288,7 @@ else()
 endif()
 target_link_libraries("${PROJECT_NAME}" freetype)
 target_link_libraries("${PROJECT_NAME}" "${IL_LIBRARIES}")
+target_link_libraries("${PROJECT_NAME}" ImGui::ImGui)
 target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
 target_link_libraries("${PROJECT_NAME}" Threads::Threads)
 if(TARGET Fontconfig::Fontconfig)
@@ -361,5 +369,8 @@ if (CMAKE_USE_FOLDERS)
     endif()
     if (TARGET resources)
         set_property(TARGET "resources" PROPERTY FOLDER "FLAMEGPU/Dependencies")
+    endif()
+    if (TARGET imgui)
+        set_property(TARGET "imgui" PROPERTY FOLDER "FLAMEGPU/Dependencies")
     endif()
 endif()
