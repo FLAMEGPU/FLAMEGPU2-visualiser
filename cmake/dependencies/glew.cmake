@@ -16,9 +16,10 @@ elseif(WIN32)
     endif()
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.
     # Declare source properties
+    # This mirror is linked from the official Glew website, and more stable than SourceForge
     FetchContent_Declare(
         glew
-        URL "https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0-win32.zip"
+        URL "https://github.com/nigels-com/glew/releases/download/glew-2.1.0/glew-2.1.0-win32.zip"
     )
     FetchContent_GetProperties(glew)
     if(NOT glew_POPULATED)
