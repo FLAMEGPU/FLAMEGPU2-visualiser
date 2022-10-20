@@ -24,16 +24,20 @@ jobs:
       # optional exclude: can be partial, include: must be specific
       matrix:
         cudacxx:
-          - cuda: "11.7"
+          - cuda: "11.8"
             cuda_arch: "35"
-            hostcxx: gcc-8
-            os: ubuntu-20.04
+            hostcxx: gcc-10
+            os: ubuntu-22.04
+          - cuda: "11.8"
+            cuda_arch: "35"
+            hostcxx: clang-14
+            os: ubuntu-22.04
         config:
           - name: "Release"
             config: "Release"
 
     # Name the job based on matrix/env options
-    name: "build (${{ matrix.cudacxx.cuda }}, ${{ matrix.config.name }}, ${{ matrix.cudacxx.os }})"
+    name: "build (${{ matrix.cudacxx.cuda }}, ${{ matrix.cudacxx.hostcxx }}, ${{ matrix.config.name }}, ${{ matrix.cudacxx.os }})"
 
     # Define job-wide env constants, and promote matrix elements to env constants for portable steps.
     env:
@@ -66,9 +70,23 @@ jobs:
         echo "CXX=/usr/bin/g++-${gcc_version}" >> $GITHUB_ENV
         echo "CUDAHOSTCXX=/usr/bin/g++-${gcc_version}" >> $GITHUB_ENV
 
+    - name: Install/Select clang and clang++
+      if: ${{ startsWith(env.HOSTCXX, 'clang-')}}
+      run: |
+        clang=${{ env.HOSTCXX }}
+        clang_version=${clang/clang-/}
+        sudo apt-get install -y clang-${clang_version} clang-tools-${clang_version}
+        echo "CC=/usr/bin/clang-${clang_version}" >> $GITHUB_ENV
+        echo "CXX=/usr/bin/clang++-${clang_version}" >> $GITHUB_ENV
+        echo "CUDAHOSTCXX=/usr/bin/clang++-${clang_version}" >> $GITHUB_ENV
+
     - name: Install Visualisation Dependencies
       if: ${{ startswith(env.OS, 'ubuntu') && env.VISUALISATION == 'ON' }}
       run: |
+        # Install ubuntu-22.04 packages
+        if [ "$OS" == 'ubuntu-22.04' ]; then 
+          sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype-dev
+        fi
         # Install ubuntu-20.04 packages
         if [ "$OS" == 'ubuntu-20.04' ]; then 
           sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype-dev

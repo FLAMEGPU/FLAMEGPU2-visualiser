@@ -10,7 +10,7 @@ It is unlikely to be useful independently.
 + [CUDA](https://developer.nvidia.com/cuda-downloads) `>= 11.0` and a Compute Capability `>= 3.5` NVIDIA GPU.
 + C++17 capable C++ compiler (host), compatible with the installed CUDA version
   + [Microsoft Visual Studio 2019](https://visualstudio.microsoft.com/) (Windows)
-  + [make](https://www.gnu.org/software/make/) and [GCC](https://gcc.gnu.org/) `>= 8.1`
+  + [make](https://www.gnu.org/software/make/) and [GCC](https://gcc.gnu.org/) `>= 8.1` or [Clang](https://clang.llvm.org/) `>= 9` (Linux)
 + [git](https://git-scm.com/)
 + [SDL](https://www.libsdl.org/)
 + [GLM](http://glm.g-truc.net/) *(consistent C++/GLSL vector maths functionality)*
