@@ -54,7 +54,7 @@ jobs:
       VISUALISATION: "ON"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     # Downgrade the devtoolset in the image based on the build matrix, using:
     # gcc-10 for CUDA >= 11.2. Unclear if devtoolset-10 will upgrade to unpatched 11.3 which breaks CUDA builds that use <chrono>. 
