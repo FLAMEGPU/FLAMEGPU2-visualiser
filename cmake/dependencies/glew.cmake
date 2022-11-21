@@ -28,7 +28,13 @@ elseif(WIN32)
         # Create a Cmake configuraiton file for glew (the download is not cmake aware)
         set(GLEW_DIR ${glew_SOURCE_DIR})
         configure_file(${CMAKE_CURRENT_LIST_DIR}/glew-config.cmake.in ${glew_SOURCE_DIR}/glew-config.cmake @ONLY)
-        # Find it again. Erroring if it cannot be found.
-        find_package(GLEW REQUIRED)
+        # Just look for the fetched version of GLEW, rather than any system provided versions. Users should still be able to override this with -DGLEW_DIR=<path> ?
+        find_package(GLEW REQUIRED CONFIG 
+            PATHS ${glew_SOURCE_DIR}
+            NO_CMAKE_PATH
+            NO_CMAKE_ENVIRONMENT_PATH
+            NO_SYSTEM_ENVIRONMENT_PATH
+            NO_CMAKE_PACKAGE_REGISTRY
+            NO_CMAKE_SYSTEM_PATH)
     endif()
 endif()
