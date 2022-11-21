@@ -27,7 +27,13 @@ elseif(WIN32)
         # Create a Cmake configuraiton file for devil (the download is not cmake aware)
         set(DevIL_DIR ${devil_SOURCE_DIR})
         configure_file(${CMAKE_CURRENT_LIST_DIR}/devil-config.cmake.in ${devil_SOURCE_DIR}/devil-config.cmake @ONLY)
-        # Find it again. Erroring if it cannot be found.
-        find_package(DevIL REQUIRED NO_MODULE)
+        # Find DevIL, only looking in the generated directory in config mode
+        find_package(DevIL REQUIRED CONFIG 
+            PATHS ${devil_SOURCE_DIR}
+            NO_CMAKE_PATH
+            NO_CMAKE_ENVIRONMENT_PATH
+            NO_SYSTEM_ENVIRONMENT_PATH
+            NO_CMAKE_PACKAGE_REGISTRY
+            NO_CMAKE_SYSTEM_PATH)
     endif()
 endif()
