@@ -49,7 +49,7 @@ jobs:
     - name: Configure cmake
       run: >
         cmake . -B "${{ env.BUILD_DIR }}"
-        -DALLOW_LINT_ONLY=ON
+        -DFLAMEGPU_ALLOW_LINT_ONLY=ON
 
     - name: Lint
       working-directory: ${{ env.BUILD_DIR }}

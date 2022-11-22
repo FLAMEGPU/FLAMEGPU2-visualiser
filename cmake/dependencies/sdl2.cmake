@@ -6,7 +6,21 @@ if(UNIX)
     if (NOT SDL2_FOUND)
         message(FATAL_ERROR "sdl2 is required for building, install it via your package manager.\n"
                         "e.g. sudo apt install libsdl2-dev")
-    endif ()
+    else()
+        # If no imported targets are provided, make one, using variables from the older find_package(SDL2).
+        # Tested on ubuntu 20.04 / libsdl2-dev 2.0.10+dfsg1-3
+        if (NOT TARGET SDL2::SDL2)
+            # If we have a ${libdir} from the above find_package sdl2, use that.
+            if(${libdir})
+                set(SDL2_LIBDIR ${libdir})
+            endif()
+            add_library(SDL2::SDL2 SHARED IMPORTED)
+            set_target_properties(SDL2::SDL2 PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${SDL2_INCLUDE_DIRS}"
+            IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+            IMPORTED_LOCATION "${SDL2_LIBDIR}/${CMAKE_SHARED_LIBRARY_PREFIX}SDL2${CMAKE_SHARED_LIBRARY_SUFFIX}")
+            endif()
+    endif()
 elseif(WIN32)
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.
     # Declare source properties
@@ -35,3 +49,11 @@ elseif(WIN32)
             NO_CMAKE_SYSTEM_PATH)
     endif()
 endif()
+
+mark_as_advanced(FETCHCONTENT_QUIET)
+mark_as_advanced(FETCHCONTENT_BASE_DIR)
+mark_as_advanced(FETCHCONTENT_FULLY_DISCONNECTED)
+mark_as_advanced(FETCHCONTENT_UPDATES_DISCONNECTED) 
+mark_as_advanced(FETCHCONTENT_SOURCE_DIR_SDL2)
+mark_as_advanced(FETCHCONTENT_UPDATES_DISCONNECTED_SDL2)
+mark_as_advanced(SDL2_DIR)

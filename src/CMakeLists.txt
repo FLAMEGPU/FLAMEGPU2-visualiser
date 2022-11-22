@@ -1,5 +1,5 @@
 # Parity with main FGPU2 CMake
-cmake_minimum_required(VERSION VERSION 3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.18...3.25 FATAL_ERROR)
 
 # Find git which is a hard dependency
 find_package(Git)
@@ -7,8 +7,12 @@ if (NOT GIT_FOUND)
   message(FATAL_ERROR "git is required for building")
 endif ()
 
+# Record the user-provided CMAKE_CUDA_ARCHITECTURES if provided, to be applied later
+include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/CUDAArchitectures.cmake)
+flamegpu_visualiser_init_cuda_architectures() 
+
 # Set the project name, but do not specify languages immediately so we can have lint only builds.
-project(flamegpu_visualiser)
+project(flamegpu_visualiser LANGUAGES NONE)
 
 # handle cpplint.
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/cpplint.cmake)
@@ -23,6 +27,9 @@ if(CMAKE_CUDA_COMPILER)
     enable_language(C)
     enable_language(CXX)
     enable_language(CUDA)
+    # Apply CMAKE_CUDA_ARCHITECTUES if the language was enabled
+    flamegpu_visualiser_set_cuda_architectures()
+    message(STATUS "Using CUDA_ARCHITECTURES ${CMAKE_CUDA_ARCHITECTURES}")
 endif()
 
 # Openg GL is required, unless doing a lint only build.
@@ -40,9 +47,12 @@ if (UNIX AND OPENGL_FOUND)
     endif()
 endif()
 
+# Ensure found compilers are actually good enough / don't trigger known issues.
+include(${CMAKE_CURRENT_LIST_DIR}/../cmake/CheckCompilerFunctionality.cmake)
+
 # If CUDA was not found, or opengl was not found we cannot build, but can lint, otherwise tehre should be a fatal error
 set(LINT_ONLY_BUILD "OFF")
-if(ALLOW_LINT_ONLY AND CPPLINT AND (NOT OPENGL_FOUND OR NOT CMAKE_CUDA_COMPILER))
+if(FLAMEGPU_ALLOW_LINT_ONLY AND CPPLINT_EXECUTABLE AND (NOT OPENGL_FOUND OR NOT CMAKE_CUDA_COMPILER OR FLAMEGPU_VISUALISER_CheckCompilerFunctionality_RESULT))
     set(LINT_ONLY_BUILD "ON")
 endif()
 
@@ -160,16 +170,14 @@ SET(VISUALISER_ALL
 )
 
 # Add the lint target.
-if(CPPLINT)
-    new_linter_target("${PROJECT_NAME}" "${VISUALISER_ALL}")
-endif()
+flamegpu_visualiser_new_linter_target("${PROJECT_NAME}" "${VISUALISER_ALL}")
 
-if(LINT_ONLY_BUILD)
-    # All should include all_lint if lint only build.
-    set_target_properties(all_lint PROPERTIES EXCLUDE_FROM_ALL FALSE)
-    if (NOT CPPLINT)
+if(LINT_ONLY_BUILD AND CPPLINT_EXECUTABLE)
+    if (NOT CPPLINT_EXECUTABLE)
         message(FATAL_ERROR "Cpplint is required for lint-only builds.")
     endif()
+    # All should include all_lint if lint only build.
+    set_target_properties(all_lint PROPERTIES EXCLUDE_FROM_ALL FALSE)
     message(STATUS "Lint-only build configuraiton due to missing dependencies")
     if (NOT OPENGL_FOUND)
         message(STATUS "OpenGL is required for building")
@@ -212,23 +220,24 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
-# CUDA_ARCH is used to control the compute capabilities to build for, via cmake/cuda_arch.cmake.
-# @todo - use the same value as the parent project if imported.
-include(${CMAKE_CURRENT_LIST_DIR}/../cmake/cuda_arch.cmake)
-# Select the C++ standard to use 
-include(${CMAKE_CURRENT_LIST_DIR}/../cmake/cxxstd.cmake)
 # Import function to set compiler settings for the target
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/CommonCompilerSettings.cmake)
 
 # Define output
 add_library("${PROJECT_NAME}" STATIC ${VISUALISER_ALL})
 
+# Require C++17 as a public target property for C++ and CUDA, with no extensions, and the standard is required
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(${PROJECT_NAME} PUBLIC cuda_std_17)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_EXTENSIONS OFF)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_EXTENSIONS OFF)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_STANDARD_REQUIRED ON)
+
 # Set target level warnings.
-EnableFLAMEGPUCompilerWarnings(TARGET "${PROJECT_NAME}")
+flamegpu_visuaiser_enable_compiler_warnings(TARGET "${PROJECT_NAME}")
 # Apply common compiler settings
-CommonCompilerSettings(TARGET "${PROJECT_NAME}")
-# Set the cuda gencodes, potentially using the user-provided CUDA_ARCH
-SetCUDAGencodes(TARGET "${PROJECT_NAME}")
+flamegpu_visualiser_common_compiler_settings(TARGET "${PROJECT_NAME}")
 
 # Prevent fscanf warnings for msvc. 
 if (WIN32)
@@ -244,18 +253,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options("${PROJECT_NAME}" PRIVATE "$<$<COMPILE_LANGUAGE:C,CXX>:/experimental:external>")
 endif()
 
-# Set up include dirs
-target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${glm_INCLUDE_DIRS})
-target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
-target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${GLEW_INCLUDE_DIRS})
-target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${IMGUI_INCLUDE_DIRS})
-if (FREETYPE_FOUND) # Only use this if we aren't building it ourselves
-    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${FREETYPE_INCLUDE_DIRS})
-endif ()
+# Specify include directories which are not implicit from link interfaces
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${IL_INCLUDE_DIR})
-if(Fontconfig_FOUND)
-    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${Fontconfig_INCLUDE_DIRS})
-endif()
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../external")
 # The main include directory should be public.
 target_include_directories("${PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../include")
@@ -268,34 +267,57 @@ set_property(TARGET "${PROJECT_NAME}" PROPERTY POSITION_INDEPENDENT_CODE ON)
 # Add the targets we depend on (this does link and include)
 # This propagates to any project that uses this as a dependency
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_link_libraries("${PROJECT_NAME}" "legacy_stdio_definitions") # This won't be required if we rebuild freetype with newer than vs2013
+    target_link_libraries("${PROJECT_NAME}" PRIVATE "legacy_stdio_definitions") # This won't be required if we rebuild freetype with newer than vs2013
 endif()
 
 # If gcc < 9, needs to link against stdc++fs
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
-    target_link_libraries("${PROJECT_NAME}" stdc++fs)
+    target_link_libraries("${PROJECT_NAME}" PRIVATE stdc++fs)
 endif()
 
-# Strip trailiing whitespace from SDL2_Libraries for Ubuntu1604 / libsdl2-dev 2.0.4
-string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
-target_link_libraries("${PROJECT_NAME}" "${SDL2_LIBRARIES}")
-# Link against GLEW, via GLEW::GLEW which is an alias for GLEW::glew or GLEW::glew_s based on availability. 
+target_link_libraries("${PROJECT_NAME}" PRIVATE glm::glm)
+# Use GLEW::GLEW if available, otherwise fallback to the variables only (i.e. custom windows fetching)
 if(TARGET GLEW::GLEW)
-    target_link_libraries("${PROJECT_NAME}" GLEW::GLEW)
-else()
-    # Fallback to the variable for our partial windows CMake config file. We should add an imported target alias to this.
-    target_link_libraries("${PROJECT_NAME}" "${GLEW_LIBRARIES}")
+    target_link_libraries("${PROJECT_NAME}" PRIVATE GLEW::GLEW)
+elseif(GLEW_INCLUDE_DIRS)
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${GLEW_INCLUDE_DIRS})
+    target_link_libraries("${PROJECT_NAME}" PRIVATE "${GLEW_LIBRARIES}")
 endif()
-target_link_libraries("${PROJECT_NAME}" freetype)
-target_link_libraries("${PROJECT_NAME}" "${IL_LIBRARIES}")
-target_link_libraries("${PROJECT_NAME}" ImGui::ImGui)
-target_link_libraries("${PROJECT_NAME}" OpenGL::GL)
-target_link_libraries("${PROJECT_NAME}" Threads::Threads)
+# Use SDL2::SDL2 if available, otherwise fallback to the variables only (i.e. custom windows fetching)
+if(TARGET SDL2::SDL2)
+    target_link_libraries("${PROJECT_NAME}" PRIVATE SDL2::SDL2)
+elseif(SDL2_INCLUDE_DIRS)
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
+    # Ubuntu 16.04 workaround
+    string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
+    target_link_libraries("${PROJECT_NAME}" PRIVATE "${SDL2_LIBRARIES}")
+endif()
+# Use DevIL::IL if available, otherwise fallback to the variables only (i.e. custom windows fetching)
+if(TARGET DevIL::IL)
+    target_link_libraries("${PROJECT_NAME}" PRIVATE DevIL::IL)
+elseif(IL_INCLUDE_DIR)
+    target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${IL_INCLUDE_DIR})
+    target_link_libraries("${PROJECT_NAME}" PRIVATE "${IL_LIBRARIES}")
+endif()
+# imgui must be public as the headers are visible in flamegpu/FLAMEGPU2
+target_link_libraries("${PROJECT_NAME}" PUBLIC ImGui::ImGui)
+# GL required
+target_link_libraries("${PROJECT_NAME}" PRIVATE OpenGL::GL)
+# std::threads support
+target_link_libraries("${PROJECT_NAME}" PRIVATE Threads::Threads)
+# Link against freetype, via Freetype::Freetype if imported, or just freetype otherwise
+if(TARGET Freetype::Freetype)
+    target_link_libraries("${PROJECT_NAME}" PRIVATE Freetype::Freetype)
+elseif(TARGET freetype)
+    target_link_libraries("${PROJECT_NAME}" PRIVATE freetype)
+endif()
+# Fontconfig is only required  under linux, so not always linked against
 if(TARGET Fontconfig::Fontconfig)
-    target_link_libraries("${PROJECT_NAME}" Fontconfig::Fontconfig)
+    target_link_libraries("${PROJECT_NAME}" PRIVATE Fontconfig::Fontconfig)
 endif()
+# dwrite.lib required on windows
 if(WIN32)
-    target_link_libraries("${PROJECT_NAME}" "dwrite.lib")
+    target_link_libraries("${PROJECT_NAME}" PRIVATE "dwrite.lib")
 endif()
 
 # Enable parallel compilation on MSVC
@@ -338,7 +360,27 @@ cmrc_add_resource_library(resources ${RESOURCES_ALL} WHENCE ${CMAKE_CURRENT_SOUR
 set_property(TARGET "resources" PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Link resources and the visualiser static lib
-target_link_libraries("${PROJECT_NAME}" resources)
+target_link_libraries("${PROJECT_NAME}" PUBLIC resources)
+
+# Define a function to list the runtime libraries for the visualiser static lib, for downstream targets to copy to any required locations (i.e. pyflamegpu). This reduces the amount of overlap.
+if (NOT COMMAND flamegpu_visualiser_get_runtime_depenencies)
+    function(flamegpu_visualiser_get_runtime_depenencies runtime_dependencies)
+        # windows only, and only with non-target dependencies. Fancier CMake based dependency stuff might be possible, but might require newer cmake or an install phase
+        if(WIN32)
+            if(SDL2_RUNTIME_LIBRARIES)
+                LIST(APPEND runtime_libs ${SDL2_RUNTIME_LIBRARIES})
+            endif()
+            if(GLEW_RUNTIME_LIBRARIES)
+                LIST(APPEND runtime_libs ${GLEW_RUNTIME_LIBRARIES})
+            endif()
+            if(IL_RUNTIME_LIBRARIES)
+                LIST(APPEND runtime_libs ${IL_RUNTIME_LIBRARIES})
+            endif()
+        endif()
+        # Return the value to the calling scope
+        set(${runtime_dependencies} "${runtime_libs}" PARENT_SCOPE)
+    endfunction()
+endif()
 
 if (CMAKE_USE_FOLDERS)
     # Setup Visual Studio (and eclipse) filters

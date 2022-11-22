@@ -35,8 +35,8 @@ To build the visualiser under linux in Release mode using the command line:
 # Create a build directory
 mkdir -p build
 cd build
-# Configure CMake, i.e. for Release builds for Pascal and newer GPUs
-cmake .. -DCUDA_ARCH=61 -DCMAKE_BUILD_TYPE=Release
+# Configure CMake, i.e. for Release builds for consumer Pascal and newer GPUs
+cmake .. -DCMAKE_CUDA_ARCHITECTURES=61 -DCMAKE_BUILD_TYPE=Release
 # Build all targets using 8 threads.
 cmake --build . --target all -j 8
 # Or directly via make
@@ -65,10 +65,10 @@ cmake --open .
 
 The project can be configured to allow linting without the need for CUDA or OpenGL to be available (i.e. CI).
 
-To do this, set the `ALLOW_LINT_ONLY` CMake option to `ON`. I.e.:
+To do this, set the `FLAMEGPU_ALLOW_LINT_ONLY` CMake option to `ON`. I.e.:
 
 ```bash
-cmake .. -DALLOW_LINT_ONLY=ON
+cmake .. -DFLAMEGPU_ALLOW_LINT_ONLY=ON
 cmake --build . --target lint_flamegpu_visualiser
 ```
 
