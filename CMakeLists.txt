@@ -1,5 +1,5 @@
 # Parity with main FGPU2 CMake
-cmake_minimum_required(VERSION VERSION 3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.18...3.25 FATAL_ERROR)
 
 project(FLAMEGPU2_VISUALISER LANGUAGES NONE)
 
@@ -13,18 +13,15 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OutOfSourceOnly.cmake)
 # Define some CMake Options which apply to all (sub) projects
 
 # Option to promote compilation warnings to error, useful for strict CI
-option(WARNINGS_AS_ERRORS "Promote compilation warnings to errors" OFF)
+option(FLAMEGPU_WARNINGS_AS_ERRORS "Promote compilation warnings to errors" OFF)
 
 # Option to group CMake generated projects into folders in supported IDEs
 option(CMAKE_USE_FOLDERS "Enable folder grouping of projects in IDEs." ON)
 mark_as_advanced(CMAKE_USE_FOLDERS)
 
 # Add a new cmake option, to allow lint_only configurations.
-option(ALLOW_LINT_ONLY "Allow the project to be configured for lint-only builds" OFF)
-mark_as_advanced(ALLOW_LINT_ONLY)
-
-# Control target CUDA_ARCH to compile for
-SET(CUDA_ARCH "${CUDA_ARCH}" CACHE STRING "List of CUDA Architectures to target. E.g. 61;70" FORCE)
+option(FLAMEGPU_ALLOW_LINT_ONLY "Allow the project to be configured for lint-only builds" OFF)
+mark_as_advanced(FLAMEGPU_ALLOW_LINT_ONLY)
 
 # Add the src subdirectory cmake project.
 add_subdirectory(src "${PROJECT_BINARY_DIR}/FLAMEGPU_visualiser")

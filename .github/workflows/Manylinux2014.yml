@@ -117,8 +117,8 @@ jobs:
         -DCMAKE_BUILD_TYPE="${{ env.CONFIG }}"
         -Werror=dev
         -DCMAKE_WARN_DEPRECATED="OFF" 
-        -DWARNINGS_AS_ERRORS="OFF"
-        -DCUDA_ARCH="${{ env.CUDA_ARCH }}"
+        -DFLAMEGPU_WARNINGS_AS_ERRORS="OFF"
+        -DCMAKE_CUDA_ARCHITECTURES="${{ env.CUDA_ARCH }}"
         -DGLEW_USE_STATIC_LIBS="${{ env.USE_STATIC_GLEW }}"
         -DOpenGL_GL_PREFERENCE:STRING=LEGACY
 

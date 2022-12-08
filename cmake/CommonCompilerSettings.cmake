@@ -1,7 +1,8 @@
+include_guard(GLOBAL)
 # Define a function which can be used to set common compiler options for a target
 # We do not want to force these options on end users (although they should be used ideally), hence not just public properties on the library target
 # Function to suppress compiler warnings for a given target
-function(CommonCompilerSettings)
+function(flamegpu_visualiser_common_compiler_settings)
     # Parse the expected arguments, prefixing variables.
     cmake_parse_arguments(
         CCS
@@ -13,9 +14,9 @@ function(CommonCompilerSettings)
 
     # Ensure that a target has been passed, and that it is a valid target.
     if(NOT CCS_TARGET)
-        message( FATAL_ERROR "function(CommonCompilerSettings): 'TARGET' argument required")
+        message( FATAL_ERROR "flamegpu_visualiser_common_compiler_settings: 'TARGET' argument required")
     elseif(NOT TARGET ${CCS_TARGET} )
-        message( FATAL_ERROR "function(CommonCompilerSettings): TARGET '${CCS_TARGET}' is not a valid target")
+        message( FATAL_ERROR "flamegpu_visualiser_common_compiler_settings: TARGET '${CCS_TARGET}' is not a valid target")
     endif()
 
     # Add device debugging symbols to device builds of CUDA objects
@@ -32,15 +33,6 @@ function(CommonCompilerSettings)
     # Prevent windows.h from defining max and min.
     if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         target_compile_definitions(${CCS_TARGET} PRIVATE NOMINMAX)
-    endif()
-
-    # Pass the SEATBELTS macro, which when set to off/0 (for non debug builds) removes expensive operations.
-    if (SEATBELTS)
-        # If on, all build configs have  seatbelts
-        target_compile_definitions(${CCS_TARGET} PRIVATE SEATBELTS=1)
-    else()
-        # Id off, debug builds have seatbelts, non debug builds do not.
-        target_compile_definitions(${CCS_TARGET} PRIVATE $<IF:$<CONFIG:Debug>,SEATBELTS=1,SEATBELTS=0>)
     endif()
 
     # MSVC handling of SYSTEM for external includes.

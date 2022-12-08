@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.18...3.25 FATAL_ERROR)
+
 project(imgui LANGUAGES CXX)
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     # If top level project
@@ -32,11 +34,11 @@ add_library(imgui STATIC ${imgui_sources})
 # Specify the include directory, to be forwared to targets which link against the imgui target.
 # Mark this as SYSTEM INTERFACE, so that it does not result in compiler warnings being generated for dependent projects.
 # For our use  case, this is up a folder so we can use imgui/imgui.h as the include, by resolving the relative path to get an abs path
-get_filename_component(imgui_inc_dir ${imgui_SOURCE_DIR} REALPATH)
-target_include_directories("${PROJECT_NAME}" SYSTEM INTERFACE ${imgui_SOURCE_DIR}/imgui ${imgui_SOURCE_DIR})
+get_filename_component(imgui_inc_dir ${PROJECT_SOURCE_DIR} REALPATH)
+target_include_directories("${PROJECT_NAME}" SYSTEM INTERFACE ${PROJECT_SOURCE_DIR}/imgui ${PROJECT_SOURCE_DIR})
 
 # Because we're using a nested dir rather than root, specify include path
-target_include_directories("${PROJECT_NAME}" PUBLIC ${imgui_SOURCE_DIR}/imgui)
+target_include_directories("${PROJECT_NAME}" PUBLIC ${PROJECT_SOURCE_DIR}/imgui)
 # Also depends on SDL for backend
 target_include_directories("${PROJECT_NAME}" SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
 
@@ -51,7 +53,7 @@ set_property(TARGET imgui PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Suppress warnigns from this target. (Not currently required)
 #include(${CMAKE_CURRENT_LIST_DIR}/../warnings.cmake)
-#DisableCompilerWarnings(TARGET imgui)
+#flamegpu_visualiser_disable_compiler_warnings(TARGET imgui)
 
 # Create an alias target for imgui to namespace it / make it more like other modern cmake 
 add_library(ImGui::ImGui ALIAS imgui)
