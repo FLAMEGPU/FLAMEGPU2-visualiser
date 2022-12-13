@@ -1,7 +1,7 @@
 # FLAMEGPU 2 Visualiser
 
 This repository contains the components for the interactive, real-time visualiser for FLAME GPU 2.x.
-This repository is automatically pulled in by [FLAMEGPU2](https://github.com/FLAMEGPU/FLAMEGPU2) when the `VISUALISATION` option is enabled within the CMake configuration.
+This repository is automatically pulled in by [FLAMEGPU2](https://github.com/FLAMEGPU/FLAMEGPU2) when the `FLAMEGPU_VISUALISATION` option is enabled within the CMake configuration.
 It is unlikely to be useful independently.
 
 ## Requirements
@@ -74,7 +74,7 @@ cmake --build . --target lint_flamegpu_visualiser
 
 ## Git Tags
 
-To allow simple version pinning of the visualiser from within the main FLAMEGPU/FLAMEGPU2 repository, tags are used to identify which version of the visualisation repository are used in each release of the main repository.
+To allow simple version pinning of the visualiser from within the main [FLAMEGPU/FLAMEGPU2](https://github.com/FLAMEGPU/FLAMEGPU2) repository, tags are used to identify which version of the visualisation repository are used in each release of the main repository.
 
 The main repository uses semantic versioning, with tags `vX.Y.Z[-PRERELEASE]`.
 Versions of this repository included by the main repository are tagged with `flamegpu-X.Y.Z[-PRERELEASE]` to allow standalone versioning options in the future.
