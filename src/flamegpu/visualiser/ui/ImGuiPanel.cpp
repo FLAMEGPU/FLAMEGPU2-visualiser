@@ -91,6 +91,10 @@ void ImGuiPanel::drawDebugPanel() const {
     ImGui::Text("Camera Location : (% .3f, % .3f, % .3f)", eye.x, eye.y, eye.z);
     ImGui::Text("Camera Direction : (% .3f, % .3f, % .3f)", look.x, look.y, look.z);
     ImGui::Text("Camera Up : (% .3f, % .3f, % .3f)", up.x, up.y, up.z);
+    ImGui::Text("Orthographic Projection: %s", (vis.modelConfig.isOrtho ? "On" : "Off"));
+    if (vis.modelConfig.isOrtho) {
+        ImGui::Text("Orthographic Zoom Mod: %.3f", vis.modelConfig.orthoZoom);
+    }
     ImGui::Text("MSAA: %s", (vis.msaaState ? "On" : "Off"));
     switch (vis.fpsStatus) {
         case 2:

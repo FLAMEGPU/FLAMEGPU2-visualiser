@@ -44,6 +44,8 @@ ModelConfig &ModelConfig::operator=(const ModelConfig &other) {
     stepVisible = other.stepVisible;
     beginPaused = other.beginPaused;
     isPython = other.isPython;
+    isOrtho = other.isOrtho;
+    orthoZoom = other.orthoZoom;
     // staticModels
     // lines
     // panels

@@ -327,7 +327,7 @@ void Visualiser::render() {
     updateTime = t_updateTime;
     SDL_Event e;
     //  Handle continuous key presses (movement)
-    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    const Uint8* state = SDL_GetKeyboardState(NULL);
     float speed = modelConfig.cameraSpeed[0];
     if (state[SDL_SCANCODE_LSHIFT]) {
         speed *= modelConfig.cameraSpeed[1];
@@ -336,29 +336,44 @@ void Visualiser::render() {
         speed /= modelConfig.cameraSpeed[1];
     }
     const float distance = speed * static_cast<float>(frameTime);
-    if (state[SDL_SCANCODE_W]) {
-        this->camera->move(distance);
-    }
-    if (state[SDL_SCANCODE_A]) {
-        this->camera->strafe(-distance);
-    }
-    if (state[SDL_SCANCODE_S]) {
-        this->camera->move(-distance);
-    }
-    if (state[SDL_SCANCODE_D]) {
-        this->camera->strafe(distance);
-    }
-    if (state[SDL_SCANCODE_Q]) {
-        this->camera->roll(-DELTA_ROLL);
-    }
-    if (state[SDL_SCANCODE_E]) {
-        this->camera->roll(DELTA_ROLL);
-    }
-    if (state[SDL_SCANCODE_SPACE]) {
-        this->camera->ascend(distance);
-    }
-    if (state[SDL_SCANCODE_C]) {  // Ctrl now moves slower
-        this->camera->ascend(-distance);
+    if (!modelConfig.isOrtho) {
+        if (state[SDL_SCANCODE_W]) {
+            this->camera->move(distance);
+        }
+        if (state[SDL_SCANCODE_A]) {
+            this->camera->strafe(-distance);
+        }
+        if (state[SDL_SCANCODE_S]) {
+            this->camera->move(-distance);
+        }
+        if (state[SDL_SCANCODE_D]) {
+            this->camera->strafe(distance);
+        }
+        if (state[SDL_SCANCODE_Q]) {
+            this->camera->roll(-DELTA_ROLL);
+        }
+        if (state[SDL_SCANCODE_E]) {
+            this->camera->roll(DELTA_ROLL);
+        }
+        if (state[SDL_SCANCODE_SPACE]) {
+            this->camera->ascend(distance);
+        }
+        if (state[SDL_SCANCODE_C]) {  // Ctrl now moves slower
+            this->camera->ascend(-distance);
+        }
+    } else {
+        if (state[SDL_SCANCODE_W]) {
+            this->camera->ascend(distance);
+        }
+        if (state[SDL_SCANCODE_A]) {
+            this->camera->strafe(-distance);
+        }
+        if (state[SDL_SCANCODE_D]) {
+            this->camera->strafe(distance);
+        }
+        if (state[SDL_SCANCODE_S]) {
+            this->camera->ascend(-distance);
+        }
     }
     // After movement update default light position
     this->lighting->getPointLight(0).Position(this->camera->getEye());
@@ -384,7 +399,13 @@ void Visualiser::render() {
                 this->handleKeypress(e.key.keysym.sym, x, y);
             }
             break;
-        // case SDL_MOUSEWHEEL:
+        case SDL_MOUSEWHEEL:
+            if (modelConfig.isOrtho) {
+                modelConfig.orthoZoom -= 0.02f * speed * e.wheel.y;
+                // Clamp value above 0, to avoid bad maths and reflected camera
+                modelConfig.orthoZoom = std::max<float>(modelConfig.orthoZoom, 0.001f);
+                resizeWindow();  // Regen projection mat
+            }
             // break;
         case SDL_MOUSEMOTION:
             this->handleMouseMove(e.motion.xrel, e.motion.yrel);
@@ -721,12 +742,23 @@ void Visualiser::resizeWindow() {
         io.DisplaySize = ImVec2(static_cast<float>(tDims.x), static_cast<float>(tDims.y));
     }
     //  Get the view frustum using GLM. Alternatively glm::perspective could be used.
-    this->projMat = glm::perspectiveFov<float>(
-        glm::radians(FOVY),
-        static_cast<float>(this->windowDims.x),
-        static_cast<float>(this->windowDims.y),
-        modelConfig.nearFarClip[0],
-        modelConfig.nearFarClip[1]);
+    if (!modelConfig.isOrtho) {
+        this->projMat = glm::perspectiveFov<float>(
+            glm::radians(FOVY),
+            static_cast<float>(this->windowDims.x),
+            static_cast<float>(this->windowDims.y),
+            modelConfig.nearFarClip[0],
+            modelConfig.nearFarClip[1]);
+    } else {
+        // Ortho has no reason for near/far plane
+        this->projMat = glm::ortho<float>(
+            modelConfig.orthoZoom * -static_cast<float>(this->windowDims.x) / 2.0f,
+            modelConfig.orthoZoom * static_cast<float>(this->windowDims.x) / 2.0f,
+            modelConfig.orthoZoom * -static_cast<float>(this->windowDims.y) / 2.0f,
+            modelConfig.orthoZoom * static_cast<float>(this->windowDims.y) / 2.0f,
+            modelConfig.nearFarClip[0],
+            modelConfig.nearFarClip[1]);
+    }
     //  Notify other elements
     this->hud->resizeWindow(this->windowDims);
     this->render_buffer->resize(this->windowDims);
@@ -779,7 +811,9 @@ void Visualiser::close() {
 }
 void Visualiser::handleMouseMove(int x, int y) {
     if (SDL_GetRelativeMouseMode()) {
-        this->camera->turn(x * MOUSE_SPEED, y * MOUSE_SPEED);
+        if (!modelConfig.isOrtho) {
+            this->camera->turn(x * MOUSE_SPEED, y * MOUSE_SPEED);
+        }
     }
 }
 void Visualiser::toggleFPSStatus() {
@@ -825,6 +859,9 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         break;
     case SDLK_F10:
         this->setMSAA(!this->msaaState);
+        break;
+    case SDLK_F9:
+        this->toggleProjection();
         break;
     case SDLK_F8:
         this->toggleFPSStatus();
@@ -890,11 +927,24 @@ void Visualiser::toggleFullScreen() {
     // this->resizeWindow(); will be triggered by SDL_WINDOWEVENT_SIZE_CHANGED
 }
 void Visualiser::toggleMouseMode() {
-    if (SDL_GetRelativeMouseMode()) {
-        SDL_SetRelativeMouseMode(SDL_FALSE);
-    } else {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
+    // Ortho camera does not require mouse lock
+    if (!modelConfig.isOrtho) {
+        if (SDL_GetRelativeMouseMode()) {
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+        } else {
+            SDL_SetRelativeMouseMode(SDL_TRUE);
+        }
     }
+}
+void Visualiser::toggleProjection() {
+    modelConfig.isOrtho = !modelConfig.isOrtho;
+    // Ortho releases mouse lock
+    if (modelConfig.isOrtho) {
+        if (SDL_GetRelativeMouseMode()) {
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+        }
+    }
+    resizeWindow();
 }
 void Visualiser::updateFPS() {
     //  Update the current time
