@@ -134,6 +134,16 @@ struct ModelConfig {
      * This mostly just allows the logos to be swapped
      */
     bool isPython;
+    /**
+     * Use orthographic projection settings instead of perspective
+     * This is useful for 2D visualisations
+     */
+    bool isOrtho = false;
+    /**
+     * Ortho projection mode uses mousewheel to zoom
+     * This var tracks the level of zoom
+     */
+    float orthoZoom = 1.0f;
 
  private:
      /**

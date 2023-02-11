@@ -149,6 +149,10 @@ class Visualiser : public ViewportExt {
      */
     void toggleMouseMode();
     /**
+     * Toggle between perspective and orthographic projection
+     */
+    void toggleProjection();
+    /**
      * Toggles the status of FPS logged to the HUD
      */
     void toggleFPSStatus();
