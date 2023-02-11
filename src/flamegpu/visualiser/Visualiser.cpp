@@ -1116,39 +1116,58 @@ void Visualiser::queryControllerAxis(const unsigned int frameTime) {
         }
         const float distance = speed * static_cast<float>(frameTime);
 
-        // Strafe on left X axis
-        if (abs(leftX) > AXIS_LEFT_DEAD_ZONE) {
-            this->camera->strafe(leftX * distance);
-        }
-        // Move on left Y axis
-        if (abs(leftY) > AXIS_LEFT_DEAD_ZONE) {
-            this->camera->move(-leftY * distance);
-        }
+        if (!modelConfig.isOrtho) {
+            // Strafe on left X axis
+            if (abs(leftX) > AXIS_LEFT_DEAD_ZONE) {
+                this->camera->strafe(leftX * distance);
+            }
+            // Move on left Y axis
+            if (abs(leftY) > AXIS_LEFT_DEAD_ZONE) {
+                this->camera->move(-leftY * distance);
+            }
 
-        float thetaInc = 0.0;
-        float phiInc = 0.0;
-        // Look using right stick
-        if (abs(rightX) > AXIS_RIGHT_DEAD_ZONE) {
-            thetaInc = rightX * AXIS_DELTA_THETA;
-        }
-        if (abs(rightY) > AXIS_RIGHT_DEAD_ZONE) {
-            phiInc = rightY * AXIS_DELTA_PHI;
-        }
-        // Avoid Drift
-        if (abs(rightX) > AXIS_TURN_THRESHOLD && abs(rightY) > AXIS_TURN_THRESHOLD) {
-            this->camera->turn(thetaInc, phiInc);
-        }
-        if (buttonA) {
-            this->camera->ascend(distance);
-        }
-        if (buttonB) {
-            this->camera->ascend(-distance);
-        }
-        if (leftShoulder) {
-            this->camera->roll(-DELTA_ROLL);
-        }
-        if (rightShoulder) {
-            this->camera->roll(DELTA_ROLL);
+            float thetaInc = 0.0;
+            float phiInc = 0.0;
+            // Look using right stick
+            if (abs(rightX) > AXIS_RIGHT_DEAD_ZONE) {
+                thetaInc = rightX * AXIS_DELTA_THETA;
+            }
+            if (abs(rightY) > AXIS_RIGHT_DEAD_ZONE) {
+                phiInc = rightY * AXIS_DELTA_PHI;
+            }
+            // Avoid Drift
+            if (abs(rightX) > AXIS_TURN_THRESHOLD && abs(rightY) > AXIS_TURN_THRESHOLD) {
+                this->camera->turn(thetaInc, phiInc);
+            }
+            if (buttonA) {
+                this->camera->ascend(distance);
+            }
+            if (buttonB) {
+                this->camera->ascend(-distance);
+            }
+            if (leftShoulder) {
+                this->camera->roll(-DELTA_ROLL);
+            }
+            if (rightShoulder) {
+                this->camera->roll(DELTA_ROLL);
+            }
+        } else {
+            // Left x-axis moves cam horizontal
+            if (abs(leftX) > AXIS_LEFT_DEAD_ZONE) {
+                this->camera->strafe(leftX * distance);
+            }
+            // Left y-axis moves cam vertical
+            if (abs(leftY) > AXIS_LEFT_DEAD_ZONE) {
+                this->camera->ascend(-leftY * distance);
+            }
+            // Right y-axis moves cam forwards/back
+            if (abs(rightY) > AXIS_RIGHT_DEAD_ZONE) {
+                // rightY is [-1, 1], with up being -ve.
+                modelConfig.orthoZoom -= 0.002f * -rightY * distance;
+                // Clamp value above 0, to avoid bad maths and reflected camera
+                modelConfig.orthoZoom = std::max<float>(modelConfig.orthoZoom, 0.001f);
+                resizeWindow();  // Regen projection mat
+            }
         }
     }
 }
