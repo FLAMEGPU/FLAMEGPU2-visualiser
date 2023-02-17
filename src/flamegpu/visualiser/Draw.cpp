@@ -224,9 +224,9 @@ void Draw::resize(unsigned int newLength) {
     unsigned int _cvboSize = vboLen * sizeof(glm::vec4);
     glm::vec3 *_vertices = reinterpret_cast<glm::vec3 *>(malloc(_vboSize));
     glm::vec4 *_colors = reinterpret_cast<glm::vec4 *>(malloc(_cvboSize));
-    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, _vbo));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertices.vbo));
     GL_CALL(glGetBufferSubData(GL_ARRAY_BUFFER, 0, _vboSize, _vertices));
-    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, _cvbo));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, colors.vbo));
     GL_CALL(glGetBufferSubData(GL_ARRAY_BUFFER, 0, _cvboSize, _colors));
     GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
     unsigned int _offset = 0;
