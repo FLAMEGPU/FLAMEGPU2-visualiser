@@ -406,7 +406,7 @@ void Visualiser::render() {
                 modelConfig.orthoZoom = std::max<float>(modelConfig.orthoZoom, 0.001f);
                 resizeWindow();  // Regen projection mat
             }
-            // break;
+            break;
         case SDL_MOUSEMOTION:
             this->handleMouseMove(e.motion.xrel, e.motion.yrel);
             break;
