@@ -69,6 +69,10 @@ class FLAMEGPU_Visualisation {
     /**
      * Set true when the vis has resized the first agent's buffers
      */
+    bool buffersReady() const;
+    /**
+     * Set true when the vis has had a chance to pause if beginPaused is enabled
+     */
     bool isReady() const;
 
  private:
