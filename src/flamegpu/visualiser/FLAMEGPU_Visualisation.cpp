@@ -59,6 +59,9 @@ void FLAMEGPU_Visualisation::stop() {
 bool FLAMEGPU_Visualisation::isRunning() const {
     return vis->isRunning();
 }
+bool FLAMEGPU_Visualisation::buffersReady() const {
+    return vis->buffersReady();
+}
 bool FLAMEGPU_Visualisation::isReady() const {
     return vis->isReady();
 }

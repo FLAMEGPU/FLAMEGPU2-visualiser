@@ -110,6 +110,7 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     , isInitialised(false)
     , continueRender(false)
     , buffersAllocated(false)
+    , visualisationLoaded(false)
     , msaaState(true)
     , windowTitle(modelcfg.windowTitle)
     , windowDims(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1])
@@ -465,8 +466,11 @@ void Visualiser::render() {
 bool Visualiser::isRunning() const {
     return continueRender;
 }
-bool Visualiser::isReady() const {
+bool Visualiser::buffersReady() const {
     return buffersAllocated;
+}
+bool Visualiser::isReady() const {
+    return visualisationLoaded;
 }
 void Visualiser::addAgentState(const std::string &agent_name, const std::string &state_name, const AgentStateConfig &vc,
     const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
@@ -580,6 +584,8 @@ void Visualiser::renderAgentStates() {
                 this->pause_guard = guard;
                 guard = nullptr;
             }
+            // Notify the sim that we're ready and it can continue
+            visualisationLoaded = true;
         }
     }
 
