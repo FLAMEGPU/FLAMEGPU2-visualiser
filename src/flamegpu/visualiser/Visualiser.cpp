@@ -34,9 +34,6 @@ namespace visualiser {
 #define ONE_SECOND_MS 1000
 #define VSYNC 1
 
-#define DEFAULT_WINDOW_WIDTH 1280
-#define DEFAULT_WINDOW_HEIGHT 720
-
 #define MOVEMENT_MULTIPLIER 1.f
 #define AXIS_LEFT_DEAD_ZONE 0.2f
 #define AXIS_RIGHT_DEAD_ZONE 0.15f
@@ -750,12 +747,18 @@ void Visualiser::resizeWindow() {
             modelConfig.nearFarClip[0],
             modelConfig.nearFarClip[1]);
     } else {
+        // Scale ortho zoom according to screen resolution
+        // So that zoom naturally scales with screen resolution
+        // This assures the full screen remains in frame with non uniform scaling
+        const float width_ratio = static_cast<float>(modelConfig.windowDimensions[0]) / static_cast<float>(this->windowDims.x);
+        const float height_ratio = static_cast<float>(modelConfig.windowDimensions[1]) / static_cast<float>(this->windowDims.y);
+        const float orthoZoom = modelConfig.orthoZoom * std::max<float>(width_ratio, height_ratio);
         // Ortho has no reason for near/far plane
         this->projMat = glm::ortho<float>(
-            modelConfig.orthoZoom * -static_cast<float>(this->windowDims.x) / 2.0f,
-            modelConfig.orthoZoom * static_cast<float>(this->windowDims.x) / 2.0f,
-            modelConfig.orthoZoom * -static_cast<float>(this->windowDims.y) / 2.0f,
-            modelConfig.orthoZoom * static_cast<float>(this->windowDims.y) / 2.0f,
+            orthoZoom * -static_cast<float>(this->windowDims.x) / 2.0f,
+            orthoZoom * static_cast<float>(this->windowDims.x) / 2.0f,
+            orthoZoom * -static_cast<float>(this->windowDims.y) / 2.0f,
+            orthoZoom * static_cast<float>(this->windowDims.y) / 2.0f,
             modelConfig.nearFarClip[0],
             modelConfig.nearFarClip[1]);
     }
