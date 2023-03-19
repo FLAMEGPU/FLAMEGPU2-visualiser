@@ -21,6 +21,7 @@
 #include "flamegpu/visualiser/ui/SplashScreen.h"
 #include "flamegpu/visualiser/multipass/FrameBuffer.h"
 #include "flamegpu/visualiser/multipass/FrameBufferAttachment.h"
+#include "util/Resources.h"
 
 namespace flamegpu {
 namespace visualiser {
@@ -1212,7 +1213,13 @@ void Visualiser::screenshot(const bool verbose) {
 void Visualiser::setWindowIcon() {
     if (!window)
         return;
-    auto surface = Texture::loadImage(modelConfig.isPython ? "resources/pyflamegpu_icon.png" : "resources/flamegpu_icon.png");
+    std::shared_ptr<SDL_Surface> surface;
+    try {
+        surface = Texture::loadImage(modelConfig.isPython ? "resources/pyflamegpu_icon.png" : "resources/flamegpu_icon.png");
+    } catch(...) {
+         // Fail silently, branding is not required
+        fprintf(stderr, "Failed to load window icon: %s\n", Resources::locateFile(modelConfig.isPython ? "resources/pyflamegpu_icon.png" : "resources/flamegpu_icon.png").c_str());
+    }
     if (surface)
         SDL_SetWindowIcon(window, surface.get());
 }
