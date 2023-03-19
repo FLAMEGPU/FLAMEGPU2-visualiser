@@ -17,31 +17,43 @@ typedef uint64_t cudaTextureObject_t;  // actual header says unsigned long long,
 #include <cuda_runtime.h>
 #endif
 
+/**
+ * Represents a double buffered CUDATextureBuffer
+ * Copy data into d_pointer
+ * Set d_pointer_outofdate = true
+ * Then call updateMapped() before using glTexName/glTBO
+ */
 template<class T>
 struct CUDATextureBuffer {
     CUDATextureBuffer(
         const GLuint glTexName,
         const GLuint glTBO,
         T *d_mappedPointer,
-        const cudaGraphicsResource_t cuGraphicsRes,
+        cudaGraphicsResource_t cuGraphicsRes,
         cudaTextureObject_t cuTextureObj,
         const unsigned int elementCount,
         const unsigned int componentCount
     )
         : glTexName(glTexName)
         , glTBO(glTBO)
-        , d_mappedPointer(d_mappedPointer)
+        , d_pointer(d_mappedPointer)
         , cuGraphicsRes(cuGraphicsRes)
         , cuTextureObj(cuTextureObj)
         , elementCount(elementCount)
         , componentCount(componentCount) { }
     const GLuint glTexName;
     const GLuint glTBO;
-    T *d_mappedPointer;
-    const cudaGraphicsResource_t cuGraphicsRes;  // These are typedefs over pointers, need to store the actual struct?
-    const cudaTextureObject_t cuTextureObj;
+    T *d_pointer;
+    bool d_pointer_outofdate = false;
+    const cudaGraphicsResource_t cuGraphicsRes;
+    const cudaTextureObject_t cuTextureObj;  // Using this is currently unsafe, the cuGraphicRes should technically be mapped/unmapped around use
     const unsigned int elementCount;
     const unsigned int componentCount;
+    /**
+     * Copy data from d_pointer to glTBO
+     * @return true on cudaSuccess
+     */
+    bool updateMapped();
 };
 /**
  * Allocates a GL_TEXTURE_BUFFER of the desired size and binds it for use with CUDA-GL interop

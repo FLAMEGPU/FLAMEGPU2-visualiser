@@ -156,6 +156,19 @@ void freeGLInteropTextureBuffer(CUDATextureBuffer<T> *texBuf) {
     GL_CALL(glDeleteTextures(1, &texBuf->glTexName));
     delete texBuf;
 }
+
+template<class T>
+bool CUDATextureBuffer<T>::updateMapped() {
+    if (!this->d_pointer_outofdate) return true;
+    CUDA_CALL(cudaGraphicsMapResources(1, const_cast<cudaGraphicsResource_t *>(&this->cuGraphicsRes)));
+    void* d_mappedPointer = nullptr;
+    CUDA_CALL(cudaGraphicsResourceGetMappedPointer(&d_mappedPointer, 0, this->cuGraphicsRes));
+    auto t = cudaMemcpy(d_mappedPointer, this->d_pointer, this->elementCount * this->componentCount * sizeof(T), cudaMemcpyDeviceToDevice);
+    CUDA_CALL(cudaGraphicsUnmapResources(1, const_cast<cudaGraphicsResource_t*>(&this->cuGraphicsRes), 0));
+    CUDA_CALL(t);
+    this->d_pointer_outofdate = false;
+    return t == cudaSuccess;
+}
 /**
  * Returns true if cudaMemcpy returns cudaSuccess
  */
@@ -171,6 +184,9 @@ template CUDATextureBuffer<unsigned int> *mallocGLInteropTextureBuffer(const uns
 template void freeGLInteropTextureBuffer(CUDATextureBuffer<float>*);
 template void freeGLInteropTextureBuffer(CUDATextureBuffer<int>*);
 template void freeGLInteropTextureBuffer(CUDATextureBuffer<unsigned int>*);
+template bool CUDATextureBuffer<float>::updateMapped();
+template bool CUDATextureBuffer<int>::updateMapped();
+template bool CUDATextureBuffer<unsigned int>::updateMapped();
 
 }  // namespace visualiser
 }  // namespace flamegpu
