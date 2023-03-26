@@ -335,16 +335,16 @@ void Visualiser::render() {
     }
     const float distance = speed * static_cast<float>(frameTime);
     if (!modelConfig.isOrtho) {
-        if (state[SDL_SCANCODE_W]) {
+        if (state[SDL_SCANCODE_W] || state[SDL_SCANCODE_UP]) {
             this->camera->move(distance);
         }
-        if (state[SDL_SCANCODE_A]) {
+        if (state[SDL_SCANCODE_A] || state[SDL_SCANCODE_LEFT]) {
             this->camera->strafe(-distance);
         }
-        if (state[SDL_SCANCODE_S]) {
+        if (state[SDL_SCANCODE_S] || state[SDL_SCANCODE_DOWN]) {
             this->camera->move(-distance);
         }
-        if (state[SDL_SCANCODE_D]) {
+        if (state[SDL_SCANCODE_D] || state[SDL_SCANCODE_RIGHT]) {
             this->camera->strafe(distance);
         }
         if (state[SDL_SCANCODE_Q]) {
