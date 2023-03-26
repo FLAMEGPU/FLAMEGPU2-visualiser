@@ -902,6 +902,16 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
             stepsPerSecond = 0.0;
         }
         break;
+    case SDLK_o:
+        // If paused step the simulation, else do nothing
+        if (this->pause_guard) {
+            delete pause_guard;
+            pause_guard = nullptr;
+            const auto pause_guard_t = new std::lock_guard<std::mutex>(render_buffer_mutex_pre);
+            pause_guard = new std::lock_guard<std::mutex>(render_buffer_mutex);
+            delete pause_guard_t;
+        }
+        break;
     case SDLK_l:
         renderLines = !renderLines;
         break;
