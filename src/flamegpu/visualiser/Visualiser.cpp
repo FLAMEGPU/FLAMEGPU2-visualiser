@@ -528,15 +528,17 @@ void Visualiser::renderAgentStates() {
                 // Alloc new buffs (this needs to occur in render thread!)
                 tb = mallocGLInteropTextureBuffer<float>(newSize * TexBufferConfig::SamplerElements(_tb.first), 1);
                 // Copy any old data to the buffer
-                if (old_tb && tb && old_tb->d_mappedPointer && tb->d_mappedPointer && as.dataSize)
-                    _cudaMemcpyDeviceToDevice(tb->d_mappedPointer, old_tb->d_mappedPointer, as.dataSize * sizeof(float) * TexBufferConfig::SamplerElements(_tb.first));
+                if (old_tb && tb && old_tb->d_pointer && tb->d_pointer && as.dataSize) {
+                    _cudaMemcpyDeviceToDevice(tb->d_pointer, old_tb->d_pointer, as.dataSize * sizeof(float) * TexBufferConfig::SamplerElements(_tb.first));
+                    tb->d_pointer_outofdate = true;
+                }
                 // Bind texture name to texture unit
                 GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui));
                 GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, tb->glTexName));
                 GL_CALL(glActiveTexture(GL_TEXTURE0));
                 shader_vec->addTexture(samplerName.c_str(), GL_TEXTURE_BUFFER, tb->glTexName, as.tex_unit_offset + tui);
                 // Free old buff
-                if (old_tb && old_tb->d_mappedPointer)
+                if (old_tb && old_tb->d_pointer)
                     freeGLInteropTextureBuffer(old_tb);
                 ++tui;
                 GL_CHECK();
@@ -549,15 +551,17 @@ void Visualiser::renderAgentStates() {
                 // Alloc new buffs (this needs to occur in other thread!!!)
                 tb = mallocGLInteropTextureBuffer<float>(newSize * _tb.second.first.array_length * TexBufferConfig::SamplerElements(_tb.first), 1);
                 // Copy any old data to the buffer
-                if (old_tb && tb && old_tb->d_mappedPointer && tb->d_mappedPointer && as.dataSize)
-                    _cudaMemcpyDeviceToDevice(tb->d_mappedPointer, old_tb->d_mappedPointer, as.dataSize * _tb.second.first.array_length * sizeof(float) * TexBufferConfig::SamplerElements(_tb.first));
+                if (old_tb && tb && old_tb->d_pointer && tb->d_pointer && as.dataSize) {
+                    _cudaMemcpyDeviceToDevice(tb->d_pointer, old_tb->d_pointer, as.dataSize * _tb.second.first.array_length * sizeof(float) * TexBufferConfig::SamplerElements(_tb.first));
+                    tb->d_pointer_outofdate = true;
+                }
                 // Bind texture name to texture unit
                 GL_CALL(glActiveTexture(GL_TEXTURE0 + as.tex_unit_offset + tui));
                 GL_CALL(glBindTexture(GL_TEXTURE_BUFFER, tb->glTexName));
                 GL_CALL(glActiveTexture(GL_TEXTURE0));
                 shader_vec->addTexture(_tb.second.first.nameInShader.c_str(), GL_TEXTURE_BUFFER, tb->glTexName, as.tex_unit_offset + tui);
                 // Free old buff
-                if (old_tb && old_tb->d_mappedPointer)
+                if (old_tb && old_tb->d_pointer)
                     freeGLInteropTextureBuffer(old_tb);
                 ++tui;
                 GL_CHECK();
@@ -591,10 +595,22 @@ void Visualiser::renderAgentStates() {
 
     //  Render agents
     if (closeSplashScreen) {
+        // Update data in mapped buffers
+        for (auto& _as : agentStates) {
+            auto& as = _as.second;
+            if (as.core_texture_buffers.begin()->second) {
+                for (auto& _tb : as.core_texture_buffers) {
+                    _tb.second->updateMapped();
+                }
+                for (auto& _tb : as.custom_texture_buffers) {
+                    _tb.second.second->updateMapped();
+                }
+            }
+        }
+        GL_CHECK();
         for (auto &as : agentStates) {
             if (!as.second.core_texture_buffers.empty() && as.second.dataSize)  // Check to make sure buffer has been allocated successfully
-                if (as.second.requiredSize)  // Also check we actually have agents (buffer might be bigger than the agents)
-                    as.second.entity->renderInstances(static_cast<int>(std::min(as.second.dataSize, as.second.requiredSize)));
+                as.second.entity->renderInstances(static_cast<int>(as.second.dataSize));
         }
     }
     if (guard)
@@ -625,13 +641,15 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
         for (const auto &_ext_tb : ext_core_tex_buffers) {
             auto &ext_tb = _ext_tb.second;
             auto &int_tb = as.core_texture_buffers.at(_ext_tb.first);
-            visassert(_cudaMemcpyDeviceToDevice(int_tb->d_mappedPointer, ext_tb.t_d_ptr, as.dataSize * sizeof(float) * TexBufferConfig::SamplerElements(_ext_tb.first)));
+            visassert(_cudaMemcpyDeviceToDevice(int_tb->d_pointer, ext_tb.t_d_ptr, as.dataSize * sizeof(float) * TexBufferConfig::SamplerElements(_ext_tb.first)));
+            int_tb->d_pointer_outofdate = true;
         }
         for (const auto& _ext_tb : ext_tex_buffers) {
             auto& ext_tb = _ext_tb.second;
             for (auto int_tb = as.custom_texture_buffers.find(_ext_tb.first); int_tb != as.custom_texture_buffers.end(); ++int_tb) {
                 if (ext_tb.nameInShader == int_tb->second.first.nameInShader) {
-                    visassert(_cudaMemcpyDeviceToDevice(int_tb->second.second->d_mappedPointer, ext_tb.t_d_ptr, as.dataSize * ext_tb.array_length * sizeof(float) * TexBufferConfig::SamplerElements(_ext_tb.first)));
+                    visassert(_cudaMemcpyDeviceToDevice(int_tb->second.second->d_pointer, ext_tb.t_d_ptr, as.dataSize * ext_tb.array_length * sizeof(float) * TexBufferConfig::SamplerElements(_ext_tb.first)));
+                    int_tb->second.second->d_pointer_outofdate = true;
                 }
             }
         }
