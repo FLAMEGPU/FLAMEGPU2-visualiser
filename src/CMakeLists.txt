@@ -37,9 +37,7 @@ endif()
 # Under linux, glnvd is preferred, unless building portable binaries (i.e. manylinux) in which case the legacy must be used. Control via -DOpenGL_GL_PREFERENCE:STRING=LEGACY 
 # This might not be compatible with EGL, if required in the future (remove vis, docker vis). Therefore conda might be preferred.
 # Use the OpenGL::GL target, and check OPENGL_gl_LIBRARY to determine if using legacy or not.
-set(CMAKE_FIND_DEBUG_MODE TRUE)
 find_package(OpenGL)
-set(CMAKE_FIND_DEBUG_MODE FALSE)
 # Output status message confirming which opengl is being used. 
 if (UNIX AND OPENGL_FOUND)
     if(OPENGL_gl_LIBRARY STREQUAL "")
