@@ -1,7 +1,7 @@
 # Freetype
 # Ensure that freetype is available, either by finding freetype, or dowloadin it if required (on windows). 
 
-if(UNIX)
+if(UNIX OR FLAMEGPU_BUILD_PYTHON_CONDA)
     find_package(Freetype)
     if (NOT FREETYPE_FOUND)
         message(FATAL_ERROR "freetype is required for building, install it via your package manager.\n"

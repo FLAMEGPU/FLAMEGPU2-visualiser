@@ -1,6 +1,6 @@
 # DevIL
 # Ensure that DevIL is available, either by finding DevIL, or by downloading DevIL if required (on windows) 
-if(UNIX)
+if(UNIX OR FLAMEGPU_BUILD_PYTHON_CONDA)
     # On Linux, if DevIL is not available the user is instructed to install it themselves.
     find_package(DevIL)
     if (NOT DevIL_FOUND)

@@ -1,6 +1,6 @@
 # SDL2 
 # Ensure that SDL2 is available, either by finding it, or downloading it if required (on windows)
-if(UNIX)
+if(UNIX OR FLAMEGPU_BUILD_PYTHON_CONDA)
     # On Linux, if SDL2 is not available the user is instructed to install it themselves.
     find_package(SDL2)
     if (NOT SDL2_FOUND)
