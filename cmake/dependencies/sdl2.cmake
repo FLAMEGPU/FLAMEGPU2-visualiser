@@ -11,7 +11,7 @@ if(UNIX)
         # Tested on ubuntu 20.04 / libsdl2-dev 2.0.10+dfsg1-3
         if (NOT TARGET SDL2::SDL2)
             # If we have a ${libdir} from the above find_package sdl2, use that.
-            if(${libdir})
+            if(libdir)
                 set(SDL2_LIBDIR ${libdir})
             endif()
             add_library(SDL2::SDL2 SHARED IMPORTED)
@@ -19,7 +19,7 @@ if(UNIX)
             INTERFACE_INCLUDE_DIRECTORIES "${SDL2_INCLUDE_DIRS}"
             IMPORTED_LINK_INTERFACE_LANGUAGES "C"
             IMPORTED_LOCATION "${SDL2_LIBDIR}/${CMAKE_SHARED_LIBRARY_PREFIX}SDL2${CMAKE_SHARED_LIBRARY_SUFFIX}")
-            endif()
+	endif()
     endif()
 elseif(WIN32)
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.

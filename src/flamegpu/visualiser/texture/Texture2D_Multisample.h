@@ -81,6 +81,8 @@ class Texture2D_Multisample : public Texture, public RenderTarget {
     glm::uvec2 dimensions;
     static const char *RAW_TEXTURE_FLAG;
     unsigned int samples;
+    // Bring the non-overriden overloaded resize method into the private scope to resolve clang -Woverloaded-virtual
+    using RenderTarget::resize;
 };
 
 }  // namespace visualiser

@@ -120,6 +120,10 @@ class OverlayGroup {
      * By default, if any overlay is visible true is returned
      */
     virtual bool getVisible() const;
+    /**
+     * Virtual destructor to resolve Wdelete-non-abstract-non-virtual-dtor warning
+    */
+    virtual ~OverlayGroup() { }
 };
 
 }  // namespace visualiser
