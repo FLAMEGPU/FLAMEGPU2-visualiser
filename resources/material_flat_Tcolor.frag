@@ -12,6 +12,7 @@ const uint B_DISPLACEMENT = 1<<9;
 const uint B_LIGHT        = 1<<10;
 const uint B_REFLECTION   = 1<<11;
 const uint B_UNKNOWN      = 1<<12;
+bool has(uint check, uint bitmask) { return (bitmask&check)!=0;}
 struct MaterialProperties {
     vec3 ambient;           //Ambient color
     float opacity;
@@ -23,7 +24,6 @@ struct MaterialProperties {
     float refractionIndex;
     vec3 transparent;       //Transparent color, multiplied with translucent light to construct final color
     uint bitmask;
-    bool has(uint check) { return (bitmask&check)!=0;}
 };
 struct LightProperties {
     vec3 ambient;              // Aclarri   
@@ -65,17 +65,17 @@ out vec4 fragColor;
 vec3 getAmbient() {
   if (bool(shaderColor)) // _materialID >= MAX_MATERIALS
     return colorOverride.rgb * 0.2f;
-  return material[_materialID].has(B_AMBIENT) ? texture(t_ambient, texCoords).rgb : material[_materialID].ambient;
+  return has(B_AMBIENT, material[_materialID].bitmask) ? texture(t_ambient, texCoords).rgb : material[_materialID].ambient;
 }
 vec4 getDiffuse() {
   if (bool(shaderColor)) // _materialID >= MAX_MATERIALS
     return colorOverride;
-  return material[_materialID].has(B_DIFFUSE) ? texture(t_diffuse, texCoords) : vec4(material[_materialID].diffuse, 1.0f);
+  return has(B_DIFFUSE, material[_materialID].bitmask) ? texture(t_diffuse, texCoords) : vec4(material[_materialID].diffuse, 1.0f);
 }
 vec3 getSpecular() {
   if (bool(shaderColor)) // _materialID >= MAX_MATERIALS
     return vec3(0.5f);
-  return material[_materialID].has(B_SPECULAR) ? texture(t_specular, texCoords).rgb : material[_materialID].specular;
+  return has(B_SPECULAR, material[_materialID].bitmask) ? texture(t_specular, texCoords).rgb : material[_materialID].specular;
 }
 void main() {
   //Calculate face normal
