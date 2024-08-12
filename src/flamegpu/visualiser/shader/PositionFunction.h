@@ -29,11 +29,6 @@ class PositionFunction {
     bool has_pos_z;
     bool has_pos_xy;
     bool has_pos_xyz;
-    bool has_pos_dbl_x;
-    bool has_pos_dbl_y;
-    bool has_pos_dbl_z;
-    bool has_pos_dbl_xy;
-    bool has_pos_dbl_xyz;
 };
 
 }  // namespace visualiser

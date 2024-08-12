@@ -12,11 +12,6 @@ namespace visualiser {
     , has_pos_z(tex_buffers.find(TexBufferConfig::Position_z) != tex_buffers.end())
     , has_pos_xy(tex_buffers.find(TexBufferConfig::Position_xy) != tex_buffers.end())
     , has_pos_xyz(tex_buffers.find(TexBufferConfig::Position_xyz) != tex_buffers.end())
-    , has_pos_dbl_x(tex_buffers.find(TexBufferConfig::Position_dbl_x) != tex_buffers.end())
-    , has_pos_dbl_y(tex_buffers.find(TexBufferConfig::Position_dbl_y) != tex_buffers.end())
-    , has_pos_dbl_z(tex_buffers.find(TexBufferConfig::Position_dbl_z) != tex_buffers.end())
-    , has_pos_dbl_xy(tex_buffers.find(TexBufferConfig::Position_dbl_xy) != tex_buffers.end())
-    , has_pos_dbl_xyz(tex_buffers.find(TexBufferConfig::Position_dbl_xyz) != tex_buffers.end())
 { }
 
 std::string PositionFunction::getSrc() {
@@ -46,23 +41,6 @@ std::string PositionFunction::getSrc() {
         ss << "        texelFetch(_pos_xyz, t).x," << "\n";
         ss << "        texelFetch(_pos_xyz, t + 1).x," << "\n";
         ss << "        texelFetch(_pos_xyz, t + 2).x);" << "\n";
-    } else if (has_pos_dbl_x || has_pos_dbl_y || has_pos_dbl_z) {
-        ss << "    return vec3(" <<"\n";
-        ss << "        " << (has_pos_dbl_x ? "float(texelFetch(_pos_x, gl_InstanceID).x)" : "0") << "," << "\n";
-        ss << "        " << (has_pos_dbl_y ? "float(texelFetch(_pos_y, gl_InstanceID).x)" : "0") << "," << "\n";
-        ss << "        " << (has_pos_dbl_z ? "float(texelFetch(_pos_z, gl_InstanceID).x)" : "0") << ");" << "\n";
-    } else if (has_pos_dbl_xy) {
-        ss << "    const int t = gl_InstanceID * 2;" << "\n";
-        ss << "    return vec3(" << "\n";
-        ss << "        float(texelFetch(_pos_xy, t).x)," << "\n";
-        ss << "        float(texelFetch(_pos_xy, t + 1).x)," << "\n";
-        ss << "        0);" << "\n";
-    } else if (has_pos_dbl_xyz) {
-        ss << "    const int t = gl_InstanceID * 3;" << "\n";
-        ss << "    return vec3(" << "\n";
-        ss << "        float(texelFetch(_pos_xyz, t).x)," << "\n";
-        ss << "        float(texelFetch(_pos_xyz, t + 1).x)," << "\n";
-        ss << "        float(texelFetch(_pos_xyz, t + 2).x));" << "\n";
     } else {
         ss << "return glm::vec3(0);" << "\n";
     }
