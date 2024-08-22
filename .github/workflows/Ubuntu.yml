@@ -24,7 +24,11 @@ jobs:
       # optional exclude: can be partial, include: must be specific
       matrix:
         cudacxx:
-          - cuda: "11.7"
+          - cuda: "12.0"
+            cuda_arch: "50"
+            hostcxx: gcc-12
+            os: ubuntu-22.04
+          - cuda: "11.2"
             cuda_arch: "35"
             hostcxx: gcc-8
             os: ubuntu-20.04
@@ -69,7 +73,10 @@ jobs:
     - name: Install Visualisation Dependencies
       if: ${{ startswith(env.OS, 'ubuntu') && env.VISUALISATION == 'ON' }}
       run: |
-        # Install ubuntu-20.04 packages
+        # Install ubuntu-22.04 packages
+        if [ "$OS" == 'ubuntu-22.04' ]; then 
+          sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype-dev
+        fi
         if [ "$OS" == 'ubuntu-20.04' ]; then 
           sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype-dev
         fi
