@@ -52,6 +52,8 @@ jobs:
       CONFIG: ${{ matrix.config.config }}
       # Kept for portable steps between this and the main repository.
       VISUALISATION: "ON"
+      # Short term fix to use node16 not node20 for actions. This will stop working eventually, forcing our hand in dropping manylinux2014 support.
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
     - uses: actions/checkout@v3
