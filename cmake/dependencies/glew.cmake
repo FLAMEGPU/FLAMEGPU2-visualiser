@@ -10,9 +10,14 @@ if(UNIX)
                             "e.g. sudo apt install libglew-dev")
     endif ()
 elseif(WIN32)
+    include(FetchContent)
     # As the URL method is used for download, set the policy if available
     if(POLICY CMP0135)
         cmake_policy(SET CMP0135 NEW)
+    endif()
+    # Temporary CMake >= 3.30 fix https://github.com/FLAMEGPU/FLAMEGPU2/issues/1223
+    if(POLICY CMP0169)
+        cmake_policy(SET CMP0169 OLD)
     endif()
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.
     # Declare source properties
