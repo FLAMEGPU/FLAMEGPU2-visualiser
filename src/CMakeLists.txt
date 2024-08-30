@@ -17,6 +17,9 @@ project(flamegpu_visualiser LANGUAGES NONE)
 # handle cpplint.
 include(${CMAKE_CURRENT_LIST_DIR}/../cmake/cpplint.cmake)
 
+# Ensure found compilers are actually good enough / don't trigger known issues.
+include(${CMAKE_CURRENT_LIST_DIR}/../cmake/CheckCompilerFunctionality.cmake)
+
 # Check to see if CUDA is available, and meets the required minimum version for non-lint builds
 if(NOT DEFINED MINIMUM_CUDA_VERSION)
     set(MINIMUM_CUDA_VERSION 11.0)
