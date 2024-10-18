@@ -46,6 +46,7 @@ ModelConfig &ModelConfig::operator=(const ModelConfig &other) {
     isPython = other.isPython;
     isOrtho = other.isOrtho;
     orthoZoom = other.orthoZoom;
+    dynamic_lines = other.dynamic_lines;  // Here because they are probably empty at construction, so addLine() can't be used
     // staticModels
     // lines
     // panels

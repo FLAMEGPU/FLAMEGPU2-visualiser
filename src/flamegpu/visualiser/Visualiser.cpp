@@ -104,7 +104,25 @@ Visualiser::RenderInfo::RenderInfo(const AgentStateConfig& vc,
             entity->loadKeyFrameModel(vc.model_pathB);
         }
 }
-
+void addLine(std::shared_ptr<Draw> &lines, const std::shared_ptr<LineConfig> &line, const std::string &name, bool replace) {
+    // Check it's valid
+    if (line->lineType == LineConfig::Type::Polyline) {
+        if (line->vertices.size() < 6 || line->vertices.size() % 3 != 0 || line->colors.size() % 4 != 0 || (line->colors.size() / 4) * 3 != line->vertices.size()) {
+            THROW SketchError("Polyline sketch contains invalid number of vertices (%d/3) or colours (%d/4).\n", line->vertices.size(), line->colors.size());
+        }
+    } else if (line->lineType == LineConfig::Type::Lines) {
+        if (line->vertices.size() < 6 || line->vertices.size() % 6 != 0 || line->colors.size() % 4 != 0 || (line->colors.size() / 4) * 3 != line->vertices.size()) {
+            THROW SketchError("Lines sketch contains invalid number of vertices (%d/3) or colours (%d/4).\n", line->vertices.size(), line->colors.size());
+        }
+    }
+    // Convert to Draw
+    lines->begin(line->lineType == LineConfig::Type::Polyline ? Draw::Type::Polyline : Draw::Type::Lines, name);
+    for (size_t i = 0; i < line->vertices.size() / 3; ++i) {
+        lines->color(*reinterpret_cast<const glm::vec4*>(&line->colors[i * 4]));
+        lines->vertex(*reinterpret_cast<const glm::vec3*>(&line->vertices[i * 3]));
+    }
+    lines->save(replace);
+}
 Visualiser::Visualiser(const ModelConfig& modelcfg)
     : hud(std::make_shared<HUD>(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1]))
     , camera(std::make_shared<NoClipCamera>(*reinterpret_cast<const glm::vec3*>(&modelcfg.cameraLocation[0]), *reinterpret_cast<const glm::vec3*>(&modelcfg.cameraTarget[0])))
@@ -149,9 +167,12 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
         imguiPanel = std::make_shared<ImGuiPanel>(modelcfg.panels, *this);
         hud->add(imguiPanel, HUD::AnchorV::North, HUD::AnchorH::West, glm::ivec2(0, 0), INT_MAX-2);
     }
-    lines = std::make_shared<Draw>();
-    lines->setViewMatPtr(camera->getViewMatPtr());
-    lines->setProjectionMatPtr(&this->projMat);
+    lines_static = std::make_shared<Draw>();
+    lines_static->setViewMatPtr(camera->getViewMatPtr());
+    lines_static->setProjectionMatPtr(&this->projMat);
+    lines_dynamic = std::make_shared<Draw>();
+    lines_dynamic->setViewMatPtr(camera->getViewMatPtr());
+    lines_dynamic->setProjectionMatPtr(&this->projMat);
     // Process static models
     for (auto &sm : modelcfg.staticModels) {
         std::shared_ptr<Entity> entity;
@@ -186,23 +207,7 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
     }
     // Process lines
     for (auto &line : modelcfg.lines) {
-        // Check it's valid
-        if (line->lineType == LineConfig::Type::Polyline) {
-            if (line->vertices.size() < 6 || line->vertices.size() % 3 != 0 || line->colors.size() % 4 != 0 || (line->colors.size() / 4) * 3 != line->vertices.size()) {
-                THROW SketchError("Polyline sketch contains invalid number of vertices (%d/3) or colours (%d/4).\n", line->vertices.size(), line->colors.size());
-            }
-        } else if (line->lineType == LineConfig::Type::Lines) {
-            if (line->vertices.size() < 6 || line->vertices.size() % 6 != 0 || line->colors.size() % 4 != 0 || (line->colors.size() / 4) * 3 != line->vertices.size()) {
-                THROW SketchError("Lines sketch contains invalid number of vertices (%d/3) or colours (%d/4).\n", line->vertices.size(), line->colors.size());
-            }
-        }
-        // Convert to Draw
-        lines->begin(line->lineType == LineConfig::Type::Polyline ? Draw::Type::Polyline : Draw::Type::Lines, std::to_string(totalLines++));
-        for (size_t i = 0; i < line->vertices.size() / 3; ++i) {
-            lines->color(*reinterpret_cast<const glm::vec4*>(&line->colors[i * 4]));
-            lines->vertex(*reinterpret_cast<const glm::vec3*>(&line->vertices[i * 3]));
-        }
-        lines->save();
+        addLine(lines_static, line, std::to_string(totalLines++), false);
     }
     // Default lighting, single point light attached to camera
     // Maybe in future let user specify lights instead of this
@@ -445,12 +450,23 @@ void Visualiser::render() {
         hud->remove(splashScreen);
         splashScreen.reset();
     }
+    // Update dynamic lines if they have changed
+    {
+        auto lock = std::lock_guard<std::mutex>(lines_dynamic_mutex);
+        for (auto &name :  lines_dynamic_updates)
+            addLine(lines_dynamic, modelConfig.dynamic_lines.at(name), name, true);
+        lines_dynamic_updates.clear();
+    }
     // Render lines last, as they may contain alpha
     if (renderLines) {
         GL_CALL(glEnable(GL_BLEND));
         GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         for (unsigned int i = 0; i < totalLines; ++i)
-            lines->render(std::to_string(i));
+            lines_static->render(std::to_string(i));
+        for (const auto &[name, _] : modelConfig.dynamic_lines)
+            // Dynamic lines may begin uninitialised
+            if (lines_dynamic->has(name))
+                lines_dynamic->render(name);
         GL_CALL(glDisable(GL_BLEND));
     }
     GL_CALL(glViewport(0, 0, windowDims.x, windowDims.y));
@@ -804,7 +820,8 @@ void Visualiser::deallocateGLObjects() {
     for (auto &as : agentStates) {
         as.second.entity.reset();
     }
-    this->lines.reset();
+    this->lines_static.reset();
+    this->lines_dynamic.reset();
     render_buffer.reset();
     screenshot_buffer.reset();
 
@@ -896,8 +913,10 @@ void Visualiser::handleKeypress(SDL_Keycode keycode, int /*x*/, int /*y*/) {
         break;
     case SDLK_F5:
         // Reload all shaders
-        if (this->lines)
-            this->lines->reload();
+        if (this->lines_static)
+            this->lines_static->reload();
+        if (this->lines_dynamic)
+            this->lines_dynamic->reload();
         for (auto& as : this->agentStates)
             as.second.entity->reload();
         for (auto& sm : this->staticModels)
@@ -1240,6 +1259,10 @@ void Visualiser::setWindowIcon() {
     }
     if (surface)
         SDL_SetWindowIcon(window, surface.get());
+}
+void Visualiser::updateDynamicLine(const std::string& name) {
+    // Store a list of dynamic line updates, as they must occur in render thread
+    lines_dynamic_updates.insert(name);
 }
 
 }  // namespace visualiser

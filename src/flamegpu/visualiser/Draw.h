@@ -69,6 +69,10 @@ class Draw : Renderable {
      */
     void save(bool replaceExisting = false);
     /**
+     * Check whether a drawing with the name exists.
+     **/
+    bool has(const std::string &name);
+    /**
      * Renders a saved drawstate
      * @param name The name of the draw state to render
      */
