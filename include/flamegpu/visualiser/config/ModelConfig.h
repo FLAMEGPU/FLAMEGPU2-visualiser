@@ -126,6 +126,10 @@ struct ModelConfig {
      */
     std::list<std::shared_ptr<LineConfig>> lines;
     /**
+     * Store of user defined graph renderings
+     */
+    std::map<std::string, std::shared_ptr<LineConfig>> dynamic_lines;
+    /**
      * Store of user defined UI panels
      */
     std::map<std::string, std::shared_ptr<PanelConfig>> panels;
