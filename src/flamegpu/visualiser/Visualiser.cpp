@@ -125,7 +125,7 @@ void addLine(std::shared_ptr<Draw> &lines, const std::shared_ptr<LineConfig> &li
 }
 Visualiser::Visualiser(const ModelConfig& modelcfg)
     : hud(std::make_shared<HUD>(modelcfg.windowDimensions[0], modelcfg.windowDimensions[1]))
-    , camera(std::make_shared<NoClipCamera>(*reinterpret_cast<const glm::vec3*>(&modelcfg.cameraLocation[0]), *reinterpret_cast<const glm::vec3*>(&modelcfg.cameraTarget[0])))
+    , camera(std::make_shared<NoClipCamera>(*reinterpret_cast<const glm::vec3*>(&modelcfg.cameraLocation[0]), *reinterpret_cast<const glm::vec3*>(&modelcfg.cameraTarget[0]), modelcfg.cameraRoll))
     , isInitialised(false)
     , continueRender(false)
     , buffersAllocated(false)

@@ -16,7 +16,7 @@ NoClipCamera::NoClipCamera(const glm::vec3 &eye)
     : NoClipCamera(eye, glm::vec3(0, 0, 0)) {}
 // Initialiser list written to remove any references to member variables
 // Because member variables are initialised via initaliser lists in the order they are declared in the class declaration (rather than the order of the initialiser list)
-NoClipCamera::NoClipCamera(const glm::vec3 &eye, const glm::vec3 &target)
+NoClipCamera::NoClipCamera(const glm::vec3 &eye, const glm::vec3 &target, const float _roll)
     : Camera(eye)
     , pureUp(0.0f, 1.0f, 0.0f)
     , look(normalize(target - eye))
@@ -27,8 +27,7 @@ NoClipCamera::NoClipCamera(const glm::vec3 &eye, const glm::vec3 &target)
     // this->look = target - eye;                        // Look is the direction from eye to target
     // this->right = cross(look, pureUp);                // Right is perpendicular to look and pureUp
     // this->up = cross(right, look);                    // Up is perpendicular to right and look
-
-    this->updateViews();
+    this->roll(_roll);
 }
 NoClipCamera::~NoClipCamera() {
 }

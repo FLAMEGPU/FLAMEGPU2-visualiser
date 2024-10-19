@@ -19,6 +19,7 @@ ModelConfig::ModelConfig(const char* _windowTitle)
     , fpsColor{1, 1, 1}
     , cameraLocation{1.5f, 1.5f, 1.5f}
     , cameraTarget{0, 0, 0}
+    , cameraRoll(0)
     , cameraSpeed{0.05f, 5}
     , nearFarClip{0.05f, 5000}
     , stepVisible(true)
@@ -39,6 +40,7 @@ ModelConfig &ModelConfig::operator=(const ModelConfig &other) {
     memcpy(fpsColor, other.fpsColor, sizeof(fpsColor));
     memcpy(cameraLocation, other.cameraLocation, sizeof(cameraLocation));
     memcpy(cameraTarget, other.cameraTarget, sizeof(cameraTarget));
+    cameraRoll = other.cameraRoll;
     memcpy(cameraSpeed, other.cameraSpeed, sizeof(cameraSpeed));
     memcpy(nearFarClip, other.nearFarClip, sizeof(nearFarClip));
     stepVisible = other.stepVisible;
