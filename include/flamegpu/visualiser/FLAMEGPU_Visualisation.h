@@ -30,11 +30,22 @@ class FLAMEGPU_Visualisation {
     void requestBufferResizes(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen, bool force) {
         requestBufferResizes(agent_name.c_str(), state_name.c_str(), buffLen, force);
     }
+    /**
+     * Main render mutex used to prevent race conditions rendering agents
+     */
     void lockMutex();
     void releaseMutex();
+    /**
+     * Dynamic line mutex ensures graphs are fully updated before synced to render
+     */
+    void lockDynamicLinesMutex();
+    void releaseDynamicLinesMutex();
     void updateAgentStateBuffer(const std::string &agent_name, const std::string &state_name, const unsigned int buffLen,
         const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
         updateAgentStateBuffer(agent_name.c_str(), state_name.c_str(), buffLen, core_tex_buffers, tex_buffers);
+    }
+    void updateDynamicLine(const std::string &graph_name) {
+        updateDynamicLine(graph_name.c_str());
     }
     /**
      * Provide an environment property, so it can be displayed
@@ -81,8 +92,11 @@ class FLAMEGPU_Visualisation {
     void requestBufferResizes(const char *agent_name, const char *state_name, const unsigned int buffLen, bool force);
     void updateAgentStateBuffer(const char *agent_name, const char *state_name, const unsigned int buffLen,
         const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers);
+    void updateDynamicLine(const char* graph_name);
+
     Visualiser *vis = nullptr;
     LockHolder *lock = nullptr;
+    LockHolder *dynamic_lines_lock = nullptr;
     /**
      * If non-0, limits the number of simulation steps per second, by blocking the return of releaseMutex
      * Blocking whilst the mutex was held, would block visualisation updates as that also uses the mutex

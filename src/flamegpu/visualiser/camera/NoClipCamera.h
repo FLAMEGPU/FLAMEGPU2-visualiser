@@ -22,8 +22,9 @@ class NoClipCamera : public Camera {
     * Initialises the camera located at eye directed at target
     * @param eye The coordinates the camera is located
     * @param target The coordinates the camera is directed towards
+    * @param _roll The camera roll in radians
     */
-    NoClipCamera(const glm::vec3 &eye, const glm::vec3 &target);
+    NoClipCamera(const glm::vec3 &eye, const glm::vec3 &target, float _roll = 0);
     /**
      * Default destructor
      */

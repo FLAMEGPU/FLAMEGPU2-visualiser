@@ -91,6 +91,9 @@ void Draw::save(bool replaceExisting) {
     requiredLength += tState.count;
     stateDirectory.insert({ tName, std::move(tState) });
 }
+bool Draw::has(const std::string &name) {
+    return stateDirectory.find(name) != stateDirectory.end();
+}
 Draw::State Draw::_save(bool isTemporary) {
     if (tType == Type::Lines && tVertices.size() % 2 != 0) {
         THROW VisAssert("Draw::_save(): Line drawings require an even number of vertices.\n");

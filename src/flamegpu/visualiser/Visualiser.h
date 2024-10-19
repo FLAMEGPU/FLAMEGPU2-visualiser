@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <utility>
 #include <map>
+#include <set>
 #include <cstdint>
 #define GLM_FORCE_NO_CTOR_INIT
 #include <glm/glm.hpp>
@@ -67,7 +68,7 @@ class Visualiser : public ViewportExt {
 
  public:
     explicit Visualiser(const ModelConfig &modelcfg);
-    ~Visualiser();
+    ~Visualiser() override;
     /**
      * Starts the render loop running
      */
@@ -128,6 +129,11 @@ class Visualiser : public ViewportExt {
      * Provide the env_cache ptr for the specified environment property, for visualisation
      */
     void registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements, bool is_const);
+    /**
+     * Update the dynamic_lines with the corresponding name
+     * @note getDynamicLineMutex() should be locked before this is called
+     */
+    void updateDynamicLine(const std::string &name);
 
  private:
     void run();
@@ -242,6 +248,11 @@ class Visualiser : public ViewportExt {
      * @see updateAgentStateBuffer(const std::string &, const std::string &, const unsigned int, float *, float *, float *, float *)
      */
     std::mutex &getRenderBufferMutex() { return render_buffer_mutex; }
+    /**
+     * This must be locked when changes to dynamic_lines are performed
+     * e.g. during graph updates
+     */
+    std::mutex &getDynamicLineMutex() { return lines_dynamic_mutex; }
     /**
      * Sets the value to be rendered to the HUD step counter (if enabled)
      * @param stepCount The step value to be displayed
@@ -358,7 +369,9 @@ class Visualiser : public ViewportExt {
     /**
      * User defined lines to be rendered
      */
-    std::shared_ptr<Draw> lines;
+    std::shared_ptr<Draw> lines_static, lines_dynamic;
+    std::set<std::string> lines_dynamic_updates;
+    std::mutex lines_dynamic_mutex;
     /**
      * Provides a simple default lighting configuration located at the camera using the old fixed function pipeline methods
      */

@@ -25,6 +25,8 @@ FLAMEGPU_Visualisation::~FLAMEGPU_Visualisation() {
         delete vis;
     if (lock)
         delete lock;
+    if (dynamic_lines_lock)
+        delete dynamic_lines_lock;
 }
 void FLAMEGPU_Visualisation::addAgentState(const char *agent_name, const char *state_name, const AgentStateConfig &vc,
     const std::map<TexBufferConfig::Function, TexBufferConfig>& core_tex_buffers, const std::multimap<TexBufferConfig::Function, CustomTexBufferConfig>& tex_buffers) {
@@ -39,6 +41,9 @@ void FLAMEGPU_Visualisation::updateAgentStateBuffer(const char *agent_name, cons
 }
 void FLAMEGPU_Visualisation::registerEnvironmentProperty(const std::string& property_name, void* ptr, const std::type_index type, const unsigned int elements, const bool is_const) {
     vis->registerEnvironmentProperty(property_name, ptr, type, elements, is_const);
+}
+void FLAMEGPU_Visualisation::updateDynamicLine(const char *graph_name) {
+    vis->updateDynamicLine(graph_name);
 }
 void FLAMEGPU_Visualisation::setStepCount(const unsigned int stepCount) {
     vis->setStepCount(stepCount);
@@ -87,6 +92,15 @@ void FLAMEGPU_Visualisation::releaseMutex() {
             // Edge case where a step takes longer than step_ms
             last_ticks = new_ticks;
         }
+    }
+}
+void FLAMEGPU_Visualisation::lockDynamicLinesMutex() {
+    dynamic_lines_lock = new LockHolder(vis->getDynamicLineMutex());
+}
+void FLAMEGPU_Visualisation::releaseDynamicLinesMutex() {
+    if (dynamic_lines_lock) {
+        delete dynamic_lines_lock;
+        dynamic_lines_lock = nullptr;
     }
 }
 
