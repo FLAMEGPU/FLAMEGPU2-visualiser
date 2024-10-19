@@ -91,6 +91,10 @@ struct ModelConfig {
      */
     float cameraTarget[3];
     /**
+     * The initial camera roll angle in radians
+     */
+    float cameraRoll;
+    /**
      * The movement speed of the camera in units per millisecond, and the shift key multiplier
      * When shift is pressed the movement speed is multiplied by this value
      * @note Defaults to (0.05,5)
