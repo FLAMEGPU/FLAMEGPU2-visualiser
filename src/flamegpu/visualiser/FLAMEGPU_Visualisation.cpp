@@ -1,6 +1,8 @@
 #include "flamegpu/visualiser/FLAMEGPU_Visualisation.h"
 
 #include <mutex>
+#include <map>
+#include <string>
 
 #include "Visualiser.h"
 

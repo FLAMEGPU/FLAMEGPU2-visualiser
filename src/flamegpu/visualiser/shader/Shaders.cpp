@@ -4,6 +4,9 @@
 #include <cstdlib>
 #include <utility>
 #include <stdexcept>
+#include <vector>
+#include <list>
+#include <string>
 
 #include "flamegpu/visualiser/util/warnings.h"
 

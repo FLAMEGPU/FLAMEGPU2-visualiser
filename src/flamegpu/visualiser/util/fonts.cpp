@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <fontconfig/fontconfig.h>
+#include <string>
 
 namespace flamegpu {
 namespace visualiser {
@@ -129,6 +130,8 @@ std::string findFont(std::initializer_list<const char *> fontNames, const Generi
 
 // https://docs.microsoft.com/en-us/windows/win32/api/dwrite/nn-dwrite-idwritefontcollection
 #include <dwrite.h>
+
+#include <string>
 
 namespace flamegpu {
 namespace visualiser {

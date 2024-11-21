@@ -1,6 +1,7 @@
 #include "flamegpu/visualiser/shader/buffer/UniformBuffer.h"
 
 #include <memory>
+#include <set>
 
 #include "flamegpu/visualiser/util/GLcheck.h"
 

@@ -1,5 +1,7 @@
 #include "flamegpu/visualiser/shader/DirectionFunction.h"
 
+#include <map>
+#include <string>
 #include <sstream>
 
 

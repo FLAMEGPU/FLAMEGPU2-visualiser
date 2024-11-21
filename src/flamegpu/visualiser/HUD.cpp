@@ -1,5 +1,8 @@
 #include "HUD.h"
 
+#include <memory>
+#include <list>
+
 #include "flamegpu/visualiser/util/warnings.h"
 
 DISABLE_WARNING_PUSH

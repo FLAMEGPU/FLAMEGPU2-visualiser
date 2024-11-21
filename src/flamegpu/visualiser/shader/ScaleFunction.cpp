@@ -1,5 +1,7 @@
 #include "flamegpu/visualiser/shader/ScaleFunction.h"
 
+#include <map>
+#include <string>
 #include <sstream>
 
 namespace flamegpu {

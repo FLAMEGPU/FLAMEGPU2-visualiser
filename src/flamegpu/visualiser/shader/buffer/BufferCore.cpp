@@ -1,5 +1,6 @@
 #include "flamegpu/visualiser/shader/buffer/BufferCore.h"
 
+#include <cstdio>
 #include <memory>
 
 #include "flamegpu/visualiser/util/GLcheck.h"

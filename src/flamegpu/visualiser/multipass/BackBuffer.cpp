@@ -1,4 +1,8 @@
 #include "flamegpu/visualiser/multipass/BackBuffer.h"
+
+#include <memory>
+#include <cstdio>
+
 #include <glm/gtx/component_wise.hpp>
 
 namespace flamegpu {

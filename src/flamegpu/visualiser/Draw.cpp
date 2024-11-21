@@ -1,6 +1,8 @@
 #include "Draw.h"
 
 #include <stdexcept>
+#include <utility>
+#include <string>
 
 #include "flamegpu/visualiser/util/StringUtils.h"
 

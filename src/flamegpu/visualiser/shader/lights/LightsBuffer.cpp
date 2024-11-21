@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <stdexcept>
+#include <set>
+#include <cstdio>
 
 #include "flamegpu/visualiser/shader/lights/PointLight.h"
 #include "flamegpu/visualiser/shader/lights/SpotLight.h"
