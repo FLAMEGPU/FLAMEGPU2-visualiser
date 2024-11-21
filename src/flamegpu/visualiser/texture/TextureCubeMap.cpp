@@ -1,4 +1,10 @@
 #include "flamegpu/visualiser/texture/TextureCubeMap.h"
+
+#include <cstdio>
+#include <memory>
+#include <unordered_map>
+#include <string>
+
 #include <glm/gtx/component_wise.hpp>
 
 namespace flamegpu {

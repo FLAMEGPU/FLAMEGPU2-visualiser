@@ -1,4 +1,7 @@
 #include "Sprite2D.h"
+
+#include <memory>
+
 #include "flamegpu/visualiser/shader/Shaders.h"
 
 namespace flamegpu {

@@ -1,5 +1,7 @@
 #include "Overlay.h"
 
+#include <memory>
+
 #include "flamegpu/visualiser/util/warnings.h"
 DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>

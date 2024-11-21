@@ -1,5 +1,8 @@
 #include "flamegpu/visualiser/multipass/FrameBuffer.h"
 
+#include <cstdio>
+#include <memory>
+
 #include "flamegpu/visualiser/texture/Texture2D.h"
 #include "flamegpu/visualiser/texture/Texture2D_Multisample.h"
 #include "flamegpu/visualiser/multipass/RenderBuffer.h"

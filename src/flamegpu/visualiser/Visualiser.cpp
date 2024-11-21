@@ -7,6 +7,11 @@
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
+#include <map>
+#include <utility>
+#include <memory>
+#include <cstdio>
+#include <string>
 
 #include <glm/gtc/matrix_transform.hpp>
 

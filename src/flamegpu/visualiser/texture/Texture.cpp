@@ -4,6 +4,10 @@
 #include <SDL_surface.h>
 
 #include <algorithm>
+#include <cstdio>
+#include <map>
+#include <memory>
+#include <string>
 
 #include "flamegpu/visualiser/util/StringUtils.h"
 #include "flamegpu/visualiser/util/Resources.h"

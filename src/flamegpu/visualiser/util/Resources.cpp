@@ -1,6 +1,9 @@
 #include "flamegpu/visualiser/util/Resources.h"
 #include "VisException.h"
+
+#include <cstdio>
 #include <filesystem>
+#include <string>
 
 #include <cmrc/cmrc.hpp>
 #include <SDL.h>

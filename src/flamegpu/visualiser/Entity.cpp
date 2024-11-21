@@ -8,6 +8,9 @@
 #include <locale>
 #include <string>
 #include <cstring>
+#include <cstdio>
+#include <vector>
+#include <memory>
 
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtc/matrix_transform.hpp>

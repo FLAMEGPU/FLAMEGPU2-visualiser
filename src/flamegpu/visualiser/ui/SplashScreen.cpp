@@ -1,6 +1,9 @@
 #include "flamegpu/visualiser/ui/SplashScreen.h"
 
+#include <cstdio>
+#include <memory>
 #include <string>
+#include <vector>
 
 #include "flamegpu/visualiser/ui/Sprite2D.h"
 #include "flamegpu/visualiser/ui/Text.h"

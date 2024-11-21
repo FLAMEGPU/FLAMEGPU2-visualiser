@@ -1,4 +1,8 @@
 #include "flamegpu/visualiser/model/Material.h"
+
+#include <cstdio>
+#include <vector>
+
 #include "flamegpu/visualiser/texture/Texture2D.h"
 
 namespace flamegpu {

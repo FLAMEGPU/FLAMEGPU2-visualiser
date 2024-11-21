@@ -1,7 +1,13 @@
 #include "flamegpu/visualiser/shader/ShaderCore.h"
 #include <cstdlib>  // < _splitpath() Windows only, need to rewrite linux ver
+#include <cstdio>
 #include <regex>
 #include <sstream>
+#include <list>
+#include <map>
+#include <utility>
+#include <string>
+#include <vector>
 #include "flamegpu/visualiser/util/warnings.h"
 DISABLE_WARNING_PUSH
 #include <glm/gtc/type_ptr.hpp>

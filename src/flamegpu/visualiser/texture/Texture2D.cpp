@@ -1,6 +1,10 @@
 #include "flamegpu/visualiser/texture/Texture2D.h"
 #include <cassert>
 #include <filesystem>
+#include <unordered_map>
+#include <memory>
+#include <string>
+#include <cstdio>
 
 #include <glm/gtx/component_wise.hpp>
 #include <SDL_surface.h>

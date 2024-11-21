@@ -6,6 +6,7 @@
 #include <locale>
 #include <string>
 #include <algorithm>
+#include <cstdio>
 
 #include <glm/vec2.hpp>
 

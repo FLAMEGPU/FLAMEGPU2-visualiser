@@ -1,5 +1,7 @@
 #include "flamegpu/visualiser/multipass/RenderBuffer.h"
 
+#include <memory>
+
 namespace flamegpu {
 namespace visualiser {
 

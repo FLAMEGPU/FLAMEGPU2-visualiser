@@ -5,6 +5,7 @@
 #include <device_launch_parameters.h>
 
 #include <cstring>
+#include <cstdio>
 #include <typeinfo>   //  operator typeid
 #include <stdexcept>
 

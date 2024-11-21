@@ -1,5 +1,8 @@
 #include "flamegpu/visualiser/texture/Texture2D_Multisample.h"
 
+#include <cstdio>
+#include <memory>
+
 namespace flamegpu {
 namespace visualiser {
 

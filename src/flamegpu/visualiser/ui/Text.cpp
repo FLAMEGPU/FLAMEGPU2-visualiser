@@ -2,8 +2,10 @@
 
 #include <freetype/ftglyph.h>
 
-#include <vector>
 #include <cstdarg>
+#include <cstdio>
+#include <string>
+#include <vector>
 
 #include "flamegpu/visualiser/util/warnings.h"
 #include "flamegpu/visualiser/util/fonts.h"

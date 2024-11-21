@@ -1,5 +1,8 @@
 #include "flamegpu/visualiser/texture/TextureBuffer.h"
 
+#include <cstdio>
+#include <memory>
+
 namespace flamegpu {
 namespace visualiser {
 

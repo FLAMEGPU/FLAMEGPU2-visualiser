@@ -1,5 +1,7 @@
 #include "flamegpu/visualiser/shader/buffer/ShaderStorageBuffer.h"
 
+#include <set>
+
 #include "flamegpu/visualiser/util/GLcheck.h"
 
 namespace flamegpu {

@@ -1,7 +1,8 @@
 #include "flamegpu/visualiser/shader/VertexFunction.h"
 
 #include <sstream>
-
+#include <map>
+#include <string>
 
 namespace flamegpu {
 namespace visualiser {

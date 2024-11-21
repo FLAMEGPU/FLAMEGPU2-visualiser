@@ -1,7 +1,8 @@
 #include "flamegpu/visualiser/shader/PositionFunction.h"
 
+#include <map>
+#include <string>
 #include <sstream>
-
 
 namespace flamegpu {
 namespace visualiser {
