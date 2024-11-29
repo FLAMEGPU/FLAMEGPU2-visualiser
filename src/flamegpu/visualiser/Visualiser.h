@@ -247,7 +247,13 @@ class Visualiser : public ViewportExt {
      * This must be locked before calling updateAgentStateBuffer()
      * @see updateAgentStateBuffer(const std::string &, const std::string &, const unsigned int, float *, float *, float *, float *)
      */
-    std::mutex &getRenderBufferMutex() { return render_buffer_mutex; }
+    std::mutex& getRenderBufferMutex() { return render_buffer_mutex; }
+    /**
+     * Returns the mutex for simulation stepping (for the simulation)
+     * This must be locked before locking render_buffer_mutex, then released straight after the lock is achieved
+     * @see updateAgentStateBuffer(const std::string &, const std::string &, const unsigned int, float *, float *, float *, float *)
+     */
+    std::mutex& getRenderBufferMutexPre() { return render_buffer_mutex_pre; }
     /**
      * This must be locked when changes to dynamic_lines are performed
      * e.g. during graph updates
@@ -394,6 +400,12 @@ class Visualiser : public ViewportExt {
      * Mutex is required to access render buffers for thread safety
      */
     std::mutex render_buffer_mutex;
+    /**
+     * Double mutex to enable simulation stepping
+     * Visualiser must lock this prior to locking render_buffer_mutex, then release this after the render_buffer_mutex lock is achieved
+     * This allows sim stepping to block a re-lock of render_buffer_mutex
+     */
+    std::mutex render_buffer_mutex_pre;
     /**
      * When this is not set to nullptr, it blocks the simulation from continuing
      */
