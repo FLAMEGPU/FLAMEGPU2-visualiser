@@ -2,6 +2,7 @@
 name: Lint
 
 on:
+  # Branch pushes that do not only modify other workflow files
   push:
     branches:
       - '**'
@@ -9,7 +10,10 @@ on:
       - "**"
       - "!.github/**"
       - ".github/workflows/Lint.yml"
-  pull_request:
+  # Disabled for now. See https://github.com/FLAMEGPU/FLAMEGPU2/pull/644
+  # pull_request:
+  # Allow manual invocation.
+  workflow_dispatch:
 
 defaults:
   run:
@@ -25,8 +29,8 @@ jobs:
       # optional exclude: can be partial, include: must be specific
       matrix:
         cudacxx:
-          - cuda: "11.0"
-            os: ubuntu-20.04
+          - cuda: "12.5"
+            os: ubuntu-24.04
     env:
       # Define constants
       BUILD_DIR: "build"

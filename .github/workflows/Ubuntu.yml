@@ -2,6 +2,7 @@
 name: Ubuntu
 
 on:
+  # Branch pushes that do not only modify other workflow files
   push:
     branches:
       - '**'
@@ -9,8 +10,10 @@ on:
       - "**"
       - "!.github/**"
       - ".github/workflows/Ubuntu.yml"
-  pull_request:
-
+  # Disabled for now. See https://github.com/FLAMEGPU/FLAMEGPU2/pull/644
+  # pull_request:
+  # Allow manual invocation.
+  workflow_dispatch:
 defaults:
   run:
     shell: bash
@@ -24,14 +27,20 @@ jobs:
       # optional exclude: can be partial, include: must be specific
       matrix:
         cudacxx:
-          - cuda: "12.0"
+          - cuda: "12.6"
             cuda_arch: "50"
-            hostcxx: gcc-12
-            os: ubuntu-22.04
-          - cuda: "11.2"
+            hostcxx: gcc-13
+            os: ubuntu-24.04
+          # 12.5 is the oldest officially supported CUDA on 24.04. 
+          - cuda: "12.5"
+            cuda_arch: "50"
+            hostcxx: gcc-9
+            os: ubuntu-24.04
+          # 11.7 is the oldest oficially supported CUDA on 22.04
+          - cuda: "11.7"
             cuda_arch: "35"
-            hostcxx: gcc-8
-            os: ubuntu-20.04
+            hostcxx: gcc-9
+            os: ubuntu-22.04
         config:
           - name: "Release"
             config: "Release"
@@ -73,16 +82,13 @@ jobs:
     - name: Install Visualisation Dependencies
       if: ${{ startswith(env.OS, 'ubuntu') && env.VISUALISATION == 'ON' }}
       run: |
+        # Install ubuntu-24.04 packages
+        if [ "$OS" == 'ubuntu-24.04' ]; then 
+          sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype-dev
+        fi
         # Install ubuntu-22.04 packages
         if [ "$OS" == 'ubuntu-22.04' ]; then 
           sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype-dev
-        fi
-        if [ "$OS" == 'ubuntu-20.04' ]; then 
-          sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype-dev
-        fi
-        # Install Ubuntu 18.04 packages
-        if [ "$OS" == 'ubuntu-18.04' ]; then 
-          sudo apt-get install -y libglew-dev libfontconfig1-dev libsdl2-dev libdevil-dev libfreetype6-dev libgl1-mesa-dev
         fi
 
     - name: Add custom problem matchers for annotations

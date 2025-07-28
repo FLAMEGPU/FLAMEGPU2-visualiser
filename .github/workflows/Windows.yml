@@ -2,6 +2,7 @@
 name: Windows
 
 on:
+  # Branch pushes that do not only modify other workflow files
   push:
     branches:
       - '**'
@@ -9,7 +10,10 @@ on:
       - "**"
       - "!.github/**"
       - ".github/workflows/Windows.yml"
-  pull_request:
+  # Disabled for now. See https://github.com/FLAMEGPU/FLAMEGPU2/pull/644
+  # pull_request:
+  # Allow manual invocation.
+  workflow_dispatch:
 
 defaults:
   run:
@@ -24,20 +28,16 @@ jobs:
       # optional exclude: can be partial, include: must be specific
       matrix:
         cudacxx:
-          # VS2022 must now use CUDA 12.4 or newer
+          # Newer CUDA with latest windows image
+          - cuda: "12.6.0"
+            cuda_arch: "50"
+            hostcxx: "Visual Studio 17 2022"
+            os: windows-2025
+          # CUDA 12.4 is the oldest CUDA supported by recent visual studio 2022 versions :(
           - cuda: "12.4.0"
             cuda_arch: "50"
             hostcxx: "Visual Studio 17 2022"
             os: windows-2022
-          # VS 2019 for 11.0-12.3
-          - cuda: "12.0.0"
-            cuda_arch: "50"
-            hostcxx: "Visual Studio 16 2019"
-            os: windows-2019
-          - cuda: "11.2.0"
-            cuda_arch: "35"
-            hostcxx: "Visual Studio 16 2019"
-            os: windows-2019
         config:
           - name: "Release"
             config: "Release"
