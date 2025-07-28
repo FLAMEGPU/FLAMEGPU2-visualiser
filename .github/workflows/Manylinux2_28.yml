@@ -1,27 +1,32 @@
-# Build within the manylinux 2014 container, to check ensure compatability for python wheels.
-name: Manylinux2014
+# Build within the manylinux 2_28 container, to check ensure compatability for python wheels.
+name: Manylinux_2_28
 
 # Run on branch push events (i.e. not tag pushes) and on pull requests
 on:
+  # Branch pushes that do not only modify other workflow files
   push:
     branches:
       - '**'
     paths:
       - "**"
       - "!.github/**"
-      - ".github/workflows/Manylinux2014.yml"
-  pull_request:
+      - ".github/scripts/install_cuda_el8.sh"
+      - ".github/workflows/Manylinux_2_28.yml"
+  # Disabled for now. See https://github.com/FLAMEGPU/FLAMEGPU2/pull/644
+  # pull_request:
+  # Allow manual invocation.
+  workflow_dispatch:
 
 defaults:
   run:
     shell: bash
 
-# A single job, which builds manylinux2014 wheels, which ships with GCC 10.2.1 at the time of writing. If this bumps to unpatched 10.3 we might have issues w/ cuda. 
+# A single job, which builds manylinux_2_28 wheels, which ships with GCC 12.
 jobs:
   build:
     runs-on: ${{ matrix.cudacxx.os }}
     # Run steps inside a manylinux container.
-    container: quay.io/pypa/manylinux2014_x86_64
+    container: quay.io/pypa/manylinux_2_28_x86_64
     strategy:
       fail-fast: false
       # Multiplicative build matrix
@@ -30,8 +35,8 @@ jobs:
         cudacxx:
           - cuda: "11.2"
             cuda_arch: "35"
-            hostcxx: devtoolset-8
-            os: ubuntu-20.04
+            hostcxx: gcc-toolset-9
+            os: ubuntu-24.04
         config:
           - name: "Release"
             config: "Release"
@@ -56,18 +61,13 @@ jobs:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    # Downgrade the devtoolset in the image based on the build matrix, using:
-    # gcc-10 for CUDA >= 11.2. Unclear if devtoolset-10 will upgrade to unpatched 11.3 which breaks CUDA builds that use <chrono>. 
-    # gcc-9 for CUDA >= 11.0
-    # gcc-8 for CUDA >= 10.1
-    # gcc-7 for CUDA >= 10.0 (and probably 9.x).
-    # these are not the officially supported toolset on centos by cuda, but it's what works.
-    - name: Install RHEL devtoolset (CentOS)
-      if: ${{ startsWith(env.HOSTCXX, 'devtoolset-') }}
+    # Downgrade the gcc-toolset in the image based on the build matrix
+    - name: Install RHEL gcc-toolset (EL 8)
+      if: ${{ startsWith(env.HOSTCXX, 'gcc-toolset-') }}
       run: |
-        # Install devtoolset-X
+        # Install gcc-toolset-X
         yum install -y ${{ env.HOSTCXX }}
         # Enable the toolset via source not scl enable which doesn't get on with multi-step GHA 
         source /opt/rh/${{ env.HOSTCXX }}/enable
@@ -77,13 +77,18 @@ jobs:
         echo "CXX=$(which g++)" >> $GITHUB_ENV
         echo "CUDAHOSTCXX=$(which g++)" >> $GITHUB_ENV
 
-    - name: Install CUDA (CentOS)
+    - name: Install CUDA (EL 8)
       if: ${{ env.CUDA != '' }}
       env:
         cuda: ${{ env.CUDA }}
-      run: .github/scripts/install_cuda_centos.sh
+      run: .github/scripts/install_cuda_el8.sh
 
-    - name: Install Visualisation Dependencies (CentOS)
+    # Downgrade CMake for DeVIL and rapidjson. See https://github.com/FLAMEGPU/FLAMEGPU2/issues/1276
+    - name: Install CMake < 4.0, overwriting the pipx installed version from manylinux
+      run: |
+        pipx install --global --force 'cmake<4.0'
+
+    - name: Install Visualisation Dependencies (EL 8)
       if: ${{ env.VISUALISATION == 'ON' }}
       run: |
         yum install -y glew-devel fontconfig-devel SDL2-devel freetype-devel 
