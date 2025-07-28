@@ -26,6 +26,7 @@ class Texture2D_Multisample : public Texture, public RenderTarget {
      * @param _dimensions New texture dimensions
      */
     void resize(const glm::uvec2 &_dimensions) override { resize(_dimensions, 0); }
+    using RenderTarget::resize;
     /**
      * Resizes the texture
      * @param dimensions New texture dimensions
