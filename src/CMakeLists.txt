@@ -22,7 +22,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/../cmake/CheckCompilerFunctionality.cmake)
 
 # Check to see if CUDA is available, and meets the required minimum version for non-lint builds
 if(NOT DEFINED MINIMUM_CUDA_VERSION)
-    set(MINIMUM_CUDA_VERSION 11.0)
+    set(MINIMUM_CUDA_VERSION 12.0)
 endif()
 include(CheckLanguage)
 check_language(CUDA)
