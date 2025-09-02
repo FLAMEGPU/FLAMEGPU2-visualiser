@@ -6,11 +6,12 @@ It is unlikely to be useful independently.
 
 ## Requirements
 
-+ [CMake](https://cmake.org/download/) `>= 3.18`
++ [CMake](https://cmake.org/download/) `>= 3.25.2`
 + [CUDA](https://developer.nvidia.com/cuda-downloads) `>= 12.0` and a Compute Capability `>= 5.0` NVIDIA GPU.
-+ C++17 capable C++ compiler (host), compatible with the installed CUDA version
-  + [Microsoft Visual Studio 2019](https://visualstudio.microsoft.com/) (Windows)
-  + [make](https://www.gnu.org/software/make/) and [GCC](https://gcc.gnu.org/) `>= 8.1`
++ C++20 capable C++ compiler (host), compatible with the installed CUDA version
+  + [Microsoft Visual Studio 2022](https://visualstudio.microsoft.com/) (Windows)
+    + *Note:* Visual Studio must be installed before the CUDA toolkit is installed. See the [CUDA installation guide for Windows](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html) for more information.
+  + [make](https://www.gnu.org/software/make/) and [GCC](https://gcc.gnu.org/) `>= 10` (Linux)
 + [git](https://git-scm.com/)
 + [SDL](https://www.libsdl.org/)
 + [GLM](http://glm.g-truc.net/) *(consistent C++/GLSL vector maths functionality)*
@@ -34,7 +35,7 @@ To build the visualiser under linux in Release mode using the command line:
 ```bash
 # Create a build directory
 mkdir -p build
-cd build
+cd buildW
 # Configure CMake, i.e. for Release builds for consumer Pascal and newer GPUs
 cmake .. -DCMAKE_CUDA_ARCHITECTURES=61 -DCMAKE_BUILD_TYPE=Release
 # Build all targets using 8 threads.
@@ -46,7 +47,7 @@ make all -j 8
 Or, if building under windows you must specify the Visual Studio version to use.
 
 ```cmd
-cmake .. -A x64 -G "Visual Studio 16 2019"
+cmake .. -A x64 -G "Visual Studio 17 2022"
 ```
 
 When using multi-config generators such as visual studio, the build configuration is selected at build time rather than at CMake configure time.
