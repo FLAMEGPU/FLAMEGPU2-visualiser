@@ -229,9 +229,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/../cmake/CommonCompilerSettings.cmake)
 # Define output
 add_library("${PROJECT_NAME}" STATIC ${VISUALISER_ALL})
 
-# Require C++17 as a public target property for C++ and CUDA, with no extensions, and the standard is required
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
-target_compile_features(${PROJECT_NAME} PUBLIC cuda_std_17)
+# Require C++20 as a public target property for C++ and CUDA, with no extensions, and the standard is required
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+target_compile_features(${PROJECT_NAME} PUBLIC cuda_std_20)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_EXTENSIONS OFF)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_EXTENSIONS OFF)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
