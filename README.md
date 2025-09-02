@@ -7,7 +7,7 @@ It is unlikely to be useful independently.
 ## Requirements
 
 + [CMake](https://cmake.org/download/) `>= 3.18`
-+ [CUDA](https://developer.nvidia.com/cuda-downloads) `>= 11.0` and a Compute Capability `>= 3.5` NVIDIA GPU.
++ [CUDA](https://developer.nvidia.com/cuda-downloads) `>= 12.0` and a Compute Capability `>= 5.0` NVIDIA GPU.
 + C++17 capable C++ compiler (host), compatible with the installed CUDA version
   + [Microsoft Visual Studio 2019](https://visualstudio.microsoft.com/) (Windows)
   + [make](https://www.gnu.org/software/make/) and [GCC](https://gcc.gnu.org/) `>= 8.1`
