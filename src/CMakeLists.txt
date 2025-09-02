@@ -1,5 +1,5 @@
-# Parity with main FGPU2 CMake
-cmake_minimum_required(VERSION 3.18...3.25 FATAL_ERROR)
+# Minimum CMake version 3.25.2 for CUDA --std=c++20
+cmake_minimum_required(VERSION 3.25.2...3.29 FATAL_ERROR)
 
 # Find git which is a hard dependency
 find_package(Git)
