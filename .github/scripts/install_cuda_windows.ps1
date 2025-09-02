@@ -54,6 +54,14 @@ $CUDA_KNOWN_URLS = @{
     "12.5.0" = "https://developer.download.nvidia.com/compute/cuda/12.5.0/network_installers/cuda_12.5.0_windows_network.exe";
     "12.5.1" = "https://developer.download.nvidia.com/compute/cuda/12.5.1/network_installers/cuda_12.5.1_windows_network.exe";
     "12.6.0" = "https://developer.download.nvidia.com/compute/cuda/12.6.0/network_installers/cuda_12.6.0_windows_network.exe";
+    "12.6.1" = "https://developer.download.nvidia.com/compute/cuda/12.6.1/network_installers/cuda_12.6.1_windows_network.exe";
+    "12.6.2" = "https://developer.download.nvidia.com/compute/cuda/12.6.2/network_installers/cuda_12.6.2_windows_network.exe";
+    "12.6.3" = "https://developer.download.nvidia.com/compute/cuda/12.6.3/network_installers/cuda_12.6.3_windows_network.exe";
+    "12.8.0" = "https://developer.download.nvidia.com/compute/cuda/12.8.0/network_installers/cuda_12.8.0_windows_network.exe"
+    "12.8.1" = "https://developer.download.nvidia.com/compute/cuda/12.8.1/network_installers/cuda_12.8.1_windows_network.exe"
+    "12.9.0" = "https://developer.download.nvidia.com/compute/cuda/12.9.0/network_installers/cuda_12.9.0_windows_network.exe"
+    "12.9.1" = "https://developer.download.nvidia.com/compute/cuda/12.9.1/network_installers/cuda_12.9.1_windows_network.exe"
+    "13.0.0" = "https://developer.download.nvidia.com/compute/cuda/13.0.0/network_installers/cuda_13.0.0_windows_network.exe"
 }
 
 # @todo - change this to be based on _MSC_VER intead, or invert it to be CUDA keyed instead
@@ -61,7 +69,7 @@ $VISUAL_STUDIO_MIN_CUDA = @{
     "2022" = "11.6.0";
     "2019" = "10.1";
     "2017" = "10.0"; # Depends on which version of 2017! 9.0 to 10.0 depending on version
-    "2015" = "8.0";  # Might support older, unsure. Depracated as of 11.1, unsupported in 11.2
+    "2015" = "8.0";  # Might support older, unsure. Deprecated as of 11.1, unsupported in 11.2
 }
 
 # cuda_runtime.h is in nvcc <= 10.2, but cudart >= 11.0
@@ -73,6 +81,12 @@ $CUDA_PACKAGES_IN = @(
     "nvrtc_dev";
     "cudart";
     "thrust";
+    "thrust";
+    "nvjitlink";
+    # cuda 13+ packages
+    "crt";
+    "nvptxcompiler";
+    "nvvm";
 )
 
 ## -------------------
@@ -125,6 +139,18 @@ Foreach ($package in $CUDA_PACKAGES_IN) {
     } elseif($package -eq "thrust" -and [version]$CUDA_VERSION_FULL -lt [version]"11.3") {
         # Thrust is a package from CUDA 11.3, otherwise it should be skipped.
         continue
+    } elseif($package -eq "nvjitlink" -and [version]$CUDA_VERSION_FULL -lt [version]"12.0") {
+        # nvjitlink is a from CUDA 12.0, otherwise it should be skipped.
+        continue
+    } elseif($package -eq "crt" -and [version]$CUDA_VERSION_FULL -lt [version]"13.0") {
+        # crt is a from CUDA 13.0, otherwise it should be skipped.
+        continue
+    } elseif($package -eq "nvptxcompiler" -and [version]$CUDA_VERSION_FULL -lt [version]"13.0") {
+        # nvptxcompiler is a from CUDA 13.0, otherwise it should be skipped.
+        continue
+    } elseif($package -eq "nvvm" -and [version]$CUDA_VERSION_FULL -lt [version]"13.0") {
+        # nvvm is a from CUDA 13.0, otherwise it should be skipped.
+        continue
     }
     $CUDA_PACKAGES += " $($package)_$($CUDA_MAJOR).$($CUDA_MINOR)"
 }
@@ -173,7 +199,7 @@ while (-not $downloaded) {
         Write-Output "Downloading Complete"
         $downloaded=$true
     } else {
-        # If downlaod failed, either wait and try again, or give up and error.
+        # If download failed, either wait and try again, or give up and error.
         if ($download_attempt -le $download_attempts_max) {
             Write-Output "Error: Failed to download $($CUDA_REPO_PKG_LOCAL) (attempt $($download_attempt)/$($download_attempts_max)). Retrying."
             # Sleep for a number of seconds.
