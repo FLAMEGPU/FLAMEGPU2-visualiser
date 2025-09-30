@@ -15,7 +15,7 @@ elseif(WIN32)
     FetchContent_Declare(
         freetype
         GIT_REPOSITORY    https://github.com/freetype/freetype.git
-        GIT_TAG           tags/VER-2-10-1
+        GIT_TAG           tags/VER-2-14-1
     )
 
     # Use variables to control freetype CMake options:
