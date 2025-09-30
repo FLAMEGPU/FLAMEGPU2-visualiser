@@ -330,7 +330,7 @@ endif ()
 
 # Resources
 # NOTE: The build step for resources embeds them as base64, this should not be used for large files.
-include(${CMAKE_CURRENT_LIST_DIR}/../cmake/CMakeRC/CMakeRC.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../cmake/dependencies/cmakerc.cmake)
 SET(RESOURCES_ALL
     ${CMAKE_CURRENT_SOURCE_DIR}/../resources/flamegpu_icon.png
     ${CMAKE_CURRENT_SOURCE_DIR}/../resources/pyflamegpu_icon.png
