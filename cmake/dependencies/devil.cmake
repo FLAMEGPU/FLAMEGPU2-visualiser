@@ -9,33 +9,30 @@ if(UNIX)
     endif()
 elseif(WIN32)
     include(FetchContent)
-    # Temporary CMake >= 3.30 fix https://github.com/FLAMEGPU/FLAMEGPU2/issues/1223
-    if(POLICY CMP0169)
-        cmake_policy(SET CMP0169 OLD)
-    endif()
-
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.
     # Declare source properties
+    # Specify an invalid SOURCE_SUBDIR to prevent FetchContent_MakeAvailable from adding the CMakeLists.txt
     FetchContent_Declare(
         devil
         URL "http://downloads.sourceforge.net/openil/DevIL-Windows-SDK-1.8.0.zip"
+        SOURCE_SUBDIR "do_not_use_add_subirectory"
     )
     FetchContent_GetProperties(devil)
-    if(NOT devil_POPULATED)
-        # Download content
-        FetchContent_Populate(devil)
-        # Create a Cmake configuraiton file for devil (the download is not cmake aware)
-        set(DevIL_DIR ${devil_SOURCE_DIR})
+    # Download content
+    FetchContent_MakeAvailable(devil)
+    # Create a Cmake configuraiton file for devil (the download is not cmake aware)
+    set(DevIL_DIR ${devil_SOURCE_DIR})
+    if (NOT EXISTS "${devil_SOURCE_DIR}/devil-config.cmake")
         configure_file(${CMAKE_CURRENT_LIST_DIR}/devil-config.cmake.in ${devil_SOURCE_DIR}/devil-config.cmake @ONLY)
-        # Find DevIL, only looking in the generated directory in config mode
-        find_package(DevIL REQUIRED CONFIG 
-            PATHS ${devil_SOURCE_DIR}
-            NO_CMAKE_PATH
-            NO_CMAKE_ENVIRONMENT_PATH
-            NO_SYSTEM_ENVIRONMENT_PATH
-            NO_CMAKE_PACKAGE_REGISTRY
-            NO_CMAKE_SYSTEM_PATH)
     endif()
+    # Find DevIL, only looking in the generated directory in config mode
+    find_package(DevIL REQUIRED CONFIG 
+        PATHS ${devil_SOURCE_DIR}
+        NO_CMAKE_PATH
+        NO_CMAKE_ENVIRONMENT_PATH
+        NO_SYSTEM_ENVIRONMENT_PATH
+        NO_CMAKE_PACKAGE_REGISTRY
+        NO_CMAKE_SYSTEM_PATH)
 endif()
 
 # Mark some CACHE vars advanced for a cleaner GUI

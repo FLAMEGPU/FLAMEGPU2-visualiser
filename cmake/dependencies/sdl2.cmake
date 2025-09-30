@@ -23,32 +23,30 @@ if(UNIX)
     endif()
 elseif(WIN32)
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.
-    # Declare source properties
     include(FetchContent)
-    # Temporary CMake >= 3.30 fix https://github.com/FLAMEGPU/FLAMEGPU2/issues/1223
-    if(POLICY CMP0169)
-        cmake_policy(SET CMP0169 OLD)
-    endif()
+
+    # Specify an invalid SOURCE_SUBDIR to prevent FetchContent_MakeAvailable from adding the CMakeLists.txt
     FetchContent_Declare(
         SDL2
         URL "https://www.libsdl.org/release/SDL2-devel-2.0.12-VC.zip"
+        SOURCE_SUBDIR "do_not_use_add_subirectory"
     )
     FetchContent_GetProperties(SDL2)
-    if(NOT SDL2_POPULATED)
-        # Download content
-        FetchContent_Populate(SDL2)
-        # Create a Cmake configuraiton file for SDL2 (the download is not cmake aware)
-        set(SDL2_DIR ${sdl2_SOURCE_DIR})
+    # Download content
+    FetchContent_MakeAvailable(SDL2)
+    # Create a Cmake configuraiton file for SDL2 (the download is not cmake aware)
+    set(SDL2_DIR ${sdl2_SOURCE_DIR})
+    if (NOT EXISTS "${sdl2_SOURCE_DIR}/sdl2-config.cmake")
         configure_file(${CMAKE_CURRENT_LIST_DIR}/sdl2-config.cmake.in ${sdl2_SOURCE_DIR}/sdl2-config.cmake @ONLY)
-        # Find SDL2, only looking in the generated directory in config mode
-        find_package(SDL2 REQUIRED CONFIG 
-            PATHS ${sdl2_SOURCE_DIR}
-            NO_CMAKE_PATH
-            NO_CMAKE_ENVIRONMENT_PATH
-            NO_SYSTEM_ENVIRONMENT_PATH
-            NO_CMAKE_PACKAGE_REGISTRY
-            NO_CMAKE_SYSTEM_PATH)
     endif()
+    # Find SDL2, only looking in the generated directory in config mode
+    find_package(SDL2 REQUIRED CONFIG 
+        PATHS ${sdl2_SOURCE_DIR}
+        NO_CMAKE_PATH
+        NO_CMAKE_ENVIRONMENT_PATH
+        NO_SYSTEM_ENVIRONMENT_PATH
+        NO_CMAKE_PACKAGE_REGISTRY
+        NO_CMAKE_SYSTEM_PATH)
 endif()
 
 mark_as_advanced(FETCHCONTENT_QUIET)
