@@ -106,10 +106,24 @@ if(NOT COMMAND flamegpu_visualiser_suppress_some_compiler_warnings)
             # CUDA 11.6 deprecates __device__ cudaDeviceSynchronize, but does not provide an alternative.
             # This is used in cub/thrust, and windows still emits this warning from the third party library
             if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 11.6.0)
-                target_compile_definitions(${SSCW_TARGET} PRIVATE "$<$<COMPILE_LANGUAGE:C,CXX,CUDA>:__CDPRT_SUPPRESS_SYNC_DEPRECATION_WARNING>")
+                target_compile_definitions(${SSCW_TARGET} PRIVATE "__CDPRT_SUPPRESS_SYNC_DEPRECATION_WARNING")
             endif()
-        else()
-            # Linux specific warning suppressions
+            # CUDA 13.0 curand_poisson.h under windows generates error '#20199-D: unrecognized #pragma in device code'. This was fixed in CUDA 13.0 Update 1, but nvcc reports the same version so the suppression is applied to < 13.1
+            if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0.0 AND CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 13.1)
+                target_compile_options(${SSCW_TARGET} PRIVATE "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:-Xcudafe --diag_suppress=20199>")
+            endif()
+        elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+            # GCC specific warning suppressions
+            # GCC 10.1 AARCH specific ps ABI warnings in C++17 mode. See https://github.com/FLAMEGPU/FLAMEGPU2/issues/1176
+            if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" AND CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 10.1.0)
+                target_compile_options(${SSCW_TARGET} PRIVATE "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:-Xcompiler -Wno-psabi>")
+                target_compile_options(${SSCW_TARGET} PRIVATE "$<$<COMPILE_LANGUAGE:C,CXX>:-Wno-psabi>")
+            endif()
+            # (some) GCC 12 in c++20 issues Wrestrict warnings for assigning a single character to a std::string, which is a false-positive.
+            if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0.0 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.0.0)
+                target_compile_options(${SSCW_TARGET} PRIVATE "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:-Xcompiler -Wno-restrict>")
+                target_compile_options(${SSCW_TARGET} PRIVATE "$<$<COMPILE_LANGUAGE:C,CXX>:-Wno-restrict>")
+            endif()
         endif()
         # Generic OS/host compiler warning suppressions
         # Ensure NVCC outputs warning numbers
