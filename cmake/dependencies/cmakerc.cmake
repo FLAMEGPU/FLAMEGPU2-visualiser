@@ -3,23 +3,19 @@
 ###########
 
 include(FetchContent)
-# Temporary CMake >= 3.30 fix https://github.com/FLAMEGPU/FLAMEGPU2/issues/1223
-if(POLICY CMP0169)
-    cmake_policy(SET CMP0169 OLD)
-endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/modules/ ${CMAKE_MODULE_PATH})
 include(FetchContent)
 
+# Specify an invalid SOURCE_SUBDIR to prevent FetchContent_MakeAvailable from adding the CMakeLists.txt
 FetchContent_Declare(
     cmakerc
     GIT_REPOSITORY    "https://github.com/vector-of-bool/cmrc.git"
     GIT_TAG           952ffddba731fc110bd50409e8d2b8a06abbd237 # latest commit with cmake 3.27+ support
+    SOURCE_SUBDIR "do_not_use_add_subirectory"
 )
-FetchContent_GetProperties(cmakerc)
-if(NOT cmakerc_POPULATED)
-    FetchContent_Populate(cmakerc)
-endif()
+# Download cmakerc, but do not add_subdirectory or find a package or create a target
+FetchContent_MakeAvailable(cmakerc)
 
 # include the CMakeRC source
 include(${cmakerc_SOURCE_DIR}/CMakeRC.cmake)

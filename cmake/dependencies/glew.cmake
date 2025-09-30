@@ -11,33 +11,31 @@ if(UNIX)
     endif ()
 elseif(WIN32)
     include(FetchContent)
-    # Temporary CMake >= 3.30 fix https://github.com/FLAMEGPU/FLAMEGPU2/issues/1223
-    if(POLICY CMP0169)
-        cmake_policy(SET CMP0169 OLD)
-    endif()
     # On windows, always download manually. There are issues with find_package and multi-config generators where a release library will be found, but no debug library, which can break things.
     # Declare source properties
     # This mirror is linked from the official Glew website, and more stable than SourceForge
+    # Specify an invalid SOURCE_SUBDIR to prevent FetchContent_MakeAvailable from adding the CMakeLists.txt
     FetchContent_Declare(
         glew
         URL "https://github.com/nigels-com/glew/releases/download/glew-2.1.0/glew-2.1.0-win32.zip"
+        SOURCE_SUBDIR "do_not_use_add_subirectory"
     )
     FetchContent_GetProperties(glew)
-    if(NOT glew_POPULATED)
-        # Download content
-        FetchContent_Populate(glew)
-        # Create a Cmake configuraiton file for glew (the download is not cmake aware)
-        set(GLEW_DIR ${glew_SOURCE_DIR})
+    # Download content
+    FetchContent_MakeAvailable(glew)
+    # Create a Cmake configuraiton file for glew (the download is not cmake aware)
+    set(GLEW_DIR ${glew_SOURCE_DIR})
+    if (NOT EXISTS "${glew_SOURCE_DIR}/glew-config.cmake")
         configure_file(${CMAKE_CURRENT_LIST_DIR}/glew-config.cmake.in ${glew_SOURCE_DIR}/glew-config.cmake @ONLY)
-        # Just look for the fetched version of GLEW, rather than any system provided versions. Users should still be able to override this with -DGLEW_DIR=<path> ?
-        find_package(GLEW REQUIRED CONFIG 
-            PATHS ${glew_SOURCE_DIR}
-            NO_CMAKE_PATH
-            NO_CMAKE_ENVIRONMENT_PATH
-            NO_SYSTEM_ENVIRONMENT_PATH
-            NO_CMAKE_PACKAGE_REGISTRY
-            NO_CMAKE_SYSTEM_PATH)
     endif()
+    # Just look for the fetched version of GLEW, rather than any system provided versions. Users should still be able to override this with -DGLEW_DIR=<path> ?
+    find_package(GLEW REQUIRED CONFIG 
+        PATHS ${glew_SOURCE_DIR}
+        NO_CMAKE_PATH
+        NO_CMAKE_ENVIRONMENT_PATH
+        NO_SYSTEM_ENVIRONMENT_PATH
+        NO_CMAKE_PACKAGE_REGISTRY
+        NO_CMAKE_SYSTEM_PATH)
 endif()
 
 mark_as_advanced(FETCHCONTENT_QUIET)
