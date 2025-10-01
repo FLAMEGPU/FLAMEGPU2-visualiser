@@ -81,3 +81,10 @@ The main repository uses semantic versioning, with tags `vX.Y.Z[-PRERELEASE]`.
 Versions of this repository included by the main repository are tagged with `flamegpu-X.Y.Z[-PRERELEASE]` to allow standalone versioning options in the future.
 
 I.e. the initial alpha release of FLAMEGPU/FLAMEGPU2 `v2.0.0-alpha` corresponds to the `flamegpu-2.0.0-alpha` tag. Subsequent pre-releases may not update the tag to be an exact match.
+
+## License
+
+FLAME GPU is available under two licenses:
+
+- [AGPL-3.0-only license](https://github.com/FLAMEGPU/FLAMEGPU2/blob/master/LICENSE.md) for open source usage
+- A commercial licenses for cases where the use of the open source AGPL-licensed version is not possible or desirable. Please see [flamegpu.com/download/license/](https://flamegpu.com/download/license/) for more information.
