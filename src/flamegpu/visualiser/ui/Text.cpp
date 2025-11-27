@@ -376,8 +376,14 @@ Text::TextureString::TextureString()
 }
 void Text::TextureString::resize(const glm::uvec2 &_dimensions) {
     this->dimensions = _dimensions;
-    if (texture)
+    if (texture) {
+        if (texture[0]) {
+            free(texture[0]);
+            texture[0] = nullptr;
+        }
         free(texture);
+        texture = nullptr;
+    }
     texture = reinterpret_cast<unsigned char**>(malloc(sizeof(char*) * this->dimensions.y));
     texture[0] = reinterpret_cast<unsigned char*>(malloc(sizeof(char) * this->dimensions.x * this->dimensions.y));
     memset(texture[0], 0, sizeof(char)*this->dimensions.x*this->dimensions.y);
