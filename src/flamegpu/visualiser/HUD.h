@@ -51,6 +51,10 @@ class HUD {
          */
         Item(std::shared_ptr<Overlay> overlay, const glm::ivec2 &offset, const glm::uvec2 &windowDims, AnchorV anchorV = AnchorV::Center, AnchorH anchorH = AnchorH::Center, const int &zIndex = 0);
         /**
+         * Destructor to free manually allocated memory
+         */
+        ~Item();
+        /**
          * Convenience resizeWindow(const glm::uvec2 &)
          * @param w The new window width
          * @param h The new window height

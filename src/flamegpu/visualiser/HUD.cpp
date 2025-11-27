@@ -153,6 +153,12 @@ HUD::Item::Item(std::shared_ptr<Overlay> overlay, const glm::ivec2 &offset, cons
     GL_CALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4*sizeof(int), &faces, GL_STATIC_DRAW));
     GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
+HUD::Item::~Item() {
+    if (data) {
+        free(data);
+        data = nullptr;
+    }
+}
 void HUD::Item::resizeWindow(const glm::uvec2 &dims) {
     // Track parameters, so when called from overlay we can reuse previous
     static glm::uvec2 _dims;
