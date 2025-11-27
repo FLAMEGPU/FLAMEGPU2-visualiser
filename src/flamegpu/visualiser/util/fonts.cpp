@@ -90,6 +90,10 @@ std::string fontSearch(const std::string commaSeparatedfonts) {
     // Tidy up.
     FcPatternDestroy(pat);
 
+    // Destroy the FcConfig - this will force a re-initialisation on subsequent calls to fontSearch, but prevent leakage
+    FcConfigDestroy(config);
+    config = nullptr;
+
     // Return the path to the desired font.
     return fontpath;
 }
