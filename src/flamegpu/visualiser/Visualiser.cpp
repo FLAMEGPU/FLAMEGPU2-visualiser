@@ -846,6 +846,19 @@ void Visualiser::close() {
         this->background_thread->join();
         delete this->background_thread;
     }
+    // Iterate the agentStates to clean up CUDATextureBuffer objects
+    // This could potentially be done in ~CUDATextureBuffer, but due to limitations of CUDA calls in dtors, it may be simpler to keep this separate/explicit (and risk leaks)
+    for (auto &_as : agentStates) {
+        auto &as = _as.second;
+        for (auto &_tb : as.core_texture_buffers) {
+            auto &tb = _tb.second;
+            if (tb != nullptr) {
+                freeGLInteropTextureBuffer(tb);
+                tb = nullptr;
+            }
+        }
+    }
+
     //  This really shouldn't run if we're not the host thread, but we don't manage the render loop thread
     if (this->window != nullptr) {
         SDL_GL_MakeCurrent(this->window, this->context);
