@@ -28,6 +28,10 @@
 #include "flamegpu/visualiser/multipass/FrameBufferAttachment.h"
 #include "util/Resources.h"
 
+#if defined(__GNUC__) || defined(__clang__)
+#include <fontconfig/fontconfig.h>
+#endif
+
 namespace flamegpu {
 namespace visualiser {
 
@@ -226,6 +230,10 @@ Visualiser::Visualiser(const ModelConfig& modelcfg)
 }
 Visualiser::~Visualiser() {
     this->close();
+#if defined(__GNUC__) || defined(__clang__)
+    // Fully clean up font config
+    FcFini();
+#endif
 }
 void Visualiser::start() {
     // Only execute if background thread is not active

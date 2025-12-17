@@ -94,9 +94,6 @@ std::string fontSearch(const std::string commaSeparatedfonts) {
     FcConfigDestroy(config);
     config = nullptr;
 
-    // Fully clean up font config - this should probably be in a called-once function rather than on each invocation
-    FcFini();
-
     // Return the path to the desired font.
     return fontpath;
 }
