@@ -11,6 +11,7 @@
 #include <utility>
 #include <memory>
 #include <cstdio>
+#include <ranges>
 #include <string>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -858,9 +859,16 @@ void Visualiser::close() {
     // This could potentially be done in ~CUDATextureBuffer, but due to limitations of CUDA calls in dtors, it may be simpler to keep this separate/explicit (and risk leaks)
     for (auto &_as : agentStates) {
         auto &as = _as.second;
-        for (auto &_tb : as.core_texture_buffers) {
+        for (auto& _tb : as.custom_texture_buffers | std::views::reverse) {
+            auto& tb = _tb.second.second;
+            if (tb && tb->d_pointer != nullptr) {
+                freeGLInteropTextureBuffer(tb);
+                tb = nullptr;
+            }
+        }
+        for (auto &_tb : as.core_texture_buffers | std::views::reverse) {
             auto &tb = _tb.second;
-            if (tb != nullptr) {
+            if (tb && tb->d_pointer != nullptr) {
                 freeGLInteropTextureBuffer(tb);
                 tb = nullptr;
             }
