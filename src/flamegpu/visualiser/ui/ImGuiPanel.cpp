@@ -16,6 +16,7 @@ namespace visualiser {
 
 ImGuiPanel::ImGuiPanel(const std::map<std::string, std::shared_ptr<PanelConfig>>& cfgs, const Visualiser& _vis)
     : Overlay(std::make_shared<Shaders>(Stock::Shaders::SPRITE2D))
+    , first_render(0)
     , vis(_vis) {
     for (const  auto &cfg : cfgs)
         configs.push_back(*cfg.second);
