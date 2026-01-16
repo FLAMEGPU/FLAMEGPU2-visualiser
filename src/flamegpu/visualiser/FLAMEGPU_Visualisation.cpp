@@ -75,7 +75,9 @@ bool FLAMEGPU_Visualisation::isReady() const {
 
 
 void FLAMEGPU_Visualisation::lockMutex() {
+    auto lock_t = new std::lock_guard<std::mutex>(vis->getRenderBufferMutexPre());
     lock = new LockHolder(vis->getRenderBufferMutex());
+    delete lock_t;
 }
 void FLAMEGPU_Visualisation::releaseMutex() {
     if (lock) {
