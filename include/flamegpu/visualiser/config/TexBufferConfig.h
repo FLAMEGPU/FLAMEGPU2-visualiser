@@ -18,6 +18,9 @@ struct TexBufferConfig {
         Position_x, Position_y, Position_z,
         Position_xy,
         Position_xyz,
+        Position_dbl_x, Position_dbl_y, Position_dbl_z,
+        Position_dbl_xy,
+        Position_dbl_xyz,
         /**
          * Agent forward/up direction x/y/z
          */
@@ -26,6 +29,11 @@ struct TexBufferConfig {
         Forward_xyz,
         Up_x, Up_y, Up_z,
         Up_xyz,
+        Forward_dbl_x, Forward_dbl_y, Forward_dbl_z,
+        Forward_dbl_xz,
+        Forward_dbl_xyz,
+        Up_dbl_x, Up_dbl_y, Up_dbl_z,
+        Up_dbl_xyz,
         /**
          * Agent rotation
          * (Alternate to Forward/Up vectors)
@@ -33,6 +41,9 @@ struct TexBufferConfig {
         Heading, Pitch, Bank,
         Direction_hp,
         Direction_hpb,
+        Heading_dbl, Pitch_dbl, Bank_dbl,
+        Direction_dbl_hp,
+        Direction_dbl_hpb,
         /**
          * Agent color
          */
