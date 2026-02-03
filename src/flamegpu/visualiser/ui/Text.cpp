@@ -348,8 +348,10 @@ glm::vec4 Text::getBackgroundColor() const {
     return backgroundColor;
 }
 void Text::setString(const char* format, ...) {
-    if (this->string)
-        delete this->string;
+    if (this->string) {
+        free(this->string);
+        this->string = nullptr;
+    }
     // Create a copy of the va_list, as vsnprintf can invalidate elements of argp and find the required buffer length
     va_list argp;
     va_start(argp, format);
@@ -374,8 +376,14 @@ Text::TextureString::TextureString()
 }
 void Text::TextureString::resize(const glm::uvec2 &_dimensions) {
     this->dimensions = _dimensions;
-    if (texture)
+    if (texture) {
+        if (texture[0]) {
+            free(texture[0]);
+            texture[0] = nullptr;
+        }
         free(texture);
+        texture = nullptr;
+    }
     texture = reinterpret_cast<unsigned char**>(malloc(sizeof(char*) * this->dimensions.y));
     texture[0] = reinterpret_cast<unsigned char*>(malloc(sizeof(char) * this->dimensions.x * this->dimensions.y));
     memset(texture[0], 0, sizeof(char)*this->dimensions.x*this->dimensions.y);

@@ -146,6 +146,7 @@ Entity::Entity(
     , materialBuffer(std::make_shared<UniformBuffer>(sizeof(MaterialProperties) * MAX_OBJ_MATERIALS))
     , location(0.0f)
     , rotation(0.0f, 0.0f, 1.0f, 0.0f)
+    , needsExport(false)
     , cullFace(true) {
     GL_CHECK();
     loadModelFromFile();

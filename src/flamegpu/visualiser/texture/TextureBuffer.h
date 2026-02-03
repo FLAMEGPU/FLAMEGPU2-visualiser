@@ -5,7 +5,7 @@
 #include "Texture.h"
 
 #ifdef __CUDACC__
-#include "flamegpu/visualiser/util/cuda.cuh"
+#include "flamegpu/visualiser/util/cuda.h"
 #endif
 
 namespace flamegpu {
