@@ -109,7 +109,7 @@ class ShaderCore : public Reloadable {
      */
     void destroyProgram();
     /**
-      * Remembers a pointer to an array of upto 4 floats that will be updated everytime useProgram() is called on this Shaders object
+     * Remembers a pointer to an array of upto 4 floats that will be updated everytime useProgram() is called on this Shaders object
      * If a dynamic uniform with the same uniformName is already bound, it will be replaced
      * @param uniformName The name of the uniform within the shader
      * @param arry A pointer to the array of floats
@@ -131,16 +131,27 @@ class ShaderCore : public Reloadable {
      */
     bool addDynamicUniform(const char *uniformName, const GLint *arry, unsigned int count = 1);
     /**
-    * Remembers a pointer to an array of upto 4 unsigned integers that will be updated everytime useProgram() is called on this Shaders object
-    * If a dynamic uniform with the same uniformName is already bound, it will be replaced
-    * @param uniformName The name of the uniform within the shader
-    * @param arry A pointer to the array of unsigned integers
-    * @param count The number of unsigned integers provided in the array (a maximum of 4)
-    * @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
-    * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
-    * @see addDynamicUniform(const char *, const GLfloat *, unsigned int)
-    */
+     * Remembers a pointer to an array of upto 4 unsigned integers that will be updated everytime useProgram() is called on this Shaders object
+     * If a dynamic uniform with the same uniformName is already bound, it will be replaced
+     * @param uniformName The name of the uniform within the shader
+     * @param arry A pointer to the array of unsigned integers
+     * @param count The number of unsigned integers provided in the array (a maximum of 4)
+     * @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+     * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+     * @see addDynamicUniform(const char *, const GLfloat *, unsigned int)
+     */
     bool addDynamicUniform(const char *uniformName, const GLuint *arry, unsigned int count = 1);
+    /**
+     * Remembers a pointer to an array of upto 4 doubles that will be updated everytime useProgram() is called on this Shaders object
+     * If a dynamic uniform with the same uniformName is already bound, it will be replaced
+     * @param uniformName The name of the uniform within the shader
+     * @param arry A pointer to the array of doubles
+     * @param count The number of doubles provided in the array (a maximum of 4)
+     * @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+     * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+     * @see addDynamicUniform(const char *, const GLint *, unsigned int)
+     */
+    bool addDynamicUniform(const char *uniformName, const GLdouble *arry, unsigned int count = 1);
     /**
     * Remembers a pointer to a mat4 that will be updated everytime useProgram() is called on this Shaders object
     * If a dynamic uniform with the same uniformName is already bound, it will be replaced
@@ -182,6 +193,16 @@ class ShaderCore : public Reloadable {
     */
     bool addStaticUniform(const char *uniformName, const GLuint *arry, unsigned int count = 1);
     /**
+     * Sets the value of a vector of upto 4 doubles within the shader
+     * If a static uniform with the same uniformName is already bound, it will be replaced
+     * @param uniformName The name of the uniform within the shader
+     * @param arry A pointer to the array of doubles
+     * @param count The number of doubles provided in the array (a maximum of 4)
+     * @returns false if the uniform name was not found or count is outside of the inclusive range 1-4
+     * @note Even when false is returned, the value will be stored for reprocessing on shader reloads
+     */
+    bool addStaticUniform(const char *uniformName, const GLdouble *arry, unsigned int count = 1);
+    /**
     * Sets the value of a mat4 within the shader
     * If a static uniform with the same uniformName is already bound, it will be replaced
     * @param uniformName The name of the uniform within the shader
@@ -221,13 +242,13 @@ class ShaderCore : public Reloadable {
      * @param bufferBindingPoint The buffer's bind point
      * @return True if buffer name is found in the current shader to be bound
      */
-    bool addBuffer(const char *bufferNameInShader, const GLenum bufferType, const GLuint bufferBindingPoint);
+    bool addBuffer(const char *bufferNameInShader, GLenum bufferType, GLuint bufferBindingPoint);
     /**
      * Attaches the specified buffer to the shader if bufferNameInShader can be found
      * If a buffer with the same bufferNameInShader is already bound, it will be replaced
      * This is for 'program resources', NOT texture buffers
      * This will not retain the shared_ptr, it's upto you to keep it alive
-     * @param bufferNameInShader The indentifier of the buffer within the shader source
+     * @param bufferNameInShader The identifier of the buffer within the shader source
      * @param buffer The buffer to be used
      * @return True if buffer name is found in the current shader to be bound
      * @note Convenience method, implemented in BufferCore.cpp
@@ -353,9 +374,9 @@ class ShaderCore : public Reloadable {
         /**
          * Data to be stored in the shader uniform
          * @note components greater than count-1 are likely to contain garbage data
-         * @note this may actually contain a glm::vec4 if type == GL_FLOAT
+         * @note this may actually contain a glm::vec4 if type == GL_FLOAT, glm::ivec4 etc
          */
-        const glm::ivec4 data;
+        const glm::mat4 data;
         /**
          * Number of vector components
          */
