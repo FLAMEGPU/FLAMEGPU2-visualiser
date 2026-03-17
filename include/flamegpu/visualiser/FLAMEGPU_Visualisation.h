@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <cstdint>
+#include <memory>
 
 #include "flamegpu/visualiser/config/TexBufferConfig.h"
 
@@ -14,6 +15,21 @@ struct AgentStateConfig;
 struct ModelConfig;
 class Visualiser;
 class LockHolder;
+
+/**
+ * Information the visualiser passes back to FLAMEGPU
+ */
+struct VisInfo {
+    // Is orthographic projection enabled; no (0) else yes
+    unsigned char isOrtho;
+    // What is the zoom config of orthographic projection
+    // @note This value has no effect when isOrtho==0
+    float orthoZoom;
+    // The viewers location in 3d space
+    float viewPos[3];
+    // Normalised direction vector of camera
+    float viewDir[3];
+};
 
 /**
  * This class forms the interface between FLAMEGPU2 and FLAMEGPU2_Visualiser
@@ -51,6 +67,13 @@ class FLAMEGPU_Visualisation {
      * Provide an environment property, so it can be displayed
      */
     void registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements, bool is_const);
+    /**
+     * Register a reference to a mutable VisInfo struct
+     * for passing data, such as camera properties,
+     * from the visualisation back to a simulation
+     * @param info VisInfo struct provided by the main simulation
+     */
+    void registerVisInfo(const std::shared_ptr<VisInfo> &info);
     /**
      * Update the UI step counter
      * @note When this value is first set non-0, the visualiser assumes sim has begun executing

@@ -70,6 +70,12 @@ class NoClipCamera : public Camera {
      */
     glm::vec3 getLook() const;
     /**
+     * Returns a constant pointer to the cameras normalized direction vector
+     * This pointer can be used to continuously track the cameras direction
+     * @return A pointer to the normalized direction of the camera
+     */
+    const glm::vec3* getLookPtr() const { return &look; }
+    /**
      * Returns the cameras normalized up vector
      * @return The normalized direction the camera treats as upwards
      */

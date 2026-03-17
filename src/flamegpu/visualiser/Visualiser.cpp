@@ -26,6 +26,7 @@
 #include "flamegpu/visualiser/ui/SplashScreen.h"
 #include "flamegpu/visualiser/multipass/FrameBuffer.h"
 #include "flamegpu/visualiser/multipass/FrameBufferAttachment.h"
+#include "flamegpu/visualiser/FLAMEGPU_Visualisation.h"
 #include "util/Resources.h"
 
 namespace flamegpu {
@@ -442,6 +443,8 @@ void Visualiser::render() {
     }
     // Doesn't use the event class for some historical reason I (pth) don't remember.
     this->queryControllerAxis(frameTime);
+    // Update VisInfo shared with sim
+    updateVisInfo(); // @todo this feels a bit aggressive if information may not have changed
     // Update lighting
     lighting->update();
     //  Render
@@ -680,6 +683,19 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
 void Visualiser::registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index /*type*/, unsigned int elements, bool is_const) {
     // Construct an (ordered) map of the registered properties
     imguiPanel->registerProperty(property_name, ptr, is_const, elements > 1);
+}
+void Visualiser::registerVisInfo(const std::shared_ptr<VisInfo> &info) {
+    this->visInfo = info;
+}
+void Visualiser::updateVisInfo() {
+    if (visInfo) {
+        // @todo lock mutex
+        visInfo->isOrtho = modelConfig.isOrtho;
+        visInfo->orthoZoom = modelConfig.orthoZoom;
+        memcpy(visInfo->viewPos, camera->getEyePtr(), sizeof(float) * 3);
+        memcpy(visInfo->viewDir, camera->getLookPtr(), sizeof(float) * 3);
+        // @todo unlock mutex
+    }
 }
 //  Items taken from sdl_exp
 bool Visualiser::init() {

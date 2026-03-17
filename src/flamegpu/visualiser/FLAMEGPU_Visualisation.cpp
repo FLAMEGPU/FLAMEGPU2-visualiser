@@ -44,6 +44,9 @@ void FLAMEGPU_Visualisation::updateAgentStateBuffer(const char *agent_name, cons
 void FLAMEGPU_Visualisation::registerEnvironmentProperty(const std::string& property_name, void* ptr, const std::type_index type, const unsigned int elements, const bool is_const) {
     vis->registerEnvironmentProperty(property_name, ptr, type, elements, is_const);
 }
+void FLAMEGPU_Visualisation::registerVisInfo(const std::shared_ptr<VisInfo> &info) {
+    vis->registerVisInfo(info);
+}
 void FLAMEGPU_Visualisation::updateDynamicLine(const char *graph_name) {
     vis->updateDynamicLine(graph_name);
 }

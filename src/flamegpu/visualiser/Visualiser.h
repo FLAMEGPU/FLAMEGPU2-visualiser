@@ -31,6 +31,7 @@
 
 namespace flamegpu {
 namespace visualiser {
+struct VisInfo;
 class FrameBuffer;
 template <typename T>
 struct CUDATextureBuffer;
@@ -130,6 +131,13 @@ class Visualiser : public ViewportExt {
      */
     void registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index type, unsigned int elements, bool is_const);
     /**
+     * Register a reference to a mutable VisInfo struct
+     * for passing data, such as camera properties,
+     * from the visualisation back to a simulation
+     * @param info VisInfo struct provided by the main simulation
+     */
+    void registerVisInfo(const std::shared_ptr<VisInfo> &info);
+    /**
      * Update the dynamic_lines with the corresponding name
      * @note getDynamicLineMutex() should be locked before this is called
      */
@@ -206,6 +214,10 @@ class Visualiser : public ViewportExt {
      * @note This is called within the render loop
      */
     void updateFPS();
+    /**
+     * Update the contents of visInfo
+     */
+    void updateVisInfo();
     /**
      * Updates the viewport and projection matrix
      * This should be called after window resize events, or simply if the viewport needs generating
@@ -398,7 +410,11 @@ class Visualiser : public ViewportExt {
      * When this is not set to nullptr, it blocks the simulation from continuing
      */
     std::lock_guard<std::mutex> *pause_guard = nullptr;
-
+    /**
+     * Struct for passing visualisation info back to simulation
+     * For thread safety ??? MutEx must be locked during changes
+     */
+    std::shared_ptr<visualiser::VisInfo> visInfo;
     // Controller stuff
     SDL_GameController *gamepad;
     SDL_Joystick *joystick;
