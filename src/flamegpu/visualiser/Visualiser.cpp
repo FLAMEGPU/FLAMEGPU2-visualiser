@@ -27,6 +27,7 @@
 #include "flamegpu/visualiser/ui/SplashScreen.h"
 #include "flamegpu/visualiser/multipass/FrameBuffer.h"
 #include "flamegpu/visualiser/multipass/FrameBufferAttachment.h"
+#include "flamegpu/visualiser/FLAMEGPU_Visualisation.h"
 #include "util/Resources.h"
 
 #if defined(__GNUC__) || defined(__clang__)
@@ -346,15 +347,15 @@ void Visualiser::render() {
     SDL_Event e;
     //  Handle continuous key presses (movement)
     const Uint8* state = SDL_GetKeyboardState(NULL);
-    float speed = modelConfig.cameraSpeed[0];
-    if (state[SDL_SCANCODE_LSHIFT]) {
-        speed *= modelConfig.cameraSpeed[1];
-    }
-    if (state[SDL_SCANCODE_LCTRL]) {
-        speed /= modelConfig.cameraSpeed[1];
-    }
-    const float distance = speed * static_cast<float>(frameTime);
     if (!modelConfig.isOrtho) {
+        float speed = modelConfig.cameraSpeed[0];
+        if (state[SDL_SCANCODE_LSHIFT]) {
+            speed *= modelConfig.cameraSpeed[1];
+        }
+        if (state[SDL_SCANCODE_LCTRL]) {
+            speed /= modelConfig.cameraSpeed[1];
+        }
+        const float distance = speed * static_cast<float>(frameTime);
         if (state[SDL_SCANCODE_W]) {
             this->camera->move(distance);
         }
@@ -380,6 +381,13 @@ void Visualiser::render() {
             this->camera->ascend(-distance);
         }
     } else {
+        float distance = static_cast<float>(frameTime) * modelConfig.orthoZoom;
+        if (state[SDL_SCANCODE_LSHIFT]) {
+            distance *= modelConfig.cameraSpeed[1];
+        }
+        if (state[SDL_SCANCODE_LCTRL]) {
+            distance /= modelConfig.cameraSpeed[1];
+        }
         if (state[SDL_SCANCODE_W]) {
             this->camera->ascend(distance);
         }
@@ -419,6 +427,13 @@ void Visualiser::render() {
             break;
         case SDL_MOUSEWHEEL:
             if (modelConfig.isOrtho) {
+                float speed = modelConfig.cameraSpeed[0];
+                if (state[SDL_SCANCODE_LSHIFT]) {
+                    speed *= modelConfig.cameraSpeed[1];
+                }
+                if (state[SDL_SCANCODE_LCTRL]) {
+                    speed /= modelConfig.cameraSpeed[1];
+                }
                 modelConfig.orthoZoom -= 0.02f * speed * e.wheel.y;
                 // Clamp value above 0, to avoid bad maths and reflected camera
                 modelConfig.orthoZoom = std::max<float>(modelConfig.orthoZoom, 0.001f);
@@ -451,6 +466,8 @@ void Visualiser::render() {
     }
     // Doesn't use the event class for some historical reason I (pth) don't remember.
     this->queryControllerAxis(frameTime);
+    // Update VisInfo shared with sim
+    updateVisInfo(); // @todo this feels a bit aggressive if information may not have changed
     // Update lighting
     lighting->update();
     //  Render
@@ -689,6 +706,19 @@ void Visualiser::updateAgentStateBuffer(const std::string &agent_name, const std
 void Visualiser::registerEnvironmentProperty(const std::string& property_name, void* ptr, std::type_index /*type*/, unsigned int elements, bool is_const) {
     // Construct an (ordered) map of the registered properties
     imguiPanel->registerProperty(property_name, ptr, is_const, elements > 1);
+}
+void Visualiser::registerVisInfo(const std::shared_ptr<VisInfo> &info) {
+    this->visInfo = info;
+}
+void Visualiser::updateVisInfo() {
+    if (visInfo) {
+        // @todo lock mutex
+        visInfo->isOrtho = modelConfig.isOrtho;
+        visInfo->orthoZoom = modelConfig.orthoZoom;
+        memcpy(visInfo->viewPos, camera->getEyePtr(), sizeof(float) * 3);
+        memcpy(visInfo->viewDir, camera->getLookPtr(), sizeof(float) * 3);
+        // @todo unlock mutex
+    }
 }
 //  Items taken from sdl_exp
 bool Visualiser::init() {
