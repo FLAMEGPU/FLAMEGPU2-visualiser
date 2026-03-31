@@ -338,15 +338,15 @@ void Visualiser::render() {
     SDL_Event e;
     //  Handle continuous key presses (movement)
     const Uint8* state = SDL_GetKeyboardState(NULL);
-    float speed = modelConfig.cameraSpeed[0];
-    if (state[SDL_SCANCODE_LSHIFT]) {
-        speed *= modelConfig.cameraSpeed[1];
-    }
-    if (state[SDL_SCANCODE_LCTRL]) {
-        speed /= modelConfig.cameraSpeed[1];
-    }
-    const float distance = speed * static_cast<float>(frameTime);
     if (!modelConfig.isOrtho) {
+        float speed = modelConfig.cameraSpeed[0];
+        if (state[SDL_SCANCODE_LSHIFT]) {
+            speed *= modelConfig.cameraSpeed[1];
+        }
+        if (state[SDL_SCANCODE_LCTRL]) {
+            speed /= modelConfig.cameraSpeed[1];
+        }
+        const float distance = speed * static_cast<float>(frameTime);
         if (state[SDL_SCANCODE_W]) {
             this->camera->move(distance);
         }
@@ -372,6 +372,13 @@ void Visualiser::render() {
             this->camera->ascend(-distance);
         }
     } else {
+        float distance = static_cast<float>(frameTime) * modelConfig.orthoZoom;
+        if (state[SDL_SCANCODE_LSHIFT]) {
+            distance *= modelConfig.cameraSpeed[1];
+        }
+        if (state[SDL_SCANCODE_LCTRL]) {
+            distance /= modelConfig.cameraSpeed[1];
+        }
         if (state[SDL_SCANCODE_W]) {
             this->camera->ascend(distance);
         }
@@ -411,6 +418,13 @@ void Visualiser::render() {
             break;
         case SDL_MOUSEWHEEL:
             if (modelConfig.isOrtho) {
+                float speed = modelConfig.cameraSpeed[0];
+                if (state[SDL_SCANCODE_LSHIFT]) {
+                    speed *= modelConfig.cameraSpeed[1];
+                }
+                if (state[SDL_SCANCODE_LCTRL]) {
+                    speed /= modelConfig.cameraSpeed[1];
+                }
                 modelConfig.orthoZoom -= 0.02f * speed * e.wheel.y;
                 // Clamp value above 0, to avoid bad maths and reflected camera
                 modelConfig.orthoZoom = std::max<float>(modelConfig.orthoZoom, 0.001f);
