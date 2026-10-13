@@ -27,7 +27,11 @@ jobs:
       # optional exclude: can be partial, include: must be specific
       matrix:
         cudacxx:
-          # CUDA 13.x
+          # CUDA 13
+          - cuda: "13.2"
+            cuda_arch: "75"
+            hostcxx: gcc-14
+            os: ubuntu-24.04
           - cuda: "13.0"
             cuda_arch: "75"
             hostcxx: gcc-13
@@ -62,7 +66,7 @@ jobs:
       VISUALISATION: "ON"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
 
     - name: Install CUDA
       if: ${{ startswith(env.OS, 'ubuntu') && env.CUDA != '' }}

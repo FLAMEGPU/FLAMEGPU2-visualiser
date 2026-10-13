@@ -34,7 +34,7 @@ jobs:
           - cuda: "13.0.0"
             cuda_arch: "75"
             hostcxx: "Visual Studio 17 2022"
-            os: windows-2025
+            os: windows-2022
         config:
           - name: "Release"
             config: "Release"
@@ -68,7 +68,7 @@ jobs:
       CMAKE: ${{ matrix.cmake }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install cmake from GitHub Releases (Linux)
       if: ${{ startswith(env.OS, 'ubuntu') && env.CMAKE != '' && env.CMAKE != 'default' }}
