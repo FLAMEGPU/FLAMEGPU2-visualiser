@@ -28,17 +28,21 @@ jobs:
       # optional exclude: can be partial, include: must be specific
       matrix:
         cudacxx:
-          # CUDA 13.x
+          # CUDA 13
+          - cuda: "13.2.0"
+            cuda_arch: "75"
+            hostcxx: "Visual Studio 18 2026"
+            os: windows-2025
           - cuda: "13.0.0"
             cuda_arch: "75"
             hostcxx: "Visual Studio 17 2022"
-            os: windows-2025
-          # Newest and oldest CUDA 12.x we support. 12.4 is the oldest officially supported by MSVC >= 1940, but we have a workaround in place
+            os: windows-2022
+          # Newest and oldest CUDA 12.x we support. 12.4 is the oldest officially supported by MSVC >= 1940, and although we have a workaround in place 12.4+ is required for pyflamegpu in c++20.
           - cuda: "12.9.1"
             cuda_arch: "50"
             hostcxx: "Visual Studio 17 2022"
-            os: windows-2025
-          - cuda: "12.0.0"
+            os: windows-2022
+          - cuda: "12.4.0"
             cuda_arch: "50"
             hostcxx: "Visual Studio 17 2022"
             os: windows-2022
@@ -66,7 +70,7 @@ jobs:
       NVCC_PREPEND_FLAGS: "-D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH --allow-unsupported-compiler"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
 
     - name: Install CUDA (Windows)
       if: ${{ runner.os == 'Windows' && env.CUDA != '' }}
